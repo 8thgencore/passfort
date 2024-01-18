@@ -3,7 +3,9 @@ module github.com/8thgencore/passfort
 go 1.21.4
 
 require (
+	github.com/Masterminds/squirrel v1.5.4
 	github.com/fatih/color v1.16.0
+	github.com/golang-migrate/migrate/v4 v4.17.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jackc/pgx/v5 v5.5.1
 	golang.org/x/crypto v0.18.0
@@ -12,8 +14,6 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.3.2 // indirect
-	github.com/Masterminds/squirrel v1.5.4 // indirect
-	github.com/golang-migrate/migrate/v4 v4.17.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect

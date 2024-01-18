@@ -1,7 +1,7 @@
 env: "local" # local, dev, prod
 
 app:
-  name: "blog-backend"
+  name: "passfort"
   version: "1.0.0"
 
 http:

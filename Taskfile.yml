@@ -1,0 +1,43 @@
+# https://taskfile.dev
+
+version: "3"
+
+vars:
+  DBML_FILE: "./schema.dbml"
+  DSN: "{{.DB_CONNECTION}}://{{.DB_USER}}:{{.DB_PASSWORD}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME}}?sslmode=disable"
+
+dotenv:
+  - ".env"
+
+tasks:
+  default:
+    desc: "Gettings started"
+    cmds:
+      - task: install
+
+  install:
+    desc: "Install dependencies"
+    cmds:
+      - go install github.com/cosmtrek/air@latest
+      - go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+  db:docs:
+    desc: "Generate database documentation from DBML file"
+    cmd: dbdocs build {{.DBML_FILE}}
+    requires:
+      vars:
+        - DBML_FILE
+
+  migrate:up:
+    desc: "Run database migrations"
+    cmd: migrate -path ./internal/database/migrations -database {{.DSN}} -verbose up {{.CLI_ARGS}}
+    requires:
+      vars:
+        - DSN
+
+  migrate:down:
+    desc: "Rollback database migrations"
+    cmd: migrate -path ./internal/database/migrations -database {{.DSN}} -verbose down {{.CLI_ARGS}}
+    requires:
+      vars:
+        - DSN
