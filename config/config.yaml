@@ -1,0 +1,26 @@
+env: "local" # local, dev, prod
+
+app:
+  name: "blog-backend"
+  version: "1.0.0"
+
+http:
+  port: 8080
+
+database:
+  connection: postgres
+  host: localhost
+  port: 5432
+  user: user
+  password: password
+  name: postgres
+
+log:
+  slog:
+    add_source: true
+    level: "debug"
+    format: "pretty"
+    pretty:
+      fields_format: "json"
+      emoji: true
+      time_layout: "15:04:05"
