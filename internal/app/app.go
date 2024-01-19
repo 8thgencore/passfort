@@ -9,28 +9,32 @@ import (
 	_ "github.com/8thgencore/passfort/docs"
 	"github.com/8thgencore/passfort/internal/config"
 	"github.com/8thgencore/passfort/internal/database"
+	"github.com/8thgencore/passfort/internal/delivery/http/handler"
+	"github.com/8thgencore/passfort/internal/repository/cache/redis"
+	"github.com/8thgencore/passfort/internal/repository/storage/postgres"
+	userService "github.com/8thgencore/passfort/internal/service/user"
 	"github.com/8thgencore/passfort/pkg/logger/slogpretty"
 )
 
-//	@title						PassFort API
-//	@version					1.0
-//	@description				This is a simple RESTful Password Manager Service API written in Go using Gin web framework, PostgreSQL database, and Redis cache.
+// @title						PassFort API
+// @version					1.0
+// @description				This is a simple RESTful Password Manager Service API written in Go using Gin web framework, PostgreSQL database, and Redis cache.
 //
-//	@contact.name				Tom Jerry
-//	@contact.url				https://github.com/8thgencore/passfort
-//	@contact.email				test@gmail.com
+// @contact.name				Tom Jerry
+// @contact.url				https://github.com/8thgencore/passfort
+// @contact.email				test@gmail.com
 //
-//	@license.name				MIT
-//	@license.url				https://opensource.org/licenses/MIT
+// @license.name				MIT
+// @license.url				https://opensource.org/licenses/MIT
 //
-//	@host						api.example.com
-//	@BasePath					/v1
-//	@schemes					http https
+// @host						api.example.com
+// @BasePath					/v1
+// @schemes					http https
 //
-//	@securityDefinitions.apikey	BearerAuth
-//	@in							header
-//	@name						Authorization
-//	@description				Type "Bearer" followed by a space and the access token.
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
+// @description				Type "Bearer" followed by a space and the access token.
 func Run(configPath string) {
 	// Load configuration
 	cfg, err := config.NewConfig("./config/config.yaml")
@@ -59,11 +63,29 @@ func Run(configPath string) {
 	// Migrate database
 	err = db.Migrate()
 	if err != nil {
-		log.Error("Error migrating database", "err", err.Error())
+		log.Error("Error migrating database", "error", err.Error())
 		os.Exit(1)
 	}
 
 	log.Info("Successfully migrated the database")
+
+	// Init cache service
+	cache, err := redis.New(ctx, &cfg.Cache)
+	if err != nil {
+		log.Error("Error initializing cache connection", "error", err.Error())
+		os.Exit(1)
+	}
+	defer cache.Close()
+
+	log.Info("Successfully connected to the cache server")
+
+	// Dependency injection
+	// User
+	userRepo := postgres.NewUserRepository(db)
+	userService := userService.NewUserService(userRepo, cache)
+	userHandler := handler.NewUserHandler(userService)
+
+	_ = userHandler
 }
 
 func newSlogLogger(c config.Slog) *slog.Logger {
