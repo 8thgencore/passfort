@@ -15,6 +15,7 @@ type (
 		App      App      `yaml:"app"`
 		HTTP     HTTP     `yaml:"http"`
 		Database Database `yaml:"database"`
+		Cache    Cache    `yaml:"cache"`
 		Log      Log      `yaml:"log"`
 	}
 
@@ -38,6 +39,12 @@ type (
 		User       string `yaml:"user"     env:"DB_USER" env-default:"user"`
 		Password   string `yaml:"password" env:"DB_PASSWORD"`
 		Name       string `yaml:"name"     env:"DB_NAME" env-default:"postgres"`
+	}
+
+	// Cache contains all the environment variables for the cache service
+	Cache struct {
+		Addr     string `yaml:"address"  env-default:"localhost:6379"`
+		Password string `yaml:"password" env-default:"password"`
 	}
 
 	// Logger settings

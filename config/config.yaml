@@ -9,12 +9,16 @@ http:
   allowed_origins: "*" # Example: 127.0.0.1, example.com
 
 database:
-  connection: postgres
-  host: localhost
+  connection: "postgres"
+  host: "localhost"
   port: 5432
-  user: user
-  password: password
-  name: postgres
+  user: "user"
+  password: "password"
+  name: "postgres"
+
+cache:
+  address: "localhost:6379"
+  password: "password"
 
 log:
   slog:

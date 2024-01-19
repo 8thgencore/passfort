@@ -3,7 +3,8 @@ version: "3.8"
 services:
   postgres:
     image: postgres:16.1-alpine3.19
-    container_name: passfort_postgres
+    container_name: passfort_storage
+    restart: unless-stopped
     ports:
       - 5432:5432
     volumes:
@@ -18,6 +19,32 @@ services:
       timeout: 5s
       retries: 3
 
+  redis:
+    image: "redis:7.2-alpine"
+    container_name: passfort_cache
+    command:
+      - /bin/sh
+      - -c
+      # - Double dollars, so that the variable is not expanded by Docker Compose
+      # - Surround by quotes, so that the shell does not split the password
+      # - The ${variable:?message} syntax causes shell to exit with a non-zero
+      #   code and print a message, when the variable is not set or empty
+      - redis-server --requirepass "$${REDIS_PASSWORD:?REDIS_PASSWORD variable is not set}"
+    restart: unless-stopped
+    expose:
+      - 6379
+    environment:
+      - ALLOW_EMPTY_PASSWORD=no
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
 volumes:
   postgres:
+    driver: local
+  redis:
     driver: local

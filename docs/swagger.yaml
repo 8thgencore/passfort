@@ -1,5 +1,13 @@
 basePath: /v1
 definitions:
+  domain.UserRoleEnum:
+    enum:
+    - admin
+    - user
+    type: string
+    x-enum-varnames:
+    - AdminRole
+    - UserRole
   handler.errorResponse:
     properties:
       messages:
@@ -12,6 +20,18 @@ definitions:
       success:
         example: false
         type: boolean
+    type: object
+  handler.meta:
+    properties:
+      limit:
+        example: 10
+        type: integer
+      skip:
+        example: 0
+        type: integer
+      total:
+        example: 100
+        type: integer
     type: object
   handler.registerRequest:
     properties:
@@ -29,6 +49,38 @@ definitions:
     - email
     - name
     - password
+    type: object
+  handler.response:
+    properties:
+      data: {}
+      message:
+        example: Success
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  handler.updateUserRequest:
+    properties:
+      email:
+        example: test@example.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+      password:
+        example: "12345678"
+        minLength: 8
+        type: string
+      role:
+        allOf:
+        - $ref: '#/definitions/domain.UserRoleEnum'
+        example: admin
+    required:
+    - email
+    - name
+    - password
+    - role
     type: object
   handler.userResponse:
     properties:
@@ -63,6 +115,41 @@ info:
   version: "1.0"
 paths:
   /users:
+    get:
+      consumes:
+      - application/json
+      description: List users with pagination
+      parameters:
+      - description: Skip
+        in: query
+        name: skip
+        required: true
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Users displayed
+          schema:
+            $ref: '#/definitions/handler.meta'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: List users
+      tags:
+      - Users
     post:
       consumes:
       - application/json
@@ -102,6 +189,131 @@ paths:
           schema:
             $ref: '#/definitions/handler.errorResponse'
       summary: Register a new user
+      tags:
+      - Users
+  /users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a user by id
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User deleted
+          schema:
+            $ref: '#/definitions/handler.response'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "403":
+          description: Forbidden error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Data not found error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a user
+      tags:
+      - Users
+    get:
+      consumes:
+      - application/json
+      description: Get a user by id
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User displayed
+          schema:
+            $ref: '#/definitions/handler.userResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Data not found error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a user
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Update a user's name, email, password, or role by id
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update user request
+        in: body
+        name: updateUserRequest
+        required: true
+        schema:
+          $ref: '#/definitions/handler.updateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User updated
+          schema:
+            $ref: '#/definitions/handler.userResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "403":
+          description: Forbidden error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Data not found error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a user
       tags:
       - Users
 schemes:
