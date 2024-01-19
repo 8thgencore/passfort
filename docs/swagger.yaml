@@ -1,0 +1,116 @@
+basePath: /v1
+definitions:
+  handler.errorResponse:
+    properties:
+      messages:
+        example:
+        - Error message 1
+        - ' Error message 2'
+        items:
+          type: string
+        type: array
+      success:
+        example: false
+        type: boolean
+    type: object
+  handler.registerRequest:
+    properties:
+      email:
+        example: test@example.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+      password:
+        example: "12345678"
+        minLength: 8
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  handler.userResponse:
+    properties:
+      created_at:
+        example: "1970-01-01T00:00:00Z"
+        type: string
+      email:
+        example: test@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: John Doe
+        type: string
+      updated_at:
+        example: "1970-01-01T00:00:00Z"
+        type: string
+    type: object
+host: api.example.com
+info:
+  contact:
+    email: test@gmail.com
+    name: Tom Jerry
+    url: https://github.com/8thgencore/passfort
+  description: This is a simple RESTful Password Manager Service API written in Go
+    using Gin web framework, PostgreSQL database, and Redis cache.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: PassFort API
+  version: "1.0"
+paths:
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: create a new user account with default role "user"
+      parameters:
+      - description: Register request
+        in: body
+        name: registerRequest
+        required: true
+        schema:
+          $ref: '#/definitions/handler.registerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User created
+          schema:
+            $ref: '#/definitions/handler.userResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Data not found error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "409":
+          description: Data conflict error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: Register a new user
+      tags:
+      - Users
+schemes:
+- http
+- https
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and the access token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

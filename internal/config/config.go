@@ -26,7 +26,8 @@ type (
 
 	// HTTP contains all the environment variables for the http server
 	HTTP struct {
-		Port string `env-required:"true" yaml:"port" env:"HTTP_PORT"`
+		Port           string `env-required:"true" yaml:"port" env:"HTTP_PORT"`
+		AllowedOrigins string `env-required:"true" yaml:"allowed_origins"`
 	}
 
 	// Database contains all the environment variables for the database

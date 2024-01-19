@@ -6,11 +6,31 @@ import (
 	"log/slog"
 	"os"
 
+	_ "github.com/8thgencore/passfort/docs"
 	"github.com/8thgencore/passfort/internal/config"
 	"github.com/8thgencore/passfort/internal/database"
 	"github.com/8thgencore/passfort/pkg/logger/slogpretty"
 )
 
+//	@title						PassFort API
+//	@version					1.0
+//	@description				This is a simple RESTful Password Manager Service API written in Go using Gin web framework, PostgreSQL database, and Redis cache.
+//
+//	@contact.name				Tom Jerry
+//	@contact.url				https://github.com/8thgencore/passfort
+//	@contact.email				test@gmail.com
+//
+//	@license.name				MIT
+//	@license.url				https://opensource.org/licenses/MIT
+//
+//	@host						api.example.com
+//	@BasePath					/v1
+//	@schemes					http https
+//
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
+//	@description				Type "Bearer" followed by a space and the access token.
 func Run(configPath string) {
 	// Load configuration
 	cfg, err := config.NewConfig("./config/config.yaml")
