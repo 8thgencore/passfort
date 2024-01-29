@@ -19,11 +19,12 @@ const (
 
 type (
 	Config struct {
-		Env      Env   `yaml:"env" env-defaul:"local" env-required:"true"` // local, dev or prod
+		Env      Env      `yaml:"env" env-defaul:"local" env-required:"true"` // local, dev or prod
 		App      App      `yaml:"app"`
 		HTTP     HTTP     `yaml:"http"`
 		Database Database `yaml:"database"`
 		Cache    Cache    `yaml:"cache"`
+		Token    Token    `yaml:"token"`
 		Log      Log      `yaml:"log"`
 	}
 
@@ -54,6 +55,12 @@ type (
 	Cache struct {
 		Addr     string `yaml:"address"  env-default:"localhost:6379"`
 		Password string `yaml:"password" env-default:"password"`
+	}
+
+	// Token contains all the environment variables for the token service
+	Token struct {
+		SymmetricKey string `yaml:"symmetric_key"  env-default:"12345678901234567890123456789012"`
+		Duration     string `yaml:"duration"       env-default:"15m"`
 	}
 
 	// Logger settings

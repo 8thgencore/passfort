@@ -22,6 +22,7 @@ func NewRouter(
 	log *slog.Logger,
 	cfg *config.Config,
 	userHander handler.UserHandler,
+	authHandler handler.AuthHandler,
 ) (*Router, error) {
 	// Disable debug mode in production
 	if cfg.Env == config.Prod {
@@ -47,6 +48,7 @@ func NewRouter(
 		user := v1.Group("/users")
 		{
 			user.POST("/", userHander.Register)
+			user.POST("/login", authHandler.Login)
 		}
 	}
 

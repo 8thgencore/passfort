@@ -8,13 +8,13 @@ import (
 
 // UserHandler represents the HTTP handler for user-related requests
 type UserHandler struct {
-	us service.UserService
+	svc service.UserService
 }
 
 // NewUserHandler creates a new UserHandler instance
-func NewUserHandler(us service.UserService) *UserHandler {
+func NewUserHandler(svc service.UserService) *UserHandler {
 	return &UserHandler{
-		us,
+		svc,
 	}
 }
 
@@ -53,7 +53,7 @@ func (uh *UserHandler) Register(ctx *gin.Context) {
 		Password: req.Password,
 	}
 
-	_, err := uh.us.Register(ctx, &user)
+	_, err := uh.svc.Register(ctx, &user)
 	if err != nil {
 		handleError(ctx, err)
 		return
@@ -93,7 +93,7 @@ func (uh *UserHandler) ListUsers(ctx *gin.Context) {
 		return
 	}
 
-	users, err := uh.us.ListUsers(ctx, req.Skip, req.Limit)
+	users, err := uh.svc.ListUsers(ctx, req.Skip, req.Limit)
 	if err != nil {
 		handleError(ctx, err)
 		return
@@ -136,7 +136,7 @@ func (uh *UserHandler) GetUser(ctx *gin.Context) {
 		return
 	}
 
-	user, err := uh.us.GetUser(ctx, req.ID)
+	user, err := uh.svc.GetUser(ctx, req.ID)
 	if err != nil {
 		handleError(ctx, err)
 		return
@@ -194,7 +194,7 @@ func (uh *UserHandler) UpdateUser(ctx *gin.Context) {
 		Role:     req.Role,
 	}
 
-	_, err = uh.us.UpdateUser(ctx, &user)
+	_, err = uh.svc.UpdateUser(ctx, &user)
 	if err != nil {
 		handleError(ctx, err)
 		return
@@ -233,7 +233,7 @@ func (uh *UserHandler) DeleteUser(ctx *gin.Context) {
 		return
 	}
 
-	err := uh.us.DeleteUser(ctx, req.ID)
+	err := uh.svc.DeleteUser(ctx, req.ID)
 	if err != nil {
 		handleError(ctx, err)
 		return

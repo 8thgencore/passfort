@@ -21,6 +21,10 @@ cache:
   address: "localhost:6379"
   password: "password"
 
+token:
+  symmetric_key: "12345678901234567890123456789012"
+  duration: "15m"
+
 log:
   slog:
     add_source: true

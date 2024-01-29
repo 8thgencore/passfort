@@ -13,7 +13,7 @@ import (
 )
 
 /**
- * UserRepository implements port.UserRepository interface
+ * UserRepository implements postgres.UserRepository interface
  * and provides an access to the postgres database
  */
 type UserRepository struct {
@@ -29,6 +29,8 @@ func NewUserRepository(db *database.DB) *UserRepository {
 
 // CreateUser creates a new user in the database
 func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
+	var userDao dao.UserDAO
+
 	query := r.db.QueryBuilder.Insert("users").
 		Columns("name", "email", "password").
 		Values(user.Name, user.Email, user.Password).
@@ -39,7 +41,6 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) (*do
 		return nil, err
 	}
 
-	var userDao dao.UserDAO
 	err = r.db.QueryRow(ctx, sql, args...).Scan(
 		&userDao.ID,
 		&userDao.Name,
@@ -50,6 +51,9 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) (*do
 		&userDao.UpdatedAt,
 	)
 	if err != nil {
+		if errCode := r.db.ErrorCode(err); errCode == "23505" {
+			return nil, domain.ErrConflictingData
+		}
 		return nil, err
 	}
 
@@ -58,7 +62,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) (*do
 
 // GetUserByID gets a user by ID from the database
 func (r *UserRepository) GetUserByID(ctx context.Context, id uint64) (*domain.User, error) {
-	var userDao *dao.UserDAO
+	var userDao dao.UserDAO
 
 	query := r.db.QueryBuilder.Select("*").
 		From("users").
@@ -86,12 +90,12 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id uint64) (*domain.Us
 		return nil, err
 	}
 
-	return converter.ToUser(userDao), nil
+	return converter.ToUser(&userDao), nil
 }
 
 // GetUserByEmailAndPassword gets a user by email from the database
 func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*domain.User, error) {
-	var userDao *dao.UserDAO
+	var userDao dao.UserDAO
 
 	query := r.db.QueryBuilder.Select("*").
 		From("users").
@@ -116,12 +120,12 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*dom
 		return nil, err
 	}
 
-	return converter.ToUser(userDao), nil
+	return converter.ToUser(&userDao), nil
 }
 
 // ListUsers lists all users from the database
 func (r *UserRepository) ListUsers(ctx context.Context, skip, limit uint64) ([]domain.User, error) {
-	var userDao *dao.UserDAO
+	var userDao dao.UserDAO
 	var users []domain.User
 
 	query := r.db.QueryBuilder.Select("*").
@@ -156,7 +160,7 @@ func (r *UserRepository) ListUsers(ctx context.Context, skip, limit uint64) ([]d
 		}
 
 		// Convert the UserDAO to a domain.User
-		user := converter.ToUser(userDao)
+		user := converter.ToUser(&userDao)
 
 		// Append the converted user to the list
 		users = append(users, *user)
@@ -167,7 +171,7 @@ func (r *UserRepository) ListUsers(ctx context.Context, skip, limit uint64) ([]d
 
 // UpdateUser updates a user by ID in the database
 func (r *UserRepository) UpdateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
-	var userDao *dao.UserDAO
+	var userDao dao.UserDAO
 
 	name := nullString(user.Name)
 	email := nullString(user.Email)
@@ -198,10 +202,13 @@ func (r *UserRepository) UpdateUser(ctx context.Context, user *domain.User) (*do
 		&userDao.UpdatedAt,
 	)
 	if err != nil {
+		if errCode := r.db.ErrorCode(err); errCode == "23505" {
+			return nil, domain.ErrConflictingData
+		}
 		return nil, err
 	}
 
-	return converter.ToUser(userDao), nil
+	return converter.ToUser(&userDao), nil
 }
 
 // DeleteUser deletes a user by ID from the database

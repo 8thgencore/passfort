@@ -4,61 +4,41 @@ import (
 	"context"
 
 	"github.com/8thgencore/passfort/internal/domain"
-	"github.com/8thgencore/passfort/internal/service/adapters/cache"
-	"github.com/8thgencore/passfort/internal/service/adapters/storage"
 	"github.com/8thgencore/passfort/pkg/util"
 )
-
-/**
- * UserService implements port.UserService interface
- * and provides an access to the user repository
- * and cache service
- */
-type UserService struct {
-	storage storage.UserRepository
-	cache   cache.CacheRepository
-}
-
-// NewUserService creates a new user service instance
-func NewUserService(storage storage.UserRepository, cache cache.CacheRepository) *UserService {
-	return &UserService{
-		storage,
-		cache,
-	}
-}
 
 // Register creates a new user
 func (us *UserService) Register(ctx context.Context, user *domain.User) (*domain.User, error) {
 	hashedPassword, err := util.HashPassword(user.Password)
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrInternal
 	}
 
 	user.Password = hashedPassword
 
-	_, err = us.storage.CreateUser(ctx, user)
+	user, err = us.storage.CreateUser(ctx, user)
 	if err != nil {
-		if domain.IsUniqueConstraintViolationError(err) {
-			return nil, domain.ErrConflictingData
+		if err == domain.ErrConflictingData {
+			return nil, err
 		}
 
-		return nil, err
+		return nil, domain.ErrInternal
 	}
 
 	cacheKey := util.GenerateCacheKey("user", user.ID)
 	userSerialized, err := util.Serialize(user)
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrInternal
 	}
 
 	err = us.cache.Set(ctx, cacheKey, userSerialized, 0)
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrInternal
 	}
 
 	err = us.cache.DeleteByPrefix(ctx, "users:*")
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrInternal
 	}
 
 	return user, nil
@@ -73,7 +53,7 @@ func (us *UserService) GetUser(ctx context.Context, id uint64) (*domain.User, er
 	if err == nil {
 		err := util.Deserialize(cachedUser, &user)
 		if err != nil {
-			return nil, err
+			return nil, domain.ErrInternal
 		}
 
 		return user, nil
@@ -81,17 +61,20 @@ func (us *UserService) GetUser(ctx context.Context, id uint64) (*domain.User, er
 
 	user, err = us.storage.GetUserByID(ctx, id)
 	if err != nil {
-		return nil, err
+		if err == domain.ErrDataNotFound {
+			return nil, err
+		}
+		return nil, domain.ErrInternal
 	}
 
 	userSerialized, err := util.Serialize(user)
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrInternal
 	}
 
 	err = us.cache.Set(ctx, cacheKey, userSerialized, 0)
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrInternal
 	}
 
 	return user, nil
@@ -108,7 +91,7 @@ func (us *UserService) ListUsers(ctx context.Context, skip, limit uint64) ([]dom
 	if err == nil {
 		err := util.Deserialize(cachedUsers, &users)
 		if err != nil {
-			return nil, err
+			return nil, domain.ErrInternal
 		}
 
 		return users, nil
@@ -116,17 +99,17 @@ func (us *UserService) ListUsers(ctx context.Context, skip, limit uint64) ([]dom
 
 	users, err = us.storage.ListUsers(ctx, skip, limit)
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrInternal
 	}
 
 	usersSerialized, err := util.Serialize(users)
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrInternal
 	}
 
 	err = us.cache.Set(ctx, cacheKey, usersSerialized, 0)
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrInternal
 	}
 
 	return users, nil
@@ -136,7 +119,10 @@ func (us *UserService) ListUsers(ctx context.Context, skip, limit uint64) ([]dom
 func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
 	existingUser, err := us.storage.GetUserByID(ctx, user.ID)
 	if err != nil {
-		return nil, err
+		if err == domain.ErrDataNotFound {
+			return nil, err
+		}
+		return nil, domain.ErrInternal
 	}
 
 	emptyData := user.Name == "" &&
@@ -155,7 +141,7 @@ func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 	if user.Password != "" {
 		hashedPassword, err = util.HashPassword(user.Password)
 		if err != nil {
-			return nil, err
+			return nil, domain.ErrInternal
 		}
 	}
 
@@ -163,29 +149,31 @@ func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 
 	_, err = us.storage.UpdateUser(ctx, user)
 	if err != nil {
-		if domain.IsUniqueConstraintViolationError(err) {
-			return nil, domain.ErrConflictingData
+		if err == domain.ErrConflictingData {
+			return nil, err
 		}
-
-		return nil, err
+		return nil, domain.ErrInternal
 	}
 
 	cacheKey := util.GenerateCacheKey("user", user.ID)
-	_ = us.cache.Delete(ctx, cacheKey)
+	err = us.cache.Delete(ctx, cacheKey)
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
 
 	userSerialized, err := util.Serialize(user)
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrInternal
 	}
 
 	err = us.cache.Set(ctx, cacheKey, userSerialized, 0)
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrInternal
 	}
 
 	err = us.cache.DeleteByPrefix(ctx, "users:*")
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrInternal
 	}
 
 	return user, nil
@@ -195,15 +183,22 @@ func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 func (us *UserService) DeleteUser(ctx context.Context, id uint64) error {
 	_, err := us.storage.GetUserByID(ctx, id)
 	if err != nil {
-		return err
+		if err == domain.ErrDataNotFound {
+			return err
+		}
+		return domain.ErrInternal
 	}
 
 	cacheKey := util.GenerateCacheKey("user", id)
-	_ = us.cache.Delete(ctx, cacheKey)
+
+	err = us.cache.Delete(ctx, cacheKey)
+	if err != nil {
+		return domain.ErrInternal
+	}
 
 	err = us.cache.DeleteByPrefix(ctx, "users:*")
 	if err != nil {
-		return err
+		return domain.ErrInternal
 	}
 
 	return us.storage.DeleteUser(ctx, id)
