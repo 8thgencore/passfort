@@ -19,17 +19,23 @@ type Router struct {
 }
 
 func NewRouter(
-	config *config.HTTP,
+	log *slog.Logger,
+	cfg *config.Config,
 	userHander handler.UserHandler,
 ) (*Router, error) {
+	// Disable debug mode in production
+	if cfg.Env == config.Prod {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	// CORS
 	ginConfig := cors.DefaultConfig()
-	allowedOrigins := config.AllowedOrigins
-	originsList := strings.Split(allowedOrigins, ",")
+	allowOrigins := cfg.HTTP.AllowOrigins
+	originsList := strings.Split(allowOrigins, ",")
 	ginConfig.AllowOrigins = originsList
 
 	router := gin.New()
-	router.Use(sloggin.New(slog.Default()), gin.Recovery(), cors.New(ginConfig))
+	router.Use(sloggin.New(log), gin.Recovery(), cors.New(ginConfig))
 
 	// Custom validator
 

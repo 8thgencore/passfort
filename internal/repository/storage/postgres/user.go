@@ -39,7 +39,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) (*do
 		return nil, err
 	}
 
-	var userDao *dao.UserDAO
+	var userDao dao.UserDAO
 	err = r.db.QueryRow(ctx, sql, args...).Scan(
 		&userDao.ID,
 		&userDao.Name,
@@ -53,7 +53,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) (*do
 		return nil, err
 	}
 
-	return converter.ToUser(userDao), nil
+	return converter.ToUser(&userDao), nil
 }
 
 // GetUserByID gets a user by ID from the database

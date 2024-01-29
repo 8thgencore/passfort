@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"log/slog"
 	"os"
@@ -9,6 +10,7 @@ import (
 	_ "github.com/8thgencore/passfort/docs"
 	"github.com/8thgencore/passfort/internal/config"
 	"github.com/8thgencore/passfort/internal/database"
+	"github.com/8thgencore/passfort/internal/delivery/http"
 	"github.com/8thgencore/passfort/internal/delivery/http/handler"
 	"github.com/8thgencore/passfort/internal/repository/cache/redis"
 	"github.com/8thgencore/passfort/internal/repository/storage/postgres"
@@ -46,7 +48,7 @@ func Run(configPath string) {
 	log := newSlogLogger(cfg.Log.Slog)
 
 	// Log information about the start of the application
-	log.Info("starting url-shortener", slog.String("env", cfg.Env))
+	log.Info("starting url-shortener", slog.String("env", string(cfg.Env)))
 	log.Debug("debug messages are enabled")
 
 	// Init database
@@ -85,7 +87,23 @@ func Run(configPath string) {
 	userService := userService.NewUserService(userRepo, cache)
 	userHandler := handler.NewUserHandler(userService)
 
-	_ = userHandler
+	// Init router
+	router, err := http.NewRouter(log, cfg, *userHandler)
+	if err != nil {
+		log.Error("Error initializing router", "error", err.Error())
+		os.Exit(1)
+	}
+
+	// Start server
+	listenAddr := fmt.Sprintf("%s:%s", cfg.HTTP.Host, cfg.HTTP.Port)
+
+	log.Info("Starting the HTTP server", "listen_address", listenAddr)
+
+	err = router.Serve(listenAddr)
+	if err != nil {
+		log.Error("Error starting the HTTP server", "error", err.Error())
+		os.Exit(1)
+	}
 }
 
 func newSlogLogger(c config.Slog) *slog.Logger {

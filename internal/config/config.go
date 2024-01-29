@@ -9,9 +9,17 @@ import (
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
+type Env string
+
+const (
+	Local Env = "local"
+	Dev   Env = "dev"
+	Prod  Env = "prod"
+)
+
 type (
 	Config struct {
-		Env      string   `yaml:"env" env-defaul:"local" env-required:"true"` // local, dev or prod
+		Env      Env   `yaml:"env" env-defaul:"local" env-required:"true"` // local, dev or prod
 		App      App      `yaml:"app"`
 		HTTP     HTTP     `yaml:"http"`
 		Database Database `yaml:"database"`
@@ -27,18 +35,19 @@ type (
 
 	// HTTP contains all the environment variables for the http server
 	HTTP struct {
-		Port           string `env-required:"true" yaml:"port" env:"HTTP_PORT"`
-		AllowedOrigins string `env-required:"true" yaml:"allowed_origins"`
+		Host         string `env-required:"true" yaml:"host" env:"HTTP_HOST"`
+		Port         string `env-required:"true" yaml:"port" env:"HTTP_PORT"`
+		AllowOrigins string `env-required:"true" yaml:"allow_origins"`
 	}
 
 	// Database contains all the environment variables for the database
 	Database struct {
-		Connection string
-		Host       string `yaml:"host"     env:"DB_HOST" env-default:"localhost"`
-		Port       string `yaml:"port"     env:"DB_PORT" env-default:"5432"`
-		User       string `yaml:"user"     env:"DB_USER" env-default:"user"`
-		Password   string `yaml:"password" env:"DB_PASSWORD"`
-		Name       string `yaml:"name"     env:"DB_NAME" env-default:"postgres"`
+		Connection string `yaml:"connection"  env:"DB_CONNECTION" env-default:"postgres"`
+		Host       string `yaml:"host"        env:"DB_HOST"       env-default:"localhost"`
+		Port       string `yaml:"port"        env:"DB_PORT"       env-default:"5432"`
+		User       string `yaml:"user"        env:"DB_USER"       env-default:"user"`
+		Password   string `yaml:"password"    env:"DB_PASSWORD"`
+		Name       string `yaml:"name"        env:"DB_NAME"       env-default:"postgres"`
 	}
 
 	// Cache contains all the environment variables for the cache service

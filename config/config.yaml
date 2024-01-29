@@ -5,8 +5,9 @@ app:
   version: "1.0.0"
 
 http:
+  host: "0.0.0.0"
   port: 8080
-  allowed_origins: "*" # Example: 127.0.0.1, example.com
+  allow_origins: "*" # Example: 127.0.0.1, example.com
 
 database:
   connection: "postgres"
