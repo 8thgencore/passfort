@@ -6,8 +6,13 @@ import (
 
 	"github.com/8thgencore/passfort/internal/config"
 	"github.com/8thgencore/passfort/internal/delivery/http/handler"
+	"github.com/8thgencore/passfort/internal/delivery/http/helper"
+	"github.com/8thgencore/passfort/internal/delivery/http/middleware"
+	"github.com/8thgencore/passfort/internal/service"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	sloggin "github.com/samber/slog-gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -21,6 +26,7 @@ type Router struct {
 func NewRouter(
 	log *slog.Logger,
 	cfg *config.Config,
+	token service.TokenService,
 	userHander handler.UserHandler,
 	authHandler handler.AuthHandler,
 ) (*Router, error) {
@@ -39,6 +45,12 @@ func NewRouter(
 	router.Use(sloggin.New(log), gin.Recovery(), cors.New(ginConfig))
 
 	// Custom validator
+	v, ok := binding.Validator.Engine().(*validator.Validate)
+	if ok {
+		if err := v.RegisterValidation("user_role", helper.UserRoleValidator); err != nil {
+			return nil, err
+		}
+	}
 
 	// Swagger
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -49,6 +61,18 @@ func NewRouter(
 		{
 			user.POST("/", userHander.Register)
 			user.POST("/login", authHandler.Login)
+
+			authUser := user.Group("/").Use(middleware.AuthMiddleware(token))
+			{
+				authUser.GET("/", userHander.ListUsers)
+				authUser.GET("/:id", userHander.GetUser)
+
+				admin := authUser.Use(middleware.AdminMiddleware())
+				{
+					admin.PUT("/:id", userHander.UpdateUser)
+					admin.DELETE("/:id", userHander.DeleteUser)
+				}
+			}
 		}
 	}
 

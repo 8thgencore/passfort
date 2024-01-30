@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/8thgencore/passfort/internal/delivery/http/response"
 	"github.com/8thgencore/passfort/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -39,17 +40,17 @@ type loginRequest struct {
 func (ah *AuthHandler) Login(ctx *gin.Context) {
 	var req loginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		validationError(ctx, err)
+		response.ValidationError(ctx, err)
 		return
 	}
 
 	token, err := ah.svc.Login(ctx, req.Email, req.Password)
 	if err != nil {
-		handleError(ctx, err)
+		response.HandleError(ctx, err)
 		return
 	}
 
-	rsp := newAuthResponse(token)
+	rsp := response.NewAuthResponse(token)
 
-	handleSuccess(ctx, rsp)
+	response.HandleSuccess(ctx, rsp)
 }

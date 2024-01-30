@@ -101,7 +101,7 @@ func Run(configPath string) {
 	authHandler := handler.NewAuthHandler(authService)
 
 	// Init router
-	router, err := http.NewRouter(log, cfg, *userHandler, *authHandler)
+	router, err := http.NewRouter(log, cfg, token, *userHandler, *authHandler)
 	if err != nil {
 		log.Error("Error initializing router", "error", err.Error())
 		os.Exit(1)

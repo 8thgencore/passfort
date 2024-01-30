@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"github.com/8thgencore/passfort/internal/delivery/http/helper"
+	"github.com/8thgencore/passfort/internal/delivery/http/response"
 	"github.com/8thgencore/passfort/internal/domain"
 	"github.com/8thgencore/passfort/internal/service"
 	"github.com/gin-gonic/gin"
@@ -43,7 +45,7 @@ type registerRequest struct {
 func (uh *UserHandler) Register(ctx *gin.Context) {
 	var req registerRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		validationError(ctx, err)
+		response.ValidationError(ctx, err)
 		return
 	}
 
@@ -55,13 +57,13 @@ func (uh *UserHandler) Register(ctx *gin.Context) {
 
 	_, err := uh.svc.Register(ctx, &user)
 	if err != nil {
-		handleError(ctx, err)
+		response.HandleError(ctx, err)
 		return
 	}
 
-	resp := newUserResponse(&user)
+	resp := response.NewUserResponse(&user)
 
-	handleSuccess(ctx, resp)
+	response.HandleSuccess(ctx, resp)
 }
 
 // listUsersRequest represents the request body for listing users
@@ -86,28 +88,28 @@ type listUsersRequest struct {
 //	@Security		BearerAuth
 func (uh *UserHandler) ListUsers(ctx *gin.Context) {
 	var req listUsersRequest
-	var usersList []userResponse
+	var usersList []response.UserResponse
 
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		validationError(ctx, err)
+		response.ValidationError(ctx, err)
 		return
 	}
 
 	users, err := uh.svc.ListUsers(ctx, req.Skip, req.Limit)
 	if err != nil {
-		handleError(ctx, err)
+		response.HandleError(ctx, err)
 		return
 	}
 
 	for _, user := range users {
-		usersList = append(usersList, newUserResponse(&user))
+		usersList = append(usersList, response.NewUserResponse(&user))
 	}
 
 	total := uint64(len(usersList))
-	meta := newMeta(total, req.Limit, req.Skip)
-	rsp := toMap(meta, usersList, "users")
+	meta := response.NewMeta(total, req.Limit, req.Skip)
+	rsp := helper.ToMap(meta, usersList, "users")
 
-	handleSuccess(ctx, rsp)
+	response.HandleSuccess(ctx, rsp)
 }
 
 // getUserRequest represents the request body for getting a user
@@ -132,19 +134,19 @@ type getUserRequest struct {
 func (uh *UserHandler) GetUser(ctx *gin.Context) {
 	var req getUserRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
-		validationError(ctx, err)
+		response.ValidationError(ctx, err)
 		return
 	}
 
 	user, err := uh.svc.GetUser(ctx, req.ID)
 	if err != nil {
-		handleError(ctx, err)
+		response.HandleError(ctx, err)
 		return
 	}
 
-	rsp := newUserResponse(user)
+	rsp := response.NewUserResponse(user)
 
-	handleSuccess(ctx, rsp)
+	response.HandleSuccess(ctx, rsp)
 }
 
 // updateUserRequest represents the request body for updating a user
@@ -175,14 +177,14 @@ type updateUserRequest struct {
 func (uh *UserHandler) UpdateUser(ctx *gin.Context) {
 	var req updateUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		validationError(ctx, err)
+		response.ValidationError(ctx, err)
 		return
 	}
 
 	idStr := ctx.Param("id")
-	id, err := stringToUint64(idStr)
+	id, err := helper.StringToUint64(idStr)
 	if err != nil {
-		validationError(ctx, err)
+		response.ValidationError(ctx, err)
 		return
 	}
 
@@ -196,13 +198,13 @@ func (uh *UserHandler) UpdateUser(ctx *gin.Context) {
 
 	_, err = uh.svc.UpdateUser(ctx, &user)
 	if err != nil {
-		handleError(ctx, err)
+		response.HandleError(ctx, err)
 		return
 	}
 
-	rsp := newUserResponse(&user)
+	rsp := response.NewUserResponse(&user)
 
-	handleSuccess(ctx, rsp)
+	response.HandleSuccess(ctx, rsp)
 }
 
 // deleteUserRequest represents the request body for deleting a user
@@ -229,15 +231,15 @@ type deleteUserRequest struct {
 func (uh *UserHandler) DeleteUser(ctx *gin.Context) {
 	var req deleteUserRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
-		validationError(ctx, err)
+		response.ValidationError(ctx, err)
 		return
 	}
 
 	err := uh.svc.DeleteUser(ctx, req.ID)
 	if err != nil {
-		handleError(ctx, err)
+		response.HandleError(ctx, err)
 		return
 	}
 
-	handleSuccess(ctx, nil)
+	response.HandleSuccess(ctx, nil)
 }
