@@ -33,4 +33,4 @@ log:
     pretty:
       fields_format: "json"
       emoji: true
-      time_layout: "15:04:05"
+      time_layout: "15:04:05.000000"

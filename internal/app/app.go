@@ -130,6 +130,7 @@ func newSlogLogger(c config.Slog) *slog.Logger {
 			WithAddSource(c.AddSource).
 			WithLevel(c.Level).
 			WithLevelEmoji(c.Pretty.Emoji).
+			WithTimeLayout(c.Pretty.TimeLayout).
 			WithFieldsFormat(c.Pretty.FieldsFormat)
 	case "json":
 		h = slog.NewJSONHandler(w, o)
