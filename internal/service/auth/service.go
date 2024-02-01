@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"log/slog"
+
 	"github.com/8thgencore/passfort/internal/service"
 	"github.com/8thgencore/passfort/internal/service/adapters/storage"
 )
@@ -11,13 +13,15 @@ import (
  * and token service
  */
 type AuthService struct {
+	log  *slog.Logger
 	repo storage.UserRepository
 	ts   service.TokenService
 }
 
 // NewAuthService creates a new auth service instance
-func NewAuthService(repo storage.UserRepository, ts service.TokenService) *AuthService {
+func NewAuthService(log *slog.Logger, repo storage.UserRepository, ts service.TokenService) *AuthService {
 	return &AuthService{
+		log,
 		repo,
 		ts,
 	}

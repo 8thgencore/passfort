@@ -3,6 +3,7 @@ package user
 import (
 	"github.com/8thgencore/passfort/internal/service/adapters/cache"
 	"github.com/8thgencore/passfort/internal/service/adapters/storage"
+	"log/slog"
 )
 
 /**
@@ -11,13 +12,15 @@ import (
  * and cache service
  */
 type UserService struct {
+	log     *slog.Logger
 	storage storage.UserRepository
 	cache   cache.CacheRepository
 }
 
 // NewUserService creates a new user service instance
-func NewUserService(storage storage.UserRepository, cache cache.CacheRepository) *UserService {
+func NewUserService(log *slog.Logger, storage storage.UserRepository, cache cache.CacheRepository) *UserService {
 	return &UserService{
+		log,
 		storage,
 		cache,
 	}

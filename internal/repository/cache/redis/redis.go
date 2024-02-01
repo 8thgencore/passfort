@@ -10,7 +10,7 @@ import (
 )
 
 /**
- * Redis implements port.CacheRepository interface
+ * Redis implements cache.CacheRepository interface
  * and provides an access to the redis library
  */
 type Redis struct {

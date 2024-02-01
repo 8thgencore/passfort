@@ -34,7 +34,8 @@ services:
     expose:
       - 6379
     environment:
-      - ALLOW_EMPTY_PASSWORD=no
+      ALLOW_EMPTY_PASSWORD: no
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
     volumes:
       - redis:/data
     healthcheck:

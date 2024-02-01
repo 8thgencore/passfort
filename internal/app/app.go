@@ -93,11 +93,11 @@ func Run(configPath string) {
 	// Dependency injection
 	// User
 	userRepo := postgres.NewUserRepository(db)
-	userService := userService.NewUserService(userRepo, cache)
+	userService := userService.NewUserService(log, userRepo, cache)
 	userHandler := handler.NewUserHandler(userService)
 
 	// Auth
-	authService := authService.NewAuthService(userRepo, token)
+	authService := authService.NewAuthService(log, userRepo, token)
 	authHandler := handler.NewAuthHandler(authService)
 
 	// Init router

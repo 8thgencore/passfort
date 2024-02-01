@@ -25,11 +25,11 @@ tasks:
 
   service:up:
     desc: "Start services"
-    cmd: docker-compose up -d
+    cmd: docker compose up -d
 
   service:down:
     desc: "Stop services"
-    cmd: docker-compose down
+    cmd: docker compose down
 
   db:docs:
     desc: "Generate database documentation from DBML file"
