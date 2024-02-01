@@ -1,40 +1,41 @@
-package token
+package paseto
 
 import (
 	"time"
 
+	"aidanwoods.dev/go-paseto"
 	"github.com/8thgencore/passfort/internal/config"
 	"github.com/8thgencore/passfort/internal/domain"
 	"github.com/8thgencore/passfort/internal/service"
-	"golang.org/x/crypto/chacha20poly1305"
 )
 
 /**
- * TokenService implements service.TokenService interface
+ * PasetoToken implements port.TokenService interface
  * and provides an access to the paseto library
  */
-type TokenService struct {
-	symmetricKey []byte
-	duration     time.Duration
+type PasetoToken struct {
+	token    *paseto.Token
+	key      *paseto.V4SymmetricKey
+	parser   *paseto.Parser
+	duration time.Duration
 }
 
 // New creates a new paseto instance
 func New(config *config.Token) (service.TokenService, error) {
-	symmetricKey := config.SymmetricKey
 	durationStr := config.Duration
-
-	validSymmetricKey := len(symmetricKey) == chacha20poly1305.KeySize
-	if !validSymmetricKey {
-		return nil, domain.ErrInvalidTokenSymmetricKey
-	}
-
 	duration, err := time.ParseDuration(durationStr)
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrTokenDuration
 	}
 
-	return &TokenService{
-		[]byte(symmetricKey),
+	token := paseto.NewToken()
+	key := paseto.NewV4SymmetricKey()
+	parser := paseto.NewParser()
+
+	return &PasetoToken{
+		&token,
+		&key,
+		&parser,
 		duration,
 	}, nil
 }

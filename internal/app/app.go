@@ -15,7 +15,7 @@ import (
 	"github.com/8thgencore/passfort/internal/repository/cache/redis"
 	"github.com/8thgencore/passfort/internal/repository/storage/postgres"
 	authService "github.com/8thgencore/passfort/internal/service/auth"
-	tokenService "github.com/8thgencore/passfort/internal/service/token"
+	"github.com/8thgencore/passfort/internal/service/token/paseto"
 	userService "github.com/8thgencore/passfort/internal/service/user"
 	"github.com/8thgencore/passfort/pkg/logger/slogpretty"
 )
@@ -84,7 +84,7 @@ func Run(configPath string) {
 	log.Info("Successfully connected to the cache server")
 
 	// Init token service
-	token, _ := tokenService.New(&cfg.Token)
+	token, _ := paseto.New(&cfg.Token)
 	if err != nil {
 		slog.Error("Error initializing token service", "error", err)
 		os.Exit(1)
