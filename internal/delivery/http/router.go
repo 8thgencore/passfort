@@ -57,11 +57,18 @@ func NewRouter(
 
 	v1 := router.Group("/v1")
 	{
+		auth := v1.Group("/auth")
+		{
+			auth.POST("/register", authHandler.Register)
+			auth.POST("/login", authHandler.Login)
+
+			authUser := auth.Group("/").Use(middleware.AuthMiddleware(token))
+			{
+				authUser.PUT("/change-password", authHandler.ChangePassword)
+			}
+		}
 		user := v1.Group("/users")
 		{
-			user.POST("/", userHander.Register)
-			user.POST("/login", authHandler.Login)
-
 			authUser := user.Group("/").Use(middleware.AuthMiddleware(token))
 			{
 				authUser.GET("/", userHander.ListUsers)

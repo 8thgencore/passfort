@@ -20,52 +20,6 @@ func NewUserHandler(svc service.UserService) *UserHandler {
 	}
 }
 
-// registerRequet represents the request body for creating a user
-type registerRequest struct {
-	Name     string `json:"name" binding:"required" example:"John Doe"`
-	Email    string `json:"email" binding:"required,email" example:"test@example.com"`
-	Password string `json:"password" binding:"required,min=8" example:"12345678"`
-}
-
-// Register godoc
-//
-//	@Summary		Register a new user
-//	@Description	create a new user account with default role "user"
-//	@Tags			Users
-//	@Accept			json
-//	@Produce		json
-//	@Param			registerRequest	body		registerRequest	true	"Register request"
-//	@Success		200				{object}	userResponse	"User created"
-//	@Failure		400				{object}	errorResponse	"Validation error"
-//	@Failure		401				{object}	errorResponse	"Unauthorized error"
-//	@Failure		404				{object}	errorResponse	"Data not found error"
-//	@Failure		409				{object}	errorResponse	"Data conflict error"
-//	@Failure		500				{object}	errorResponse	"Internal server error"
-//	@Router			/users [post]
-func (uh *UserHandler) Register(ctx *gin.Context) {
-	var req registerRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.ValidationError(ctx, err)
-		return
-	}
-
-	user := domain.User{
-		Name:     req.Name,
-		Email:    req.Email,
-		Password: req.Password,
-	}
-
-	_, err := uh.svc.Register(ctx, &user)
-	if err != nil {
-		response.HandleError(ctx, err)
-		return
-	}
-
-	resp := response.NewUserResponse(&user)
-
-	response.HandleSuccess(ctx, resp)
-}
-
 // listUsersRequest represents the request body for listing users
 type listUsersRequest struct {
 	Skip  uint64 `form:"skip" binding:"required,min=0" example:"0"`
@@ -79,11 +33,11 @@ type listUsersRequest struct {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Param			skip	query		uint64			true	"Skip"
-//	@Param			limit	query		uint64			true	"Limit"
-//	@Success		200		{object}	meta			"Users displayed"
-//	@Failure		400		{object}	errorResponse	"Validation error"
-//	@Failure		500		{object}	errorResponse	"Internal server error"
+//	@Param			skip	query		uint64					true	"Skip"
+//	@Param			limit	query		uint64					true	"Limit"
+//	@Success		200		{object}	response.Meta			"Users displayed"
+//	@Failure		400		{object}	response.ErrorResponse	"Validation error"
+//	@Failure		500		{object}	response.ErrorResponse	"Internal server error"
 //	@Router			/users [get]
 //	@Security		BearerAuth
 func (uh *UserHandler) ListUsers(ctx *gin.Context) {
@@ -124,11 +78,11 @@ type getUserRequest struct {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		uint64			true	"User ID"
-//	@Success		200	{object}	userResponse	"User displayed"
-//	@Failure		400	{object}	errorResponse	"Validation error"
-//	@Failure		404	{object}	errorResponse	"Data not found error"
-//	@Failure		500	{object}	errorResponse	"Internal server error"
+//	@Param			id	path		uint64					true	"User ID"
+//	@Success		200	{object}	response.UserResponse	"User displayed"
+//	@Failure		400	{object}	response.ErrorResponse	"Validation error"
+//	@Failure		404	{object}	response.ErrorResponse	"Data not found error"
+//	@Failure		500	{object}	response.ErrorResponse	"Internal server error"
 //	@Router			/users/{id} [get]
 //	@Security		BearerAuth
 func (uh *UserHandler) GetUser(ctx *gin.Context) {
@@ -151,10 +105,9 @@ func (uh *UserHandler) GetUser(ctx *gin.Context) {
 
 // updateUserRequest represents the request body for updating a user
 type updateUserRequest struct {
-	Name     string              `json:"name" binding:"omitempty,required" example:"John Doe"`
-	Email    string              `json:"email" binding:"omitempty,required,email" example:"test@example.com"`
-	Password string              `json:"password" binding:"omitempty,required,min=8" example:"12345678"`
-	Role     domain.UserRoleEnum `json:"role" binding:"omitempty,required,user_role" example:"admin"`
+	Name  string              `json:"name" binding:"omitempty,required" example:"John Doe"`
+	Email string              `json:"email" binding:"omitempty,required,email" example:"test@example.com"`
+	Role  domain.UserRoleEnum `json:"role" binding:"omitempty,required,user_role" example:"admin"`
 }
 
 // UpdateUser godoc
@@ -164,14 +117,14 @@ type updateUserRequest struct {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Param			id					path		uint64				true	"User ID"
-//	@Param			updateUserRequest	body		updateUserRequest	true	"Update user request"
-//	@Success		200					{object}	userResponse		"User updated"
-//	@Failure		400					{object}	errorResponse		"Validation error"
-//	@Failure		401					{object}	errorResponse		"Unauthorized error"
-//	@Failure		403					{object}	errorResponse		"Forbidden error"
-//	@Failure		404					{object}	errorResponse		"Data not found error"
-//	@Failure		500					{object}	errorResponse		"Internal server error"
+//	@Param			id					path		uint64					true	"User ID"
+//	@Param			updateUserRequest	body		updateUserRequest		true	"Update user request"
+//	@Success		200					{object}	response.UserResponse	"User updated"
+//	@Failure		400					{object}	response.ErrorResponse	"Validation error"
+//	@Failure		401					{object}	response.ErrorResponse	"Unauthorized error"
+//	@Failure		403					{object}	response.ErrorResponse	"Forbidden error"
+//	@Failure		404					{object}	response.ErrorResponse	"Data not found error"
+//	@Failure		500					{object}	response.ErrorResponse	"Internal server error"
 //	@Router			/users/{id} [put]
 //	@Security		BearerAuth
 func (uh *UserHandler) UpdateUser(ctx *gin.Context) {
@@ -189,20 +142,19 @@ func (uh *UserHandler) UpdateUser(ctx *gin.Context) {
 	}
 
 	user := domain.User{
-		ID:       id,
-		Name:     req.Name,
-		Email:    req.Email,
-		Password: req.Password,
-		Role:     req.Role,
+		ID:    id,
+		Name:  req.Name,
+		Email: req.Email,
+		Role:  req.Role,
 	}
 
-	_, err = uh.svc.UpdateUser(ctx, &user)
+	updatedUser, err := uh.svc.UpdateUser(ctx, &user)
 	if err != nil {
 		response.HandleError(ctx, err)
 		return
 	}
 
-	rsp := response.NewUserResponse(&user)
+	rsp := response.NewUserResponse(updatedUser)
 
 	response.HandleSuccess(ctx, rsp)
 }
@@ -219,13 +171,13 @@ type deleteUserRequest struct {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		uint64			true	"User ID"
-//	@Success		200	{object}	response		"User deleted"
-//	@Failure		400	{object}	errorResponse	"Validation error"
-//	@Failure		401	{object}	errorResponse	"Unauthorized error"
-//	@Failure		403	{object}	errorResponse	"Forbidden error"
-//	@Failure		404	{object}	errorResponse	"Data not found error"
-//	@Failure		500	{object}	errorResponse	"Internal server error"
+//	@Param			id	path		uint64					true	"User ID"
+//	@Success		200	{object}	response.Response		"User deleted"
+//	@Failure		400	{object}	response.ErrorResponse	"Validation error"
+//	@Failure		401	{object}	response.ErrorResponse	"Unauthorized error"
+//	@Failure		403	{object}	response.ErrorResponse	"Forbidden error"
+//	@Failure		404	{object}	response.ErrorResponse	"Data not found error"
+//	@Failure		500	{object}	response.ErrorResponse	"Internal server error"
 //	@Router			/users/{id} [delete]
 //	@Security		BearerAuth
 func (uh *UserHandler) DeleteUser(ctx *gin.Context) {

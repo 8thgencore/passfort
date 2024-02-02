@@ -97,7 +97,7 @@ func Run(configPath string) {
 	userHandler := handler.NewUserHandler(userService)
 
 	// Auth
-	authService := authService.NewAuthService(log, userRepo, token)
+	authService := authService.NewAuthService(log, userRepo, cache, token)
 	authHandler := handler.NewAuthHandler(authService)
 
 	// Init router

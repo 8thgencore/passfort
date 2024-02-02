@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"github.com/8thgencore/passfort/internal/delivery/http/helper"
+	"github.com/8thgencore/passfort/internal/delivery/http/middleware"
 	"github.com/8thgencore/passfort/internal/delivery/http/response"
+	"github.com/8thgencore/passfort/internal/domain"
 	"github.com/8thgencore/passfort/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -18,6 +21,52 @@ func NewAuthHandler(svc service.AuthService) *AuthHandler {
 	}
 }
 
+// registerRequet represents the request body for creating a user
+type registerRequest struct {
+	Name     string `json:"name" binding:"required" example:"John Doe"`
+	Email    string `json:"email" binding:"required,email" example:"test@example.com"`
+	Password string `json:"password" binding:"required,min=8" example:"12345678"`
+}
+
+// Register godoc
+//
+//	@Summary		Register a new user
+//	@Description	create a new user account with default role "user"
+//	@Tags			Authentication
+//	@Accept			json
+//	@Produce		json
+//	@Param			registerRequest	body		registerRequest			true	"Register request"
+//	@Success		200				{object}	response.UserResponse	"User created"
+//	@Failure		400				{object}	response.ErrorResponse	"Validation error"
+//	@Failure		401				{object}	response.ErrorResponse	"Unauthorized error"
+//	@Failure		404				{object}	response.ErrorResponse	"Data not found error"
+//	@Failure		409				{object}	response.ErrorResponse	"Data conflict error"
+//	@Failure		500				{object}	response.ErrorResponse	"Internal server error"
+//	@Router			/auth/register [post]
+func (ah *AuthHandler) Register(ctx *gin.Context) {
+	var req registerRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		response.ValidationError(ctx, err)
+		return
+	}
+
+	user := domain.User{
+		Name:     req.Name,
+		Email:    req.Email,
+		Password: req.Password,
+	}
+
+	_, err := ah.svc.Register(ctx, &user)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+
+	resp := response.NewUserResponse(&user)
+
+	response.HandleSuccess(ctx, resp)
+}
+
 // loginRequest represents the request body for logging in a user
 type loginRequest struct {
 	Email    string `json:"email" binding:"required,email" example:"test@example.com"`
@@ -28,15 +77,15 @@ type loginRequest struct {
 //
 //	@Summary		Login and get an access token
 //	@Description	Logs in a registered user and returns an access token if the credentials are valid.
-//	@Tags			Users
+//	@Tags			Authentication
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		loginRequest	true	"Login request body"
-//	@Success		200		{object}	authResponse	"Succesfully logged in"
-//	@Failure		400		{object}	errorResponse	"Validation error"
-//	@Failure		401		{object}	errorResponse	"Unauthorized error"
-//	@Failure		500		{object}	errorResponse	"Internal server error"
-//	@Router			/users/login [post]
+//	@Param			request	body		loginRequest			true	"Login request body"
+//	@Success		200		{object}	response.AuthResponse	"Succesfully logged in"
+//	@Failure		400		{object}	response.ErrorResponse	"Validation error"
+//	@Failure		401		{object}	response.ErrorResponse	"Unauthorized error"
+//	@Failure		500		{object}	response.ErrorResponse	"Internal server error"
+//	@Router			/auth/login [post]
 func (ah *AuthHandler) Login(ctx *gin.Context) {
 	var req loginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -53,4 +102,44 @@ func (ah *AuthHandler) Login(ctx *gin.Context) {
 	rsp := response.NewAuthResponse(token)
 
 	response.HandleSuccess(ctx, rsp)
+}
+
+type changePasswordRequest struct {
+	OldPassword string `json:"old_password" binding:"required,min=8" example:"oldpassword"`
+	NewPassword string `json:"new_password" binding:"required,min=8" example:"newpassword"`
+}
+
+// ChangeOwnPassword godoc
+//
+//	@Summary		Change own password
+//	@Description	Change the authenticated user's password by providing the old and new passwords
+//	@Tags			Authentication
+//	@Accept			json
+//	@Produce		json
+//	@Param			changePasswordRequest	body		changePasswordRequest	true	"Change password request"
+//	@Success		200						{object}	response.Response		"Password changed successfully"
+//	@Failure		400						{object}	response.ErrorResponse	"Validation error"
+//	@Failure		401						{object}	response.ErrorResponse	"Unauthorized error"
+//	@Failure		403						{object}	response.ErrorResponse	"Forbidden error"
+//	@Failure		404						{object}	response.ErrorResponse	"Data not found error"
+//	@Failure		422						{object}	response.ErrorResponse	"Passwords do not match"
+//	@Failure		500						{object}	response.ErrorResponse	"Internal server error"
+//	@Router			/auth/change-password [put]
+//	@Security		BearerAuth
+func (ah *AuthHandler) ChangePassword(ctx *gin.Context) {
+	var req changePasswordRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		response.ValidationError(ctx, err)
+		return
+	}
+
+	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
+
+	err := ah.svc.ChangePassword(ctx, authPayload.UserID, req.OldPassword, req.NewPassword)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+
+	response.HandleSuccess(ctx, nil)
 }

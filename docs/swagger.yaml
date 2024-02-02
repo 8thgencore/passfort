@@ -8,24 +8,19 @@ definitions:
     x-enum-varnames:
     - AdminRole
     - UserRole
-  handler.authResponse:
+  handler.changePasswordRequest:
     properties:
-      token:
-        example: v2.local.Gdh5kiOTyyaQ3_bNykYDeYHO21Jg2...
+      new_password:
+        example: newpassword
+        minLength: 8
         type: string
-    type: object
-  handler.errorResponse:
-    properties:
-      messages:
-        example:
-        - Error message 1
-        - ' Error message 2'
-        items:
-          type: string
-        type: array
-      success:
-        example: false
-        type: boolean
+      old_password:
+        example: oldpassword
+        minLength: 8
+        type: string
+    required:
+    - new_password
+    - old_password
     type: object
   handler.loginRequest:
     properties:
@@ -39,18 +34,6 @@ definitions:
     required:
     - email
     - password
-    type: object
-  handler.meta:
-    properties:
-      limit:
-        example: 10
-        type: integer
-      skip:
-        example: 0
-        type: integer
-      total:
-        example: 100
-        type: integer
     type: object
   handler.registerRequest:
     properties:
@@ -68,16 +51,6 @@ definitions:
     - email
     - name
     - password
-    type: object
-  handler.response:
-    properties:
-      data: {}
-      message:
-        example: Success
-        type: string
-      success:
-        example: true
-        type: boolean
     type: object
   handler.updateUserRequest:
     properties:
@@ -101,7 +74,48 @@ definitions:
     - password
     - role
     type: object
-  handler.userResponse:
+  response.AuthResponse:
+    properties:
+      token:
+        example: v2.local.Gdh5kiOTyyaQ3_bNykYDeYHO21Jg2...
+        type: string
+    type: object
+  response.ErrorResponse:
+    properties:
+      messages:
+        example:
+        - Error message 1
+        - ' Error message 2'
+        items:
+          type: string
+        type: array
+      success:
+        example: false
+        type: boolean
+    type: object
+  response.Meta:
+    properties:
+      limit:
+        example: 10
+        type: integer
+      skip:
+        example: 0
+        type: integer
+      total:
+        example: 100
+        type: integer
+    type: object
+  response.Response:
+    properties:
+      data: {}
+      message:
+        example: Success
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  response.UserResponse:
     properties:
       created_at:
         example: "1970-01-01T00:00:00Z"
@@ -133,6 +147,132 @@ info:
   title: PassFort API
   version: "1.0"
 paths:
+  /auth/change-password:
+    put:
+      consumes:
+      - application/json
+      description: Change the authenticated user's password by providing the old and
+        new passwords
+      parameters:
+      - description: Change password request
+        in: body
+        name: changePasswordRequest
+        required: true
+        schema:
+          $ref: '#/definitions/handler.changePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password changed successfully
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Data not found error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "422":
+          description: Passwords do not match
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Change own password
+      tags:
+      - Authentication
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Logs in a registered user and returns an access token if the credentials
+        are valid.
+      parameters:
+      - description: Login request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Succesfully logged in
+          schema:
+            $ref: '#/definitions/response.AuthResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Login and get an access token
+      tags:
+      - Authentication
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: create a new user account with default role "user"
+      parameters:
+      - description: Register request
+        in: body
+        name: registerRequest
+        required: true
+        schema:
+          $ref: '#/definitions/handler.registerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User created
+          schema:
+            $ref: '#/definitions/response.UserResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Data not found error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Data conflict error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - Authentication
   /users:
     get:
       consumes:
@@ -155,59 +295,18 @@ paths:
         "200":
           description: Users displayed
           schema:
-            $ref: '#/definitions/handler.meta'
+            $ref: '#/definitions/response.Meta'
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List users
-      tags:
-      - Users
-    post:
-      consumes:
-      - application/json
-      description: create a new user account with default role "user"
-      parameters:
-      - description: Register request
-        in: body
-        name: registerRequest
-        required: true
-        schema:
-          $ref: '#/definitions/handler.registerRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: User created
-          schema:
-            $ref: '#/definitions/handler.userResponse'
-        "400":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/handler.errorResponse'
-        "401":
-          description: Unauthorized error
-          schema:
-            $ref: '#/definitions/handler.errorResponse'
-        "404":
-          description: Data not found error
-          schema:
-            $ref: '#/definitions/handler.errorResponse'
-        "409":
-          description: Data conflict error
-          schema:
-            $ref: '#/definitions/handler.errorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/handler.errorResponse'
-      summary: Register a new user
       tags:
       - Users
   /users/{id}:
@@ -227,27 +326,27 @@ paths:
         "200":
           description: User deleted
           schema:
-            $ref: '#/definitions/handler.response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "401":
           description: Unauthorized error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "403":
           description: Forbidden error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "404":
           description: Data not found error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete a user
@@ -269,19 +368,19 @@ paths:
         "200":
           description: User displayed
           schema:
-            $ref: '#/definitions/handler.userResponse'
+            $ref: '#/definitions/response.UserResponse'
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "404":
           description: Data not found error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get a user
@@ -309,65 +408,30 @@ paths:
         "200":
           description: User updated
           schema:
-            $ref: '#/definitions/handler.userResponse'
+            $ref: '#/definitions/response.UserResponse'
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "401":
           description: Unauthorized error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "403":
           description: Forbidden error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "404":
           description: Data not found error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update a user
-      tags:
-      - Users
-  /users/login:
-    post:
-      consumes:
-      - application/json
-      description: Logs in a registered user and returns an access token if the credentials
-        are valid.
-      parameters:
-      - description: Login request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handler.loginRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Succesfully logged in
-          schema:
-            $ref: '#/definitions/handler.authResponse'
-        "400":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/handler.errorResponse'
-        "401":
-          description: Unauthorized error
-          schema:
-            $ref: '#/definitions/handler.errorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/handler.errorResponse'
-      summary: Login and get an access token
       tags:
       - Users
 schemes:

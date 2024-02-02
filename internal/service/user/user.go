@@ -7,43 +7,6 @@ import (
 	"github.com/8thgencore/passfort/pkg/util"
 )
 
-// Register creates a new user
-func (us *UserService) Register(ctx context.Context, user *domain.User) (*domain.User, error) {
-	hashedPassword, err := util.HashPassword(user.Password)
-	if err != nil {
-		return nil, domain.ErrInternal
-	}
-
-	user.Password = hashedPassword
-
-	user, err = us.storage.CreateUser(ctx, user)
-	if err != nil {
-		if err == domain.ErrConflictingData {
-			return nil, err
-		}
-
-		return nil, domain.ErrInternal
-	}
-
-	cacheKey := util.GenerateCacheKey("user", user.ID)
-	userSerialized, err := util.Serialize(user)
-	if err != nil {
-		return nil, domain.ErrInternal
-	}
-
-	err = us.cache.Set(ctx, cacheKey, userSerialized, 0)
-	if err != nil {
-		return nil, domain.ErrInternal
-	}
-
-	err = us.cache.DeleteByPrefix(ctx, "users:*")
-	if err != nil {
-		return nil, domain.ErrInternal
-	}
-
-	return user, nil
-}
-
 // GetUser gets a user by ID
 func (us *UserService) GetUser(ctx context.Context, id uint64) (*domain.User, error) {
 	var user *domain.User
@@ -67,12 +30,12 @@ func (us *UserService) GetUser(ctx context.Context, id uint64) (*domain.User, er
 		return nil, domain.ErrInternal
 	}
 
-	userSerialized, err := util.Serialize(user)
+	serializedUser, err := util.Serialize(user)
 	if err != nil {
 		return nil, domain.ErrInternal
 	}
 
-	err = us.cache.Set(ctx, cacheKey, userSerialized, 0)
+	err = us.cache.Set(ctx, cacheKey, serializedUser, 0)
 	if err != nil {
 		return nil, domain.ErrInternal
 	}
@@ -127,7 +90,6 @@ func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 
 	emptyData := user.Name == "" &&
 		user.Email == "" &&
-		user.Password == "" &&
 		user.Role == ""
 	sameData := existingUser.Name == user.Name &&
 		existingUser.Email == user.Email &&
@@ -136,18 +98,7 @@ func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 		return nil, domain.ErrNoUpdatedData
 	}
 
-	var hashedPassword string
-
-	if user.Password != "" {
-		hashedPassword, err = util.HashPassword(user.Password)
-		if err != nil {
-			return nil, domain.ErrInternal
-		}
-	}
-
-	user.Password = hashedPassword
-
-	_, err = us.storage.UpdateUser(ctx, user)
+	updatedUser, err := us.storage.UpdateUser(ctx, user)
 	if err != nil {
 		if err == domain.ErrConflictingData {
 			return nil, err
@@ -161,12 +112,12 @@ func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 		return nil, domain.ErrInternal
 	}
 
-	userSerialized, err := util.Serialize(user)
+	serializedUser, err := util.Serialize(user)
 	if err != nil {
 		return nil, domain.ErrInternal
 	}
 
-	err = us.cache.Set(ctx, cacheKey, userSerialized, 0)
+	err = us.cache.Set(ctx, cacheKey, serializedUser, 0)
 	if err != nil {
 		return nil, domain.ErrInternal
 	}
@@ -176,7 +127,7 @@ func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 		return nil, domain.ErrInternal
 	}
 
-	return user, nil
+	return updatedUser, nil
 }
 
 // DeleteUser deletes a user by ID

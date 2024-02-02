@@ -28,6 +28,8 @@ var (
 	ErrInvalidToken = errors.New("access token is invalid")
 	// ErrInvalidCredentials is an error for when the credentials are invalid
 	ErrInvalidCredentials = errors.New("invalid email or password")
+	// ErrPasswordsDoNotMatch is an error for when the provided passwords do not match
+	ErrPasswordsDoNotMatch = errors.New("provided passwords do not match")
 	// ErrEmptyAuthorizationHeader is an error for when the authorization header is empty
 	ErrEmptyAuthorizationHeader = errors.New("authorization header is not provided")
 	// ErrInvalidAuthorizationHeader is an error for when the authorization header is invalid

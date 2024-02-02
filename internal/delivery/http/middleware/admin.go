@@ -10,7 +10,7 @@ import (
 // AdminMiddleware is a middleware to check if the user is an admin
 func AdminMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		payload := helper.GetAuthPayload(ctx, authorizationPayloadKey)
+		payload := helper.GetAuthPayload(ctx, AuthorizationPayloadKey)
 
 		isAdmin := payload.Role == domain.AdminRole
 		if !isAdmin {

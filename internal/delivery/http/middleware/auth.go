@@ -14,8 +14,8 @@ const (
 	authorizationHeaderKey = "authorization"
 	// authorizationType is the accepted authorization type
 	authorizationType = "bearer"
-	// authorizationPayloadKey is the key for authorization payload in the context
-	authorizationPayloadKey = "authorization_payload"
+	// AuthorizationPayloadKey is the key for authorization payload in the context
+	AuthorizationPayloadKey = "authorization_payload"
 )
 
 // AuthMiddleware is a middleware to check if the user is authenticated
@@ -52,7 +52,7 @@ func AuthMiddleware(token service.TokenService) gin.HandlerFunc {
 			return
 		}
 
-		ctx.Set(authorizationPayloadKey, payload)
+		ctx.Set(AuthorizationPayloadKey, payload)
 		ctx.Next()
 	}
 }
