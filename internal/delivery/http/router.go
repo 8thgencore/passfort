@@ -29,6 +29,7 @@ func NewRouter(
 	token service.TokenService,
 	userHander handler.UserHandler,
 	authHandler handler.AuthHandler,
+	collectionHandler handler.CollectionHandler,
 ) (*Router, error) {
 	// Disable debug mode in production
 	if cfg.Env == config.Prod {
@@ -79,6 +80,17 @@ func NewRouter(
 					admin.PUT("/:id", userHander.UpdateUser)
 					admin.DELETE("/:id", userHander.DeleteUser)
 				}
+			}
+		}
+		collection := v1.Group("/collections")
+		{
+			authCollection := collection.Group("/").Use(middleware.AuthMiddleware(token))
+			{
+				authCollection.GET("/me", collectionHandler.ListMeCollections)
+				authCollection.POST("/", collectionHandler.CreateCollection)
+				authCollection.GET("/:id", collectionHandler.GetCollection)
+				authCollection.PUT("/:id", collectionHandler.UpdateCollection)
+				authCollection.DELETE("/:id", collectionHandler.DeleteCollection)
 			}
 		}
 	}

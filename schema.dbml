@@ -23,3 +23,36 @@ Table "users" {
         email [unique, name: "email"]
     }
 }
+
+Enum "secret_type_enum" {
+  "password"
+  "text"
+  "file"
+}
+
+
+Table "collections" {
+  "id" bigserial [pk, increment]
+  "name" varchar [not null]
+  "description" varchar [null]
+  "created_at" timestamptz [not null, default: `now()`]
+  "updated_at" timestamptz [not null, default: `now()`]
+
+}
+
+Table "users_collections" {
+  "user_id" bigserial 
+  "collection_id" bigserial
+  "created_at" timestamptz [not null, default: `now()`]
+  "updated_at" timestamptz [not null, default: `now()`]
+
+
+  Indexes {
+    user_id [unique, name: "users_collections_user_id"]
+  }
+}
+
+Ref: users.id < users_collections.user_id
+
+Ref: collections.id < users_collections.collection_id
+

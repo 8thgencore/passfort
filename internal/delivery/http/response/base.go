@@ -70,6 +70,26 @@ func NewUserResponse(user *domain.User) UserResponse {
 	}
 }
 
+// CollectionResponse represents a collection response body
+type CollectionResponse struct {
+	ID          uint64    `json:"id" example:"1"`
+	Name        string    `json:"name" example:"My Collection"`
+	Description string    `json:"description,omitempty" example:"Collection description"`
+	CreatedAt   time.Time `json:"created_at" example:"1970-01-01T00:00:00Z"`
+	UpdatedAt   time.Time `json:"updated_at" example:"1970-01-01T00:00:00Z"`
+}
+
+// NewCollectionResponse is a helper function to create a response body for handling collection data
+func NewCollectionResponse(collection *domain.Collection) CollectionResponse {
+	return CollectionResponse{
+		ID:          collection.ID,
+		Name:        collection.Name,
+		Description: collection.Description,
+		CreatedAt:   collection.CreatedAt,
+		UpdatedAt:   collection.UpdatedAt,
+	}
+}
+
 // // paymentResponse represents a payment response body
 // type paymentResponse struct {
 // 	ID   uint64             `json:"id" example:"1"`

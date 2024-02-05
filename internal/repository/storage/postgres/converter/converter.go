@@ -28,3 +28,23 @@ func ToUser(userDAO *dao.UserDAO) *domain.User {
 		UpdatedAt: userDAO.UpdatedAt,
 	}
 }
+
+func ToCollectionDAO(collection domain.Collection) *dao.CollectionDAO {
+	return &dao.CollectionDAO{
+		ID:          collection.ID,
+		Name:        collection.Name,
+		Description: collection.Description,
+		CreatedAt:   collection.CreatedAt,
+		UpdatedAt:   collection.UpdatedAt,
+	}
+}
+
+func ToCollection(collectionDAO *dao.CollectionDAO) *domain.Collection {
+	return &domain.Collection{
+		ID:          collectionDAO.ID,
+		Name:        collectionDAO.Name,
+		Description: collectionDAO.Description,
+		CreatedAt:   collectionDAO.CreatedAt,
+		UpdatedAt:   collectionDAO.UpdatedAt,
+	}
+}

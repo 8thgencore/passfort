@@ -35,3 +35,17 @@ type UserService interface {
 	// DeleteUser deletes a user
 	DeleteUser(ctx context.Context, id uint64) error
 }
+
+// CollectionService is an interface for interacting with collection-related business logic
+type CollectionService interface {
+	// CreateCollection inserts a new collection into the database
+	CreateCollection(ctx context.Context, userID uint64, collection *domain.Collection) (*domain.Collection, error)
+	// ListCollectionsByUserID returns a list of collections by user id with pagination
+	ListCollectionsByUserID(ctx context.Context, userID, skip, limit uint64) ([]domain.Collection, error)
+	// GetCollection returns a collection by id
+	GetCollection(ctx context.Context, userID, collectionID uint64) (*domain.Collection, error)
+	// UpdateCollection updates a collection
+	UpdateCollection(ctx context.Context, userID uint64, collection *domain.Collection) (*domain.Collection, error)
+	// DeleteCollection deletes a collection
+	DeleteCollection(ctx context.Context, userID, collectionID uint64) error
+}
