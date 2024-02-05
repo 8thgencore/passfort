@@ -8,7 +8,7 @@ import (
 )
 
 // CreateToken creates a new paseto token
-func (pt *PasetoToken) CreateToken(user *domain.User) (string, error) {
+func (pt *Token) CreateToken(user *domain.User) (string, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return "", domain.ErrTokenCreation
@@ -38,7 +38,7 @@ func (pt *PasetoToken) CreateToken(user *domain.User) (string, error) {
 }
 
 // VerifyToken verifies the paseto token
-func (pt *PasetoToken) VerifyToken(token string) (*domain.TokenPayload, error) {
+func (pt *Token) VerifyToken(token string) (*domain.TokenPayload, error) {
 	var payload *domain.TokenPayload
 
 	parsedToken, err := pt.parser.ParseV4Local(*pt.key, token, nil)

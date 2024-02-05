@@ -42,15 +42,15 @@ type (
 )
 
 const (
-	ffJson       FieldsFormat = "json"
-	ffJsonIndent FieldsFormat = "json-indent"
+	ffJSON       FieldsFormat = "json"
+	ffJSONIndent FieldsFormat = "json-indent"
 	ffYaml       FieldsFormat = "yaml"
 )
 
 var (
 	fieldFormats = map[FieldsFormat]marshalFunc{
-		ffJson: json.Marshal,
-		ffJsonIndent: func(v any) ([]byte, error) {
+		ffJSON: json.Marshal,
+		ffJSONIndent: func(v any) ([]byte, error) {
 			return json.MarshalIndent(v, "", "  ")
 		},
 		ffYaml: yaml.Marshal,
@@ -70,7 +70,7 @@ var (
 func NewHandler() Handler {
 	return Handler{
 		logger:       log.New(os.Stderr, "", 0),
-		fieldsFormat: ffJson,
+		fieldsFormat: ffJSON,
 		SlogOpts:     SlogOpts{Level: slog.LevelDebug},
 	}
 }
@@ -81,8 +81,10 @@ func (f FieldsFormat) Validate() error {
 		for ff := range fieldFormats {
 			xs = append(xs, string(ff))
 		}
+
 		return fmt.Errorf("invalid fields format %q, must be one of %s", f, strings.Join(xs, ","))
 	}
+
 	return nil
 }
 
@@ -90,6 +92,7 @@ func (f FieldsFormat) Marshal(v any) ([]byte, error) {
 	if err := f.Validate(); err != nil {
 		return nil, err
 	}
+
 	return fieldFormats[f](v)
 }
 

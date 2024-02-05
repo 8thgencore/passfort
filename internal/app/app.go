@@ -42,7 +42,7 @@ import (
 // @description				Type "Bearer" followed by a space and the access token.
 func Run(configPath string) {
 	// Load configuration
-	cfg, err := config.NewConfig("./config/config.yaml")
+	cfg, err := config.NewConfig(configPath)
 	if err != nil {
 		log.Fatal(err)
 	}
