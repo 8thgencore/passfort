@@ -9,6 +9,7 @@ import (
 	"github.com/8thgencore/passfort/internal/repository/storage/postgres/converter"
 	"github.com/8thgencore/passfort/internal/repository/storage/postgres/dao"
 	sq "github.com/Masterminds/squirrel"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -28,7 +29,7 @@ func NewCollectionRepository(db *database.DB) *CollectionRepository {
 }
 
 // CreateCollection creates a new collection in the database
-func (r *CollectionRepository) CreateCollection(ctx context.Context, userID uint64, collection *domain.Collection) (*domain.Collection, error) {
+func (r *CollectionRepository) CreateCollection(ctx context.Context, userID uuid.UUID, collection *domain.Collection) (*domain.Collection, error) {
 	var collectionDAO dao.CollectionDAO
 
 	// Begin a transaction
@@ -86,7 +87,7 @@ func (r *CollectionRepository) CreateCollection(ctx context.Context, userID uint
 }
 
 // GetCollectionByID gets a collection by ID from the database
-func (r *CollectionRepository) GetCollectionByID(ctx context.Context, id uint64) (*domain.Collection, error) {
+func (r *CollectionRepository) GetCollectionByID(ctx context.Context, id uuid.UUID) (*domain.Collection, error) {
 	var collectionDAO dao.CollectionDAO
 
 	query := r.db.QueryBuilder.Select("*").
@@ -117,7 +118,7 @@ func (r *CollectionRepository) GetCollectionByID(ctx context.Context, id uint64)
 }
 
 // ListCollectionsByUserID lists all collections from the database
-func (r *CollectionRepository) ListCollectionsByUserID(ctx context.Context, userID uint64, skip, limit uint64) ([]domain.Collection, error) {
+func (r *CollectionRepository) ListCollectionsByUserID(ctx context.Context, userID uuid.UUID, skip, limit uint64) ([]domain.Collection, error) {
 	var collectionDAO dao.CollectionDAO
 	var collections []domain.Collection
 
@@ -196,7 +197,7 @@ func (r *CollectionRepository) UpdateCollection(ctx context.Context, collection 
 }
 
 // DeleteCollection deletes a collection by ID from the database
-func (r *CollectionRepository) DeleteCollection(ctx context.Context, id uint64) error {
+func (r *CollectionRepository) DeleteCollection(ctx context.Context, id uuid.UUID) error {
 	// Begin a transaction
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
@@ -242,7 +243,7 @@ func (r *CollectionRepository) DeleteCollection(ctx context.Context, id uint64) 
 }
 
 // IsUserPartOfCollection checks if the user is part of the specified collection
-func (r *CollectionRepository) IsUserPartOfCollection(ctx context.Context, userID, collectionID uint64) (bool, error) {
+func (r *CollectionRepository) IsUserPartOfCollection(ctx context.Context, userID, collectionID uuid.UUID) (bool, error) {
 	query := r.db.QueryBuilder.Select("1").
 		From("users_collections").
 		Where(sq.Eq{"user_id": userID, "collection_id": collectionID}).

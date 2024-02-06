@@ -1,9 +1,13 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Collection struct {
-	ID          uint64
+	ID          uuid.UUID
 	Name        string
 	Description string
 	CreatedAt   time.Time

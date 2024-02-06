@@ -1,9 +1,13 @@
 package dao
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type CollectionDAO struct {
-	ID          uint64    `db:"id"`
+	ID          uuid.UUID `db:"id"`
 	Name        string    `db:"name"`
 	Description string    `db:"description"`
 	CreatedAt   time.Time `db:"created_at"`

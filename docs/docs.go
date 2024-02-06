@@ -341,7 +341,7 @@ const docTemplate = `{
                 "summary": "Get a collection",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Collection ID",
                         "name": "id",
                         "in": "path",
@@ -394,7 +394,7 @@ const docTemplate = `{
                 "summary": "Update a collection",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Collection ID",
                         "name": "id",
                         "in": "path",
@@ -468,7 +468,7 @@ const docTemplate = `{
                 "summary": "Delete a collection",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Collection ID",
                         "name": "id",
                         "in": "path",
@@ -571,6 +571,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get information about the authenticated user (who am I)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get information about the authenticated user",
+                "responses": {
+                    "200": {
+                        "description": "User information",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users/{id}": {
             "get": {
                 "security": [
@@ -591,7 +631,7 @@ const docTemplate = `{
                 "summary": "Get a user",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "User ID",
                         "name": "id",
                         "in": "path",
@@ -644,7 +684,7 @@ const docTemplate = `{
                 "summary": "Update a user",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "User ID",
                         "name": "id",
                         "in": "path",
@@ -718,7 +758,7 @@ const docTemplate = `{
                 "summary": "Delete a user",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "User ID",
                         "name": "id",
                         "in": "path",
@@ -917,8 +957,8 @@ const docTemplate = `{
                     "example": "Collection description"
                 },
                 "id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "1"
                 },
                 "name": {
                     "type": "string",
@@ -992,8 +1032,8 @@ const docTemplate = `{
                     "example": "test@example.com"
                 },
                 "id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "1"
                 },
                 "name": {
                     "type": "string",

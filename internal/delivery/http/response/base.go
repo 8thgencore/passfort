@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/8thgencore/passfort/internal/domain"
+	"github.com/google/uuid"
 )
 
 // Response represents a Response body format
@@ -52,7 +53,7 @@ func NewAuthResponse(token string) AuthResponse {
 
 // UserResponse represents a user response body
 type UserResponse struct {
-	ID        uint64    `json:"id" example:"1"`
+	ID        uuid.UUID `json:"id" example:"1"`
 	Name      string    `json:"name" example:"John Doe"`
 	Email     string    `json:"email" example:"test@example.com"`
 	CreatedAt time.Time `json:"created_at" example:"1970-01-01T00:00:00Z"`
@@ -72,7 +73,7 @@ func NewUserResponse(user *domain.User) UserResponse {
 
 // CollectionResponse represents a collection response body
 type CollectionResponse struct {
-	ID          uint64    `json:"id" example:"1"`
+	ID          uuid.UUID `json:"id" example:"1"`
 	Name        string    `json:"name" example:"My Collection"`
 	Description string    `json:"description,omitempty" example:"Collection description"`
 	CreatedAt   time.Time `json:"created_at" example:"1970-01-01T00:00:00Z"`

@@ -9,6 +9,7 @@ import (
 	"github.com/8thgencore/passfort/internal/repository/storage/postgres/converter"
 	"github.com/8thgencore/passfort/internal/repository/storage/postgres/dao"
 	sq "github.com/Masterminds/squirrel"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -61,7 +62,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) (*do
 }
 
 // GetUserByID gets a user by ID from the database
-func (r *UserRepository) GetUserByID(ctx context.Context, id uint64) (*domain.User, error) {
+func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	var userDao dao.UserDAO
 
 	query := r.db.QueryBuilder.Select("*").
@@ -117,6 +118,9 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*dom
 		&userDao.UpdatedAt,
 	)
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, domain.ErrDataNotFound
+		}
 		return nil, err
 	}
 
@@ -212,7 +216,7 @@ func (r *UserRepository) UpdateUser(ctx context.Context, user *domain.User) (*do
 }
 
 // DeleteUser deletes a user by ID from the database
-func (r *UserRepository) DeleteUser(ctx context.Context, id uint64) error {
+func (r *UserRepository) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	query := r.db.QueryBuilder.Delete("users").
 		Where(sq.Eq{"id": id})
 

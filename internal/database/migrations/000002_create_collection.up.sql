@@ -1,6 +1,6 @@
 -- Create collections table
-CREATE TABLE collections (
-    "id" bigserial PRIMARY KEY,
+CREATE TABLE "collections" (
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(), 
     "name" varchar NOT NULL,
     "description" varchar,
     "created_at" timestamptz NOT NULL DEFAULT now(),
@@ -8,9 +8,9 @@ CREATE TABLE collections (
 );
 
 -- Create users_collections table
-CREATE TABLE users_collections (
-    "user_id" bigserial REFERENCES users(id),
-    "collection_id" bigserial REFERENCES collections(id),
+CREATE TABLE "users_collections" (
+    "user_id" uuid REFERENCES users(id),
+    "collection_id" uuid REFERENCES collections(id),
     "created_at" timestamptz NOT NULL DEFAULT now(),
     "updated_at" timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (user_id, collection_id)

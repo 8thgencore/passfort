@@ -106,8 +106,8 @@ definitions:
         example: Collection description
         type: string
       id:
-        example: 1
-        type: integer
+        example: "1"
+        type: string
       name:
         example: My Collection
         type: string
@@ -159,8 +159,8 @@ definitions:
         example: test@example.com
         type: string
       id:
-        example: 1
-        type: integer
+        example: "1"
+        type: string
       name:
         example: John Doe
         type: string
@@ -350,7 +350,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -392,7 +392,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -426,7 +426,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - description: Update collection request
         in: body
         name: updateCollectionRequest
@@ -547,7 +547,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -589,7 +589,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -623,7 +623,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - description: Update user request
         in: body
         name: updateUserRequest
@@ -660,6 +660,31 @@ paths:
       security:
       - BearerAuth: []
       summary: Update a user
+      tags:
+      - Users
+  /users/me:
+    get:
+      consumes:
+      - application/json
+      description: Get information about the authenticated user (who am I)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User information
+          schema:
+            $ref: '#/definitions/response.UserResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get information about the authenticated user
       tags:
       - Users
 schemes:

@@ -5,6 +5,7 @@ import (
 
 	"github.com/8thgencore/passfort/internal/domain"
 	"github.com/8thgencore/passfort/pkg/util"
+	"github.com/google/uuid"
 )
 
 // Register creates a new user
@@ -21,6 +22,7 @@ func (as *AuthService) Register(ctx context.Context, user *domain.User) (*domain
 		if err == domain.ErrConflictingData {
 			return nil, err
 		}
+		as.log.Error("failed to create a user", "error", err.Error())
 
 		return nil, domain.ErrInternal
 	}
@@ -51,6 +53,8 @@ func (as *AuthService) Login(ctx context.Context, email, password string) (strin
 		if err == domain.ErrDataNotFound {
 			return "", domain.ErrInvalidCredentials
 		}
+		as.log.Error("failed to get the user by email", "error", err.Error())
+
 		return "", domain.ErrInternal
 	}
 
@@ -68,7 +72,7 @@ func (as *AuthService) Login(ctx context.Context, email, password string) (strin
 }
 
 // ChangePassword implements the ChangePassword method of the AuthService interface
-func (as *AuthService) ChangePassword(ctx context.Context, userID uint64, oldPassword, newPassword string) error {
+func (as *AuthService) ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error {
 	// Retrieve the user based on the userID
 	user, err := as.storage.GetUserByID(ctx, userID)
 	if err != nil {

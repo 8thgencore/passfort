@@ -2,10 +2,12 @@ package dao
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type UserDAO struct {
-	ID        uint64    `db:"id"`
+	ID        uuid.UUID `db:"id"`
 	Name      string    `db:"name"`
 	Email     string    `db:"email"`
 	Password  string    `db:"password"`

@@ -7,6 +7,7 @@ import (
 	"github.com/8thgencore/passfort/internal/domain"
 	"github.com/8thgencore/passfort/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // CollectionHandler represents the HTTP handler for collection-related requests
@@ -118,7 +119,7 @@ func (ch *CollectionHandler) ListMeCollections(ctx *gin.Context) {
 
 // getCollectionRequest represents the request body for getting a collection
 type getCollectionRequest struct {
-	ID uint64 `uri:"id" binding:"required,min=1" example:"1"`
+	ID string `uri:"id" binding:"required" example:"5950a459-5126-40b7-bd8e-82f7b91c2cf1"`
 }
 
 // GetCollection godoc
@@ -128,7 +129,7 @@ type getCollectionRequest struct {
 //	@Tags			Collections
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		uint64						true	"Collection ID"
+//	@Param			id	path		string						true	"Collection ID"
 //	@Success		200	{object}	response.CollectionResponse	"Collection displayed"
 //	@Failure		400	{object}	response.ErrorResponse		"Validation error"
 //	@Failure		404	{object}	response.ErrorResponse		"Data not found error"
@@ -142,9 +143,16 @@ func (ch *CollectionHandler) GetCollection(ctx *gin.Context) {
 		return
 	}
 
+	uuidString := req.ID
+	uuid, err := uuid.Parse(uuidString)
+	if err != nil {
+		response.ValidationError(ctx, err)
+		return
+	}
+
 	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
 
-	collection, err := ch.svc.GetCollection(ctx, authPayload.UserID, req.ID)
+	collection, err := ch.svc.GetCollection(ctx, authPayload.UserID, uuid)
 	if err != nil {
 		response.HandleError(ctx, err)
 		return
@@ -168,7 +176,7 @@ type updateCollectionRequest struct {
 //	@Tags			Collections
 //	@Accept			json
 //	@Produce		json
-//	@Param			id						path		uint64						true	"Collection ID"
+//	@Param			id						path		string						true	"Collection ID"
 //	@Param			updateCollectionRequest	body		updateCollectionRequest		true	"Update collection request"
 //	@Success		200						{object}	response.CollectionResponse	"Collection updated"
 //	@Failure		400						{object}	response.ErrorResponse		"Validation error"
@@ -185,15 +193,15 @@ func (ch *CollectionHandler) UpdateCollection(ctx *gin.Context) {
 		return
 	}
 
-	idStr := ctx.Param("id")
-	id, err := helper.StringToUint64(idStr)
+	uuidString := ctx.Param("id")
+	uuid, err := uuid.Parse(uuidString)
 	if err != nil {
 		response.ValidationError(ctx, err)
 		return
 	}
 
 	collection := domain.Collection{
-		ID:          id,
+		ID:          uuid,
 		Name:        req.Name,
 		Description: req.Description,
 	}
@@ -213,7 +221,7 @@ func (ch *CollectionHandler) UpdateCollection(ctx *gin.Context) {
 
 // deleteCollectionRequest represents the request body for deleting a collection
 type deleteCollectionRequest struct {
-	ID uint64 `uri:"id" binding:"required,min=1" example:"1"`
+	ID string `uri:"id" binding:"required" example:"5950a459-5126-40b7-bd8e-82f7b91c2cf1"`
 }
 
 // DeleteCollection godoc
@@ -223,7 +231,7 @@ type deleteCollectionRequest struct {
 //	@Tags			Collections
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		uint64					true	"Collection ID"
+//	@Param			id	path		string					true	"Collection ID"
 //	@Success		200	{object}	response.Response		"Collection deleted"
 //	@Failure		400	{object}	response.ErrorResponse	"Validation error"
 //	@Failure		401	{object}	response.ErrorResponse	"Unauthorized error"
@@ -239,9 +247,16 @@ func (ch *CollectionHandler) DeleteCollection(ctx *gin.Context) {
 		return
 	}
 
+	uuidString := ctx.Param("id")
+	uuid, err := uuid.Parse(uuidString)
+	if err != nil {
+		response.ValidationError(ctx, err)
+		return
+	}
+
 	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
 
-	err := ch.svc.DeleteCollection(ctx, authPayload.UserID, req.ID)
+	err = ch.svc.DeleteCollection(ctx, authPayload.UserID, uuid)
 	if err != nil {
 		response.HandleError(ctx, err)
 		return

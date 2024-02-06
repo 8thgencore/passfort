@@ -5,10 +5,11 @@ import (
 
 	"github.com/8thgencore/passfort/internal/domain"
 	"github.com/8thgencore/passfort/pkg/util"
+	"github.com/google/uuid"
 )
 
 // GetUser gets a user by ID
-func (us *UserService) GetUser(ctx context.Context, id uint64) (*domain.User, error) {
+func (us *UserService) GetUser(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	var user *domain.User
 
 	cacheKey := util.GenerateCacheKey("user", id)
@@ -21,6 +22,8 @@ func (us *UserService) GetUser(ctx context.Context, id uint64) (*domain.User, er
 
 		return user, nil
 	}
+
+	us.log.Debug(id.String())
 
 	user, err = us.storage.GetUserByID(ctx, id)
 	if err != nil {
@@ -131,7 +134,7 @@ func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 }
 
 // DeleteUser deletes a user by ID
-func (us *UserService) DeleteUser(ctx context.Context, id uint64) error {
+func (us *UserService) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	_, err := us.storage.GetUserByID(ctx, id)
 	if err != nil {
 		if err == domain.ErrDataNotFound {

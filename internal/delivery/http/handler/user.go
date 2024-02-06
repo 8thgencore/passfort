@@ -2,10 +2,12 @@ package handler
 
 import (
 	"github.com/8thgencore/passfort/internal/delivery/http/helper"
+	"github.com/8thgencore/passfort/internal/delivery/http/middleware"
 	"github.com/8thgencore/passfort/internal/delivery/http/response"
 	"github.com/8thgencore/passfort/internal/domain"
 	"github.com/8thgencore/passfort/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // UserHandler represents the HTTP handler for user-related requests
@@ -68,7 +70,34 @@ func (uh *UserHandler) ListUsers(ctx *gin.Context) {
 
 // getUserRequest represents the request body for getting a user
 type getUserRequest struct {
-	ID uint64 `uri:"id" binding:"required,min=1" example:"1"`
+	ID string `uri:"id" binding:"required" example:"5950a459-5126-40b7-bd8e-82f7b91c2cf1"`
+}
+
+// GetUserMe godoc
+//
+//	@Summary		Get information about the authenticated user
+//	@Description	Get information about the authenticated user (who am I)
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	response.UserResponse	"User information"
+//	@Failure		401	{object}	response.ErrorResponse	"Unauthorized error"
+//	@Failure		500	{object}	response.ErrorResponse	"Internal server error"
+//	@Router			/users/me [get]
+//	@Security		BearerAuth
+func (uh *UserHandler) GetUserMe(ctx *gin.Context) {
+	// Retrieve the user ID from the context (assuming it's stored during authentication)
+	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
+
+	user, err := uh.svc.GetUser(ctx, authPayload.UserID)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+
+	rsp := response.NewUserResponse(user)
+
+	response.HandleSuccess(ctx, rsp)
 }
 
 // GetUser godoc
@@ -78,7 +107,7 @@ type getUserRequest struct {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		uint64					true	"User ID"
+//	@Param			id	path		string					true	"User ID"
 //	@Success		200	{object}	response.UserResponse	"User displayed"
 //	@Failure		400	{object}	response.ErrorResponse	"Validation error"
 //	@Failure		404	{object}	response.ErrorResponse	"Data not found error"
@@ -92,7 +121,14 @@ func (uh *UserHandler) GetUser(ctx *gin.Context) {
 		return
 	}
 
-	user, err := uh.svc.GetUser(ctx, req.ID)
+	uuidString := req.ID
+	uuid, err := uuid.Parse(uuidString)
+	if err != nil {
+		response.ValidationError(ctx, err)
+		return
+	}
+
+	user, err := uh.svc.GetUser(ctx, uuid)
 	if err != nil {
 		response.HandleError(ctx, err)
 		return
@@ -117,7 +153,7 @@ type updateUserRequest struct {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Param			id					path		uint64					true	"User ID"
+//	@Param			id					path		string					true	"User ID"
 //	@Param			updateUserRequest	body		updateUserRequest		true	"Update user request"
 //	@Success		200					{object}	response.UserResponse	"User updated"
 //	@Failure		400					{object}	response.ErrorResponse	"Validation error"
@@ -134,15 +170,15 @@ func (uh *UserHandler) UpdateUser(ctx *gin.Context) {
 		return
 	}
 
-	idStr := ctx.Param("id")
-	id, err := helper.StringToUint64(idStr)
+	uuidString := ctx.Param("id")
+	uuid, err := uuid.Parse(uuidString)
 	if err != nil {
 		response.ValidationError(ctx, err)
 		return
 	}
 
 	user := domain.User{
-		ID:    id,
+		ID:    uuid,
 		Name:  req.Name,
 		Email: req.Email,
 		Role:  req.Role,
@@ -161,7 +197,7 @@ func (uh *UserHandler) UpdateUser(ctx *gin.Context) {
 
 // deleteUserRequest represents the request body for deleting a user
 type deleteUserRequest struct {
-	ID uint64 `uri:"id" binding:"required,min=1" example:"1"`
+	ID string `uri:"id" binding:"required" example:"5950a459-5126-40b7-bd8e-82f7b91c2cf1"`
 }
 
 // DeleteUser godoc
@@ -171,7 +207,7 @@ type deleteUserRequest struct {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		uint64					true	"User ID"
+//	@Param			id	path		string					true	"User ID"
 //	@Success		200	{object}	response.Response		"User deleted"
 //	@Failure		400	{object}	response.ErrorResponse	"Validation error"
 //	@Failure		401	{object}	response.ErrorResponse	"Unauthorized error"
@@ -187,7 +223,26 @@ func (uh *UserHandler) DeleteUser(ctx *gin.Context) {
 		return
 	}
 
-	err := uh.svc.DeleteUser(ctx, req.ID)
+	// Parse the UUID from the request
+	uuidString := req.ID
+	uuid, err := uuid.Parse(uuidString)
+	if err != nil {
+		response.ValidationError(ctx, err)
+		return
+	}
+
+	// Get the user ID from the authentication token
+	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
+
+	// Check if the user is trying to delete themselves
+	if uuid == authPayload.UserID {
+		err := domain.ErrDeleteOwnAccount
+		response.HandleError(ctx, err)
+		return
+	}
+
+	// Call the service to delete the user
+	err = uh.svc.DeleteUser(ctx, uuid)
 	if err != nil {
 		response.HandleError(ctx, err)
 		return

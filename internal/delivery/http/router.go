@@ -73,6 +73,7 @@ func NewRouter(
 			authUser := user.Group("/").Use(middleware.AuthMiddleware(token))
 			{
 				authUser.GET("/", userHander.ListUsers)
+				authUser.GET("/me", userHander.GetUserMe)
 				authUser.GET("/:id", userHander.GetUser)
 
 				admin := authUser.Use(middleware.AdminMiddleware())
