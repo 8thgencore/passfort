@@ -4,7 +4,6 @@ import (
 	"github.com/8thgencore/passfort/internal/delivery/http/helper"
 	"github.com/8thgencore/passfort/internal/delivery/http/middleware"
 	"github.com/8thgencore/passfort/internal/delivery/http/response"
-	"github.com/8thgencore/passfort/internal/domain"
 	"github.com/8thgencore/passfort/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -20,7 +19,6 @@ func NewAuthHandler(svc service.AuthService) *AuthHandler {
 		svc,
 	}
 }
-
 
 // loginRequest represents the request body for logging in a user
 type loginRequest struct {

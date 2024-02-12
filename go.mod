@@ -1,6 +1,6 @@
 module github.com/8thgencore/passfort
 
-go 1.22
+go 1.21
 
 require (
 	aidanwoods.dev/go-paseto v1.5.1
