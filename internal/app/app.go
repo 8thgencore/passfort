@@ -98,7 +98,7 @@ func Run(configPath string) {
 	userHandler := handler.NewUserHandler(userService)
 
 	// Auth
-	authService := authService.NewAuthService(log, userRepo, cache, token)
+	authService := authService.NewAuthService(log, userRepo, token)
 	authHandler := handler.NewAuthHandler(authService)
 
 	// Collection

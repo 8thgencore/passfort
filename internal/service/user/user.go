@@ -8,6 +8,44 @@ import (
 	"github.com/google/uuid"
 )
 
+// Register creates a new user
+func (us *UserService) Register(ctx context.Context, user *domain.User) (*domain.User, error) {
+	hashedPassword, err := util.HashPassword(user.Password)
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+
+	user.Password = hashedPassword
+
+	user, err = us.storage.CreateUser(ctx, user)
+	if err != nil {
+		if err == domain.ErrConflictingData {
+			return nil, err
+		}
+		us.log.Error("failed to create a user", "error", err.Error())
+
+		return nil, domain.ErrInternal
+	}
+
+	cacheKey := util.GenerateCacheKey("user", user.ID)
+	userSerialized, err := util.Serialize(user)
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+
+	err = us.cache.Set(ctx, cacheKey, userSerialized, 0)
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+
+	err = us.cache.DeleteByPrefix(ctx, "users:*")
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+
+	return user, nil
+}
+
 // GetUser gets a user by ID
 func (us *UserService) GetUser(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	var user *domain.User

@@ -17,8 +17,6 @@ type TokenService interface {
 
 // UserService is an interface for interacting with user authentication-related business logic
 type AuthService interface {
-	// Register registers a new user
-	Register(ctx context.Context, user *domain.User) (*domain.User, error)
 	// Login authenticates a user by email and password and returns a token
 	Login(ctx context.Context, email, password string) (string, error)
 	// ChangePassword changes the password for the authenticated user
@@ -27,6 +25,8 @@ type AuthService interface {
 
 // UserService is an interface for interacting with user-related business logic
 type UserService interface {
+	// Register registers a new user
+	Register(ctx context.Context, user *domain.User) (*domain.User, error)
 	// GetUser returns a user by id
 	GetUser(ctx context.Context, id uuid.UUID) (*domain.User, error)
 	// ListUsers returns a list of users with pagination

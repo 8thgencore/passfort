@@ -266,48 +266,6 @@ paths:
       summary: Login and get an access token
       tags:
       - Authentication
-  /auth/register:
-    post:
-      consumes:
-      - application/json
-      description: create a new user account with default role "user"
-      parameters:
-      - description: Register request
-        in: body
-        name: registerRequest
-        required: true
-        schema:
-          $ref: '#/definitions/handler.registerRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: User created
-          schema:
-            $ref: '#/definitions/response.UserResponse'
-        "400":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "401":
-          description: Unauthorized error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "404":
-          description: Data not found error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "409":
-          description: Data conflict error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-      summary: Register a new user
-      tags:
-      - Authentication
   /collections:
     post:
       consumes:
@@ -685,6 +643,48 @@ paths:
       security:
       - BearerAuth: []
       summary: Get information about the authenticated user
+      tags:
+      - Users
+  /users/register:
+    post:
+      consumes:
+      - application/json
+      description: create a new user account with default role "user"
+      parameters:
+      - description: Register request
+        in: body
+        name: registerRequest
+        required: true
+        schema:
+          $ref: '#/definitions/handler.registerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User created
+          schema:
+            $ref: '#/definitions/response.UserResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Data not found error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Data conflict error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Register a new user
       tags:
       - Users
 schemes:

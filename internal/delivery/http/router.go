@@ -60,7 +60,6 @@ func NewRouter(
 	{
 		auth := v1.Group("/auth")
 		{
-			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
 
 			authUser := auth.Group("/").Use(middleware.AuthMiddleware(token))
@@ -70,6 +69,8 @@ func NewRouter(
 		}
 		user := v1.Group("/users")
 		{
+			user.POST("/register", userHander.Register)
+
 			authUser := user.Group("/").Use(middleware.AuthMiddleware(token))
 			{
 				authUser.GET("/", userHander.ListUsers)
