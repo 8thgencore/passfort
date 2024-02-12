@@ -5,13 +5,15 @@ Project "PassFort" {
     '''
 }
 
+// Users table
+
 Enum "users_role_enum" {
     "admin"
     "user"
 }
 
 Table "users" {
-    "id" bigserial  [pk, increment]
+    "id" uuid  [pk, increment]
     "name" varchar [not null]
     "email" varchar [not null]
     "password" varchar [not null]
@@ -24,15 +26,10 @@ Table "users" {
     }
 }
 
-Enum "secret_type_enum" {
-  "password"
-  "text"
-  "file"
-}
-
+// Collections table
 
 Table "collections" {
-  "id" bigserial [pk, increment]
+  "id" uuid [pk, increment]
   "name" varchar [not null]
   "description" varchar [null]
   "created_at" timestamptz [not null, default: `now()`]
@@ -41,8 +38,8 @@ Table "collections" {
 }
 
 Table "users_collections" {
-  "user_id" bigserial 
-  "collection_id" bigserial
+  "user_id" uuid 
+  "collection_id" uuid
   "created_at" timestamptz [not null, default: `now()`]
   "updated_at" timestamptz [not null, default: `now()`]
 
@@ -56,3 +53,25 @@ Ref: users.id < users_collections.user_id
 
 Ref: collections.id < users_collections.collection_id
 
+// Secrets table
+
+Enum "secret_type_enum" {
+  "password"
+  "text"
+  "file"
+}
+
+Table "secrets" {
+  "id" uuid [pk, increment]
+  "collection_id" uuid
+  "type" secret_type_enum
+  "created_by" bigserial
+  "updated_by" bigserial
+  "created_at" timestamptz [not null, default: `now()`]
+  "updated_at" timestamptz [not null, default: `now()`]
+}
+
+Ref: users.id < secrets.created_by
+Ref: users.id < secrets.updated_by
+
+Ref: collections.id < secrets.collection_id
