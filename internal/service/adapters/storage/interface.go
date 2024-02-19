@@ -38,3 +38,17 @@ type CollectionRepository interface {
 	// IsUserPartOfCollection checks if the user is part of the specified collection
 	IsUserPartOfCollection(ctx context.Context, userID, collectionID uuid.UUID) (bool, error)
 }
+
+// SecretRepository is an interface for interacting with secret-related data
+type SecretRepository interface {
+	// CreateSecret inserts a new secret into the database
+	CreateSecret(ctx context.Context, collectionID uuid.UUID, secret *dao.SecretDAO) (*dao.SecretDAO, error)
+	// GetSecretByID selects a secret by id
+	GetSecretByID(ctx context.Context, id uuid.UUID) (*dao.SecretDAO, error)
+	// ListSecretsByCollectionID selects a list of secrets for a specific collection ID
+	ListSecretsByCollectionID(ctx context.Context, collectionID uuid.UUID, skip, limit uint64) ([]dao.SecretDAO, error)
+	// UpdateSecret updates a secret
+	UpdateSecret(ctx context.Context, secret *dao.SecretDAO) (*dao.SecretDAO, error)
+	// DeleteSecret deletes a secret
+	DeleteSecret(ctx context.Context, id uuid.UUID) error
+}

@@ -15,7 +15,7 @@ database:
   port: 5432
   user: "user"
   password: "password"
-  name: "postgres"
+  name: "passfort"
 
 cache:
   address: "localhost:6379"

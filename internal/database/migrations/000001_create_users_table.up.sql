@@ -8,7 +8,7 @@ CREATE TABLE
     "name" VARCHAR NOT NULL,
     "email" VARCHAR NOT NULL,
     "password" VARCHAR NOT NULL,
-    "role" users_role_enum DEFAULT  'user',
+    "role" users_role_enum DEFAULT 'user',
     "created_at" timestamptz NOT NULL DEFAULT (now ()),
     "updated_at" timestamptz NOT NULL DEFAULT (now ()),
     UNIQUE (email)
