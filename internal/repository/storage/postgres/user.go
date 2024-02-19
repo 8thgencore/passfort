@@ -6,7 +6,6 @@ import (
 
 	"github.com/8thgencore/passfort/internal/database"
 	"github.com/8thgencore/passfort/internal/domain"
-	"github.com/8thgencore/passfort/internal/repository/storage/postgres/converter"
 	"github.com/8thgencore/passfort/internal/repository/storage/postgres/dao"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -29,7 +28,7 @@ func NewUserRepository(db *database.DB) *UserRepository {
 }
 
 // CreateUser creates a new user in the database
-func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
+func (r *UserRepository) CreateUser(ctx context.Context, user *dao.UserDAO) (*dao.UserDAO, error) {
 	var userDao dao.UserDAO
 
 	query := r.db.QueryBuilder.Insert("users").
@@ -58,11 +57,11 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) (*do
 		return nil, err
 	}
 
-	return converter.ToUser(&userDao), nil
+	return &userDao, nil
 }
 
 // GetUserByID gets a user by ID from the database
-func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
+func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*dao.UserDAO, error) {
 	var userDao dao.UserDAO
 
 	query := r.db.QueryBuilder.Select("*").
@@ -91,11 +90,11 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*domain
 		return nil, err
 	}
 
-	return converter.ToUser(&userDao), nil
+	return &userDao, nil
 }
 
 // GetUserByEmailAndPassword gets a user by email from the database
-func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*domain.User, error) {
+func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*dao.UserDAO, error) {
 	var userDao dao.UserDAO
 
 	query := r.db.QueryBuilder.Select("*").
@@ -124,13 +123,13 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*dom
 		return nil, err
 	}
 
-	return converter.ToUser(&userDao), nil
+	return &userDao, nil
 }
 
 // ListUsers lists all users from the database
-func (r *UserRepository) ListUsers(ctx context.Context, skip, limit uint64) ([]domain.User, error) {
+func (r *UserRepository) ListUsers(ctx context.Context, skip, limit uint64) ([]dao.UserDAO, error) {
 	var userDao dao.UserDAO
-	var users []domain.User
+	var usersDAO []dao.UserDAO
 
 	query := r.db.QueryBuilder.Select("*").
 		From("users").
@@ -163,18 +162,15 @@ func (r *UserRepository) ListUsers(ctx context.Context, skip, limit uint64) ([]d
 			return nil, err
 		}
 
-		// Convert the UserDAO to a domain.User
-		user := converter.ToUser(&userDao)
-
-		// Append the converted user to the list
-		users = append(users, *user)
+		// Append the user to the list
+		usersDAO = append(usersDAO, userDao)
 	}
 
-	return users, nil
+	return usersDAO, nil
 }
 
 // UpdateUser updates a user by ID in the database
-func (r *UserRepository) UpdateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
+func (r *UserRepository) UpdateUser(ctx context.Context, user *dao.UserDAO) (*dao.UserDAO, error) {
 	var userDao dao.UserDAO
 
 	name := nullString(user.Name)
@@ -212,7 +208,7 @@ func (r *UserRepository) UpdateUser(ctx context.Context, user *domain.User) (*do
 		return nil, err
 	}
 
-	return converter.ToUser(&userDao), nil
+	return &userDao, nil
 }
 
 // DeleteUser deletes a user by ID from the database

@@ -4,13 +4,14 @@ import (
 	"context"
 
 	"github.com/8thgencore/passfort/internal/domain"
+	"github.com/8thgencore/passfort/internal/repository/storage/postgres/converter"
 	"github.com/8thgencore/passfort/pkg/util"
 	"github.com/google/uuid"
 )
 
 // Login gives a registered user an access token if the credentials are valid
 func (as *AuthService) Login(ctx context.Context, email, password string) (string, error) {
-	user, err := as.storage.GetUserByEmail(ctx, email)
+	userDAO, err := as.storage.GetUserByEmail(ctx, email)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
 			return "", domain.ErrInvalidCredentials
@@ -19,6 +20,7 @@ func (as *AuthService) Login(ctx context.Context, email, password string) (strin
 
 		return "", domain.ErrInternal
 	}
+	user := converter.ToUser(userDAO)
 
 	err = util.ComparePassword(password, user.Password)
 	if err != nil {

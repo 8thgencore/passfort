@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/8thgencore/passfort/internal/domain"
+	"github.com/8thgencore/passfort/internal/repository/storage/postgres/converter"
 	"github.com/8thgencore/passfort/pkg/util"
 	"github.com/google/uuid"
 )
@@ -17,7 +18,7 @@ func (us *UserService) Register(ctx context.Context, user *domain.User) (*domain
 
 	user.Password = hashedPassword
 
-	user, err = us.storage.CreateUser(ctx, user)
+	userDAO, err := us.storage.CreateUser(ctx, converter.ToUserDAO(user))
 	if err != nil {
 		if err == domain.ErrConflictingData {
 			return nil, err
@@ -26,6 +27,7 @@ func (us *UserService) Register(ctx context.Context, user *domain.User) (*domain
 
 		return nil, domain.ErrInternal
 	}
+	user = converter.ToUser(userDAO)
 
 	cacheKey := util.GenerateCacheKey("user", user.ID)
 	userSerialized, err := util.Serialize(user)
@@ -63,13 +65,14 @@ func (us *UserService) GetUser(ctx context.Context, id uuid.UUID) (*domain.User,
 
 	us.log.Debug(id.String())
 
-	user, err = us.storage.GetUserByID(ctx, id)
+	userDAO, err := us.storage.GetUserByID(ctx, id)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
 			return nil, err
 		}
 		return nil, domain.ErrInternal
 	}
+	user = converter.ToUser(userDAO)
 
 	serializedUser, err := util.Serialize(user)
 	if err != nil {
@@ -101,9 +104,12 @@ func (us *UserService) ListUsers(ctx context.Context, skip, limit uint64) ([]dom
 		return users, nil
 	}
 
-	users, err = us.storage.ListUsers(ctx, skip, limit)
+	usersDAO, err := us.storage.ListUsers(ctx, skip, limit)
 	if err != nil {
 		return nil, domain.ErrInternal
+	}
+	for _, userDAO := range usersDAO {
+		users = append(users, *converter.ToUser(&userDAO))
 	}
 
 	usersSerialized, err := util.Serialize(users)
@@ -121,13 +127,14 @@ func (us *UserService) ListUsers(ctx context.Context, skip, limit uint64) ([]dom
 
 // UpdateUser updates a user's name, email, and password
 func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
-	existingUser, err := us.storage.GetUserByID(ctx, user.ID)
+	existingUserDAO, err := us.storage.GetUserByID(ctx, user.ID)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
 			return nil, err
 		}
 		return nil, domain.ErrInternal
 	}
+	existingUser := converter.ToUser(existingUserDAO)
 
 	emptyData := user.Name == "" &&
 		user.Email == "" &&
@@ -139,13 +146,14 @@ func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 		return nil, domain.ErrNoUpdatedData
 	}
 
-	updatedUser, err := us.storage.UpdateUser(ctx, user)
+	updatedUserDAO, err := us.storage.UpdateUser(ctx, converter.ToUserDAO(user))
 	if err != nil {
 		if err == domain.ErrConflictingData {
 			return nil, err
 		}
 		return nil, domain.ErrInternal
 	}
+	updatedUser := converter.ToUser(updatedUserDAO)
 
 	cacheKey := util.GenerateCacheKey("user", user.ID)
 	err = us.cache.Delete(ctx, cacheKey)

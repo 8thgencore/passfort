@@ -29,7 +29,7 @@ func ToUser(userDAO *dao.UserDAO) *domain.User {
 	}
 }
 
-func ToCollectionDAO(collection domain.Collection) *dao.CollectionDAO {
+func ToCollectionDAO(collection *domain.Collection) *dao.CollectionDAO {
 	return &dao.CollectionDAO{
 		ID:          collection.ID,
 		Name:        collection.Name,
@@ -46,5 +46,29 @@ func ToCollection(collectionDAO *dao.CollectionDAO) *domain.Collection {
 		Description: collectionDAO.Description,
 		CreatedAt:   collectionDAO.CreatedAt,
 		UpdatedAt:   collectionDAO.UpdatedAt,
+	}
+}
+
+func ToSecretDAO(secret *domain.Secret) *dao.SecretDAO {
+	return &dao.SecretDAO{
+		ID:           secret.ID,
+		CollectionID: secret.CollectionID,
+		SecretType:   string(secret.SecretType),
+		CreatedAt:    secret.CreatedAt,
+		UpdatedAt:    secret.UpdatedAt,
+		CreatedBy:    secret.CreatedBy,
+		UpdatedBy:    secret.UpdatedBy,
+	}
+}
+
+func ToSecret(secretDAO *dao.SecretDAO) *domain.Secret {
+	return &domain.Secret{
+		ID:           secretDAO.ID,
+		CollectionID: secretDAO.CollectionID,
+		SecretType:   domain.SecretTypeEnum(secretDAO.SecretType),
+		CreatedAt:    secretDAO.CreatedAt,
+		UpdatedAt:    secretDAO.UpdatedAt,
+		CreatedBy:    secretDAO.CreatedBy,
+		UpdatedBy:    secretDAO.UpdatedBy,
 	}
 }

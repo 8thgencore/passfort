@@ -64,7 +64,7 @@ Enum "secret_type_enum" {
 Table "secrets" {
   "id" uuid [pk, increment]
   "collection_id" uuid
-  "type" secret_type_enum
+  "secret_type" secret_type_enum
   "created_by" bigserial
   "updated_by" bigserial
   "created_at" timestamptz [not null, default: `now()`]

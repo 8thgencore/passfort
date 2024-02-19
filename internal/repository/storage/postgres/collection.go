@@ -6,7 +6,6 @@ import (
 
 	"github.com/8thgencore/passfort/internal/database"
 	"github.com/8thgencore/passfort/internal/domain"
-	"github.com/8thgencore/passfort/internal/repository/storage/postgres/converter"
 	"github.com/8thgencore/passfort/internal/repository/storage/postgres/dao"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -29,7 +28,7 @@ func NewCollectionRepository(db *database.DB) *CollectionRepository {
 }
 
 // CreateCollection creates a new collection in the database
-func (r *CollectionRepository) CreateCollection(ctx context.Context, userID uuid.UUID, collection *domain.Collection) (*domain.Collection, error) {
+func (r *CollectionRepository) CreateCollection(ctx context.Context, userID uuid.UUID, collection *dao.CollectionDAO) (*dao.CollectionDAO, error) {
 	var collectionDAO dao.CollectionDAO
 
 	// Begin a transaction
@@ -83,11 +82,11 @@ func (r *CollectionRepository) CreateCollection(ctx context.Context, userID uuid
 		return nil, err
 	}
 
-	return converter.ToCollection(&collectionDAO), nil
+	return &collectionDAO, nil
 }
 
 // GetCollectionByID gets a collection by ID from the database
-func (r *CollectionRepository) GetCollectionByID(ctx context.Context, id uuid.UUID) (*domain.Collection, error) {
+func (r *CollectionRepository) GetCollectionByID(ctx context.Context, id uuid.UUID) (*dao.CollectionDAO, error) {
 	var collectionDAO dao.CollectionDAO
 
 	query := r.db.QueryBuilder.Select("*").
@@ -114,13 +113,13 @@ func (r *CollectionRepository) GetCollectionByID(ctx context.Context, id uuid.UU
 		return nil, err
 	}
 
-	return converter.ToCollection(&collectionDAO), nil
+	return &collectionDAO, nil
 }
 
 // ListCollectionsByUserID lists all collections from the database
-func (r *CollectionRepository) ListCollectionsByUserID(ctx context.Context, userID uuid.UUID, skip, limit uint64) ([]domain.Collection, error) {
+func (r *CollectionRepository) ListCollectionsByUserID(ctx context.Context, userID uuid.UUID, skip, limit uint64) ([]dao.CollectionDAO, error) {
 	var collectionDAO dao.CollectionDAO
-	var collections []domain.Collection
+	var collectionsDAO []dao.CollectionDAO
 
 	query := r.db.QueryBuilder.Select("c.id, c.name, c.description, c.created_at, c.updated_at").
 		From("collections c").
@@ -153,18 +152,15 @@ func (r *CollectionRepository) ListCollectionsByUserID(ctx context.Context, user
 			return nil, err
 		}
 
-		// Convert the CollectionDAO to a domain.Collection
-		collection := converter.ToCollection(&collectionDAO)
-
 		// Append the converted collection to the list
-		collections = append(collections, *collection)
+		collectionsDAO = append(collectionsDAO, collectionDAO)
 	}
 
-	return collections, nil
+	return collectionsDAO, nil
 }
 
 // UpdateCollection updates a collection by ID in the database
-func (r *CollectionRepository) UpdateCollection(ctx context.Context, collection *domain.Collection) (*domain.Collection, error) {
+func (r *CollectionRepository) UpdateCollection(ctx context.Context, collection *dao.CollectionDAO) (*dao.CollectionDAO, error) {
 	var collectionDAO dao.CollectionDAO
 
 	name := nullString(collection.Name)
@@ -193,7 +189,7 @@ func (r *CollectionRepository) UpdateCollection(ctx context.Context, collection 
 		return nil, err
 	}
 
-	return converter.ToCollection(&collectionDAO), nil
+	return &collectionDAO, nil
 }
 
 // DeleteCollection deletes a collection by ID from the database
