@@ -26,36 +26,6 @@ func NewSecretRepository(db *database.DB) *SecretRepository {
 	}
 }
 
-// GetSecretByID returns the secret by the specified identifier.
-func (r *SecretRepository) GetSecretByID(ctx context.Context, id uuid.UUID) (*dao.SecretDAO, error) {
-	var secret dao.SecretDAO
-
-	query := r.db.QueryBuilder.Select("*").From("secrets").Where(sq.Eq{"id": id}).Limit(1)
-
-	sql, args, err := query.ToSql()
-	if err != nil {
-		return nil, err
-	}
-
-	err = r.db.QueryRow(ctx, sql, args...).Scan(
-		&secret.ID,
-		&secret.CollectionID,
-		&secret.SecretType,
-		&secret.CreatedAt,
-		&secret.UpdatedAt,
-		&secret.CreatedBy,
-		&secret.UpdatedBy,
-	)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, domain.ErrDataNotFound
-		}
-		return nil, err
-	}
-
-	return &secret, nil
-}
-
 // CreateSecret creates a new secret in the data warehouse.
 func (r *SecretRepository) CreateSecret(ctx context.Context, collectionID uuid.UUID, secret *dao.SecretDAO) (*dao.SecretDAO, error) {
 	var secretDao dao.SecretDAO
@@ -87,6 +57,36 @@ func (r *SecretRepository) CreateSecret(ctx context.Context, collectionID uuid.U
 	}
 
 	return &secretDao, nil
+}
+
+// GetSecretByID returns the secret by the specified identifier.
+func (r *SecretRepository) GetSecretByID(ctx context.Context, id uuid.UUID) (*dao.SecretDAO, error) {
+	var secret dao.SecretDAO
+
+	query := r.db.QueryBuilder.Select("*").From("secrets").Where(sq.Eq{"id": id}).Limit(1)
+
+	sql, args, err := query.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.db.QueryRow(ctx, sql, args...).Scan(
+		&secret.ID,
+		&secret.CollectionID,
+		&secret.SecretType,
+		&secret.CreatedAt,
+		&secret.UpdatedAt,
+		&secret.CreatedBy,
+		&secret.UpdatedBy,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, domain.ErrDataNotFound
+		}
+		return nil, err
+	}
+
+	return &secret, nil
 }
 
 // ListSecretsByCollectionID selects a list of secrets for a specific collection ID
