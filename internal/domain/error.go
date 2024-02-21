@@ -42,6 +42,8 @@ var (
 	ErrForbidden = errors.New("user is forbidden to access the resource")
 	// ErrDeleteOwnAccount is an error for when a user tries to delete their own account
 	ErrDeleteOwnAccount = errors.New("you cannot delete your own account")
+	// ErrCollectionNotExists is an error for when the requested collection does not exist
+	ErrCollectionNotExists = errors.New("requested collection does not exist")
 )
 
 // IsUniqueConstraintViolationError checks if the error is a unique constraint violation error

@@ -1,5 +1,15 @@
 basePath: /v1
 definitions:
+  domain.SecretTypeEnum:
+    enum:
+    - password
+    - text
+    - file
+    type: string
+    x-enum-varnames:
+    - Password
+    - Text
+    - File
   domain.UserRoleEnum:
     enum:
     - admin
@@ -32,6 +42,16 @@ definitions:
         type: string
     required:
     - name
+    type: object
+  handler.createSecretRequest:
+    properties:
+      collection_id:
+        type: string
+      secret_type:
+        $ref: '#/definitions/domain.SecretTypeEnum'
+    required:
+    - collection_id
+    - secret_type
     type: object
   handler.loginRequest:
     properties:
@@ -74,6 +94,8 @@ definitions:
     required:
     - name
     type: object
+  handler.updateSecretRequest:
+    type: object
   handler.updateUserRequest:
     properties:
       email:
@@ -106,7 +128,7 @@ definitions:
         example: Collection description
         type: string
       id:
-        example: "1"
+        example: bb073c91-f09b-4858-b2d1-d14116e73b8d
         type: string
       name:
         example: My Collection
@@ -150,6 +172,31 @@ definitions:
         example: true
         type: boolean
     type: object
+  response.SecretResponse:
+    properties:
+      collection_id:
+        example: fab8dfe9-7cd0-4cd7-a387-7d6835a910d3
+        type: string
+      created_at:
+        example: "1970-01-01T00:00:00Z"
+        type: string
+      created_by:
+        example: f10ff052-b316-47f0-9788-ae8ebfa91b86
+        type: string
+      id:
+        example: bb073c91-f09b-4858-b2d1-d14116e73b8d
+        type: string
+      secret_type:
+        allOf:
+        - $ref: '#/definitions/domain.SecretTypeEnum'
+        example: password
+      updated_at:
+        example: "1970-01-01T00:00:00Z"
+        type: string
+      updated_by:
+        example: f10ff052-b316-47f0-9788-ae8ebfa91b86
+        type: string
+    type: object
   response.UserResponse:
     properties:
       created_at:
@@ -159,7 +206,7 @@ definitions:
         example: test@example.com
         type: string
       id:
-        example: "1"
+        example: bb073c91-f09b-4858-b2d1-d14116e73b8d
         type: string
       name:
         example: John Doe
@@ -459,6 +506,197 @@ paths:
       summary: List me collections
       tags:
       - Collections
+  /secrets:
+    post:
+      consumes:
+      - application/json
+      description: Create a new secret
+      parameters:
+      - description: Create Secret Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createSecretRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Secret created
+          schema:
+            $ref: '#/definitions/response.SecretResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new secret
+      tags:
+      - Secrets
+  /secrets/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a secret by id
+      parameters:
+      - description: Secret ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Secret deleted
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Data not found error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a secret
+      tags:
+      - Secrets
+    get:
+      consumes:
+      - application/json
+      description: Get a secret by id
+      parameters:
+      - description: Secret ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Secret displayed
+          schema:
+            $ref: '#/definitions/response.SecretResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Data not found error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Get a secret
+      tags:
+      - Secrets
+    put:
+      consumes:
+      - application/json
+      description: Update a secret's fields by id
+      parameters:
+      - description: Secret ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update secret request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.updateSecretRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Secret updated
+          schema:
+            $ref: '#/definitions/response.SecretResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Data not found error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a secret
+      tags:
+      - Secrets
+  /secrets/me:
+    get:
+      consumes:
+      - application/json
+      description: List me secrets associated with pagination
+      parameters:
+      - description: Skip
+        in: query
+        name: skip
+        required: true
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Secrets displayed
+          schema:
+            $ref: '#/definitions/response.Meta'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List me secrets
+      tags:
+      - Secrets
   /users:
     get:
       consumes:

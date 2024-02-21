@@ -6,10 +6,10 @@ import (
 	"github.com/google/uuid"
 )
 
-// SecretType is an enum for secrets's type
+// SecretTypeEnum is an enum for secrets's type
 type SecretTypeEnum string
 
-// SecretType enum values
+// SecretTypeEnum enum values
 const (
 	Password SecretTypeEnum = "password"
 	Text     SecretTypeEnum = "text"

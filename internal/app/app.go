@@ -16,6 +16,7 @@ import (
 	"github.com/8thgencore/passfort/internal/repository/storage/postgres"
 	authService "github.com/8thgencore/passfort/internal/service/auth"
 	collectionService "github.com/8thgencore/passfort/internal/service/collection"
+	secretService "github.com/8thgencore/passfort/internal/service/secret"
 	"github.com/8thgencore/passfort/internal/service/token/paseto"
 	userService "github.com/8thgencore/passfort/internal/service/user"
 	"github.com/8thgencore/passfort/pkg/logger/slogpretty"
@@ -106,8 +107,13 @@ func Run(configPath string) {
 	collectionService := collectionService.NewCollectionService(log, collectionRepo)
 	collectionHandler := handler.NewCollectionHandler(collectionService)
 
+	// Secret
+	secretRepo := postgres.NewSecretRepository(db)
+	secretService := secretService.NewSecretService(log, secretRepo, collectionRepo)
+	secretHandler := handler.NewSecretHandler(secretService)
+
 	// Init router
-	router, err := http.NewRouter(log, cfg, token, *userHandler, *authHandler, *collectionHandler)
+	router, err := http.NewRouter(log, cfg, token, *userHandler, *authHandler, *collectionHandler, *secretHandler)
 	if err != nil {
 		log.Error("Error initializing router", "error", err.Error())
 		os.Exit(1)

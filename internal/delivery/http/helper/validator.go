@@ -16,3 +16,15 @@ var UserRoleValidator validator.Func = func(fl validator.FieldLevel) bool {
 		return false
 	}
 }
+
+// SecretTypeValidator is a custom validator function for SecretTypeEnum
+var SecretTypeValidator validator.Func = func(fl validator.FieldLevel) bool {
+	secretType := fl.Field().Interface().(domain.SecretTypeEnum)
+
+	switch secretType {
+	case domain.Password, domain.Text, domain.File:
+		return true
+	default:
+		return false
+	}
+}

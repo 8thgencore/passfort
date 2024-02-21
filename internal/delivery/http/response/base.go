@@ -53,7 +53,7 @@ func NewAuthResponse(token string) AuthResponse {
 
 // UserResponse represents a user response body
 type UserResponse struct {
-	ID        uuid.UUID `json:"id" example:"1"`
+	ID        uuid.UUID `json:"id" example:"bb073c91-f09b-4858-b2d1-d14116e73b8d"`
 	Name      string    `json:"name" example:"John Doe"`
 	Email     string    `json:"email" example:"test@example.com"`
 	CreatedAt time.Time `json:"created_at" example:"1970-01-01T00:00:00Z"`
@@ -73,7 +73,7 @@ func NewUserResponse(user *domain.User) UserResponse {
 
 // CollectionResponse represents a collection response body
 type CollectionResponse struct {
-	ID          uuid.UUID `json:"id" example:"1"`
+	ID          uuid.UUID `json:"id" example:"bb073c91-f09b-4858-b2d1-d14116e73b8d"`
 	Name        string    `json:"name" example:"My Collection"`
 	Description string    `json:"description,omitempty" example:"Collection description"`
 	CreatedAt   time.Time `json:"created_at" example:"1970-01-01T00:00:00Z"`
@@ -91,9 +91,33 @@ func NewCollectionResponse(collection *domain.Collection) CollectionResponse {
 	}
 }
 
+// SecretResponse represents a secret response body
+type SecretResponse struct {
+	ID           uuid.UUID             `json:"id" example:"bb073c91-f09b-4858-b2d1-d14116e73b8d"`
+	CollectionID uuid.UUID             `json:"collection_id" example:"fab8dfe9-7cd0-4cd7-a387-7d6835a910d3"`
+	SecretType   domain.SecretTypeEnum `json:"secret_type" example:"password"`
+	CreatedAt    time.Time             `json:"created_at" example:"1970-01-01T00:00:00Z"`
+	UpdatedAt    time.Time             `json:"updated_at" example:"1970-01-01T00:00:00Z"`
+	CreatedBy    uuid.UUID             `json:"created_by" example:"f10ff052-b316-47f0-9788-ae8ebfa91b86"`
+	UpdatedBy    uuid.UUID             `json:"updated_by" example:"f10ff052-b316-47f0-9788-ae8ebfa91b86"`
+}
+
+// NewSecretResponse is a helper function to create a response body for handling secret data
+func NewSecretResponse(secret *domain.Secret) SecretResponse {
+	return SecretResponse{
+		ID:           secret.ID,
+		CollectionID: secret.CollectionID,
+		SecretType:   secret.SecretType,
+		CreatedAt:    secret.CreatedAt,
+		UpdatedAt:    secret.UpdatedAt,
+		CreatedBy:    secret.CreatedBy,
+		UpdatedBy:    secret.UpdatedBy,
+	}
+}
+
 // // paymentResponse represents a payment response body
 // type paymentResponse struct {
-// 	ID   uint64             `json:"id" example:"1"`
+// 	ID   uint64             `json:"id" example:"bb073c91-f09b-4858-b2d1-d14116e73b8d"`
 // 	Name string             `json:"name" example:"Tunai"`
 // 	Type domain.PaymentType `json:"type" example:"CASH"`
 // 	Logo string             `json:"logo" example:"https://example.com/cash.png"`
@@ -111,7 +135,7 @@ func NewCollectionResponse(collection *domain.Collection) CollectionResponse {
 
 // // categoryResponse represents a category response body
 // type categoryResponse struct {
-// 	ID   uint64 `json:"id" example:"1"`
+// 	ID   uint64 `json:"id" example:"bb073c91-f09b-4858-b2d1-d14116e73b8d"`
 // 	Name string `json:"name" example:"Foods"`
 // }
 
@@ -125,7 +149,7 @@ func NewCollectionResponse(collection *domain.Collection) CollectionResponse {
 
 // // productResponse represents a product response body
 // type productResponse struct {
-// 	ID        uint64           `json:"id" example:"1"`
+// 	ID        uint64           `json:"id" example:"bb073c91-f09b-4858-b2d1-d14116e73b8d"`
 // 	SKU       string           `json:"sku" example:"9a4c25d3-9786-492c-b084-85cb75c1ee3e"`
 // 	Name      string           `json:"name" example:"Chiki Ball"`
 // 	Stock     int64            `json:"stock" example:"100"`
@@ -153,7 +177,7 @@ func NewCollectionResponse(collection *domain.Collection) CollectionResponse {
 
 // // orderResponse represents an order response body
 // type orderResponse struct {
-// 	ID           uint64                 `json:"id" example:"1"`
+// 	ID           uint64                 `json:"id" example:"bb073c91-f09b-4858-b2d1-d14116e73b8d"`
 // 	UserID       uint64                 `json:"user_id" example:"1"`
 // 	PaymentID    uint64                 `json:"payment_type_id" example:"1"`
 // 	CustomerName string                 `json:"customer_name" example:"John Doe"`
@@ -187,7 +211,7 @@ func NewCollectionResponse(collection *domain.Collection) CollectionResponse {
 
 // // orderProductResponse represents an order product response body
 // type orderProductResponse struct {
-// 	ID               uint64          `json:"id" example:"1"`
+// 	ID               uint64          `json:"id" example:"bb073c91-f09b-4858-b2d1-d14116e73b8d"`
 // 	OrderID          uint64          `json:"order_id" example:"1"`
 // 	ProductID        uint64          `json:"product_id" example:"1"`
 // 	Quantity         int64           `json:"qty" example:"1"`

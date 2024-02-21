@@ -451,6 +451,302 @@ const docTemplate = `{
                 }
             }
         },
+        "/secrets": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new secret",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Secrets"
+                ],
+                "summary": "Create a new secret",
+                "parameters": [
+                    {
+                        "description": "Create Secret Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.createSecretRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Secret created",
+                        "schema": {
+                            "$ref": "#/definitions/response.SecretResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/secrets/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List me secrets associated with pagination",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Secrets"
+                ],
+                "summary": "List me secrets",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Skip",
+                        "name": "skip",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Secrets displayed",
+                        "schema": {
+                            "$ref": "#/definitions/response.Meta"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/secrets/{id}": {
+            "get": {
+                "description": "Get a secret by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Secrets"
+                ],
+                "summary": "Get a secret",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Secret ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Secret displayed",
+                        "schema": {
+                            "$ref": "#/definitions/response.SecretResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Data not found error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a secret's fields by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Secrets"
+                ],
+                "summary": "Update a secret",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Secret ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update secret request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.updateSecretRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Secret updated",
+                        "schema": {
+                            "$ref": "#/definitions/response.SecretResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Data not found error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a secret by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Secrets"
+                ],
+                "summary": "Delete a secret",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Secret ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Secret deleted",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Data not found error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "security": [
@@ -807,6 +1103,19 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "domain.SecretTypeEnum": {
+            "type": "string",
+            "enum": [
+                "password",
+                "text",
+                "file"
+            ],
+            "x-enum-varnames": [
+                "Password",
+                "Text",
+                "File"
+            ]
+        },
         "domain.UserRoleEnum": {
             "type": "string",
             "enum": [
@@ -850,6 +1159,21 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "example": "My Collection"
+                }
+            }
+        },
+        "handler.createSecretRequest": {
+            "type": "object",
+            "required": [
+                "collection_id",
+                "secret_type"
+            ],
+            "properties": {
+                "collection_id": {
+                    "type": "string"
+                },
+                "secret_type": {
+                    "$ref": "#/definitions/domain.SecretTypeEnum"
                 }
             }
         },
@@ -910,6 +1234,9 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.updateSecretRequest": {
+            "type": "object"
+        },
         "handler.updateUserRequest": {
             "type": "object",
             "required": [
@@ -958,7 +1285,7 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string",
-                    "example": "1"
+                    "example": "bb073c91-f09b-4858-b2d1-d14116e73b8d"
                 },
                 "name": {
                     "type": "string",
@@ -1020,6 +1347,43 @@ const docTemplate = `{
                 }
             }
         },
+        "response.SecretResponse": {
+            "type": "object",
+            "properties": {
+                "collection_id": {
+                    "type": "string",
+                    "example": "fab8dfe9-7cd0-4cd7-a387-7d6835a910d3"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "1970-01-01T00:00:00Z"
+                },
+                "created_by": {
+                    "type": "string",
+                    "example": "f10ff052-b316-47f0-9788-ae8ebfa91b86"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "bb073c91-f09b-4858-b2d1-d14116e73b8d"
+                },
+                "secret_type": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.SecretTypeEnum"
+                        }
+                    ],
+                    "example": "password"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "1970-01-01T00:00:00Z"
+                },
+                "updated_by": {
+                    "type": "string",
+                    "example": "f10ff052-b316-47f0-9788-ae8ebfa91b86"
+                }
+            }
+        },
         "response.UserResponse": {
             "type": "object",
             "properties": {
@@ -1033,7 +1397,7 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string",
-                    "example": "1"
+                    "example": "bb073c91-f09b-4858-b2d1-d14116e73b8d"
                 },
                 "name": {
                     "type": "string",

@@ -114,11 +114,6 @@ func (uh *UserHandler) ListUsers(ctx *gin.Context) {
 	response.HandleSuccess(ctx, rsp)
 }
 
-// getUserRequest represents the request body for getting a user
-type getUserRequest struct {
-	ID string `uri:"id" binding:"required" example:"5950a459-5126-40b7-bd8e-82f7b91c2cf1"`
-}
-
 // GetUserMe godoc
 //
 //	@Summary		Get information about the authenticated user
@@ -146,6 +141,11 @@ func (uh *UserHandler) GetUserMe(ctx *gin.Context) {
 	response.HandleSuccess(ctx, rsp)
 }
 
+// getUserRequest represents the request body for getting a user
+type getUserRequest struct {
+	ID string `uri:"id" binding:"required" example:"5950a459-5126-40b7-bd8e-82f7b91c2cf1"`
+}
+
 // GetUser godoc
 //
 //	@Summary		Get a user
@@ -167,8 +167,7 @@ func (uh *UserHandler) GetUser(ctx *gin.Context) {
 		return
 	}
 
-	uuidString := req.ID
-	uuid, err := uuid.Parse(uuidString)
+	uuid, err := uuid.Parse(req.ID)
 	if err != nil {
 		response.ValidationError(ctx, err)
 		return

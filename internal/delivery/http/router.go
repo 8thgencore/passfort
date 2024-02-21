@@ -30,6 +30,7 @@ func NewRouter(
 	userHander handler.UserHandler,
 	authHandler handler.AuthHandler,
 	collectionHandler handler.CollectionHandler,
+	secretHandler handler.SecretHandler,
 ) (*Router, error) {
 	// Disable debug mode in production
 	if cfg.Env == config.Prod {
@@ -46,9 +47,11 @@ func NewRouter(
 	router.Use(sloggin.New(log), gin.Recovery(), cors.New(ginConfig))
 
 	// Custom validator
-	v, ok := binding.Validator.Engine().(*validator.Validate)
-	if ok {
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		if err := v.RegisterValidation("user_role", helper.UserRoleValidator); err != nil {
+			return nil, err
+		}
+		if err := v.RegisterValidation("secret_type", helper.SecretTypeValidator); err != nil {
 			return nil, err
 		}
 	}
@@ -93,6 +96,17 @@ func NewRouter(
 				authCollection.GET("/:id", collectionHandler.GetCollection)
 				authCollection.PUT("/:id", collectionHandler.UpdateCollection)
 				authCollection.DELETE("/:id", collectionHandler.DeleteCollection)
+			}
+		}
+		secret := v1.Group("/secrets")
+		{
+			authSecret := secret.Group("/").Use(middleware.AuthMiddleware(token))
+			{
+				authSecret.GET("/me", secretHandler.ListMeSecrets)
+				authSecret.POST("/", secretHandler.CreateSecret)
+				authSecret.GET("/:id", secretHandler.GetSecret)
+				// authSecret.PUT("/:id", secretHandler.UpdateSecret)
+				authSecret.DELETE("/:id", secretHandler.DeleteSecret)
 			}
 		}
 	}
