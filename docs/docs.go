@@ -257,7 +257,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/collections/{id}": {
+        "/collections/{collection_id}": {
             "get": {
                 "security": [
                     {
@@ -279,7 +279,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Collection ID",
-                        "name": "id",
+                        "name": "collection_id",
                         "in": "path",
                         "required": true
                     }
@@ -332,7 +332,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Collection ID",
-                        "name": "id",
+                        "name": "collection_id",
                         "in": "path",
                         "required": true
                     },
@@ -406,7 +406,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Collection ID",
-                        "name": "id",
+                        "name": "collection_id",
                         "in": "path",
                         "required": true
                     }
@@ -451,58 +451,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/secrets": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create a new secret",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Secrets"
-                ],
-                "summary": "Create a new secret",
-                "parameters": [
-                    {
-                        "description": "Create Secret Request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.createSecretRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Secret created",
-                        "schema": {
-                            "$ref": "#/definitions/response.SecretResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Validation error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/secrets/me": {
+        "/collections/{collection_id}/secrets": {
             "get": {
                 "security": [
                     {
@@ -521,6 +470,13 @@ const docTemplate = `{
                 ],
                 "summary": "List me secrets",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection ID",
+                        "name": "collection_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "Skip",
@@ -556,10 +512,71 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new secret",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Secrets"
+                ],
+                "summary": "Create a new secret",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection ID",
+                        "name": "collection_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Create Secret Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.createSecretRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Secret created",
+                        "schema": {
+                            "$ref": "#/definitions/response.SecretResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
-        "/secrets/{id}": {
+        "/collections/{collection_id}/secrets/{secret_id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get a secret by id",
                 "consumes": [
                     "application/json"
@@ -574,8 +591,15 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "Collection ID",
+                        "name": "collection_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Secret ID",
-                        "name": "id",
+                        "name": "secret_id",
                         "in": "path",
                         "required": true
                     }
@@ -589,80 +613,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Validation error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Data not found error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update a secret's fields by id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Secrets"
-                ],
-                "summary": "Update a secret",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Secret ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Update secret request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.updateSecretRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Secret updated",
-                        "schema": {
-                            "$ref": "#/definitions/response.SecretResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Validation error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden error",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
                         }
@@ -701,8 +651,15 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "Collection ID",
+                        "name": "collection_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Secret ID",
-                        "name": "id",
+                        "name": "secret_id",
                         "in": "path",
                         "required": true
                     }
@@ -1165,15 +1122,16 @@ const docTemplate = `{
         "handler.createSecretRequest": {
             "type": "object",
             "required": [
-                "collection_id",
                 "secret_type"
             ],
             "properties": {
-                "collection_id": {
-                    "type": "string"
-                },
                 "secret_type": {
-                    "$ref": "#/definitions/domain.SecretTypeEnum"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.SecretTypeEnum"
+                        }
+                    ],
+                    "example": "password"
                 }
             }
         },
@@ -1233,9 +1191,6 @@ const docTemplate = `{
                     "example": "My Collection"
                 }
             }
-        },
-        "handler.updateSecretRequest": {
-            "type": "object"
         },
         "handler.updateUserRequest": {
             "type": "object",

@@ -58,9 +58,9 @@ type SecretService interface {
 	// ListSecretsByCollectionID returns a list of secrets by collection ID with pagination
 	ListSecretsByCollectionID(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, skip, limit uint64) ([]domain.Secret, error)
 	// GetSecret returns a secret by id
-	GetSecret(ctx context.Context, userID, secretID uuid.UUID) (*domain.Secret, error)
+	GetSecret(ctx context.Context, userID, collectionID, secretID uuid.UUID) (*domain.Secret, error)
 	// UpdateSecret updates a secret
-	UpdateSecret(ctx context.Context, userID uuid.UUID, secret *domain.Secret) (*domain.Secret, error)
+	UpdateSecret(ctx context.Context, userID, collectionID uuid.UUID, secret *domain.Secret) (*domain.Secret, error)
 	// DeleteSecret deletes a secret
-	DeleteSecret(ctx context.Context, userID, secretID uuid.UUID) error
+	DeleteSecret(ctx context.Context, userID, collectionID, secretID uuid.UUID) error
 }

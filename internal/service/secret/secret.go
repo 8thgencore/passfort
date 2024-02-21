@@ -51,25 +51,22 @@ func (ss *SecretService) ListSecretsByCollectionID(ctx context.Context, userID u
 }
 
 // GetSecret gets a secret by ID
-func (ss *SecretService) GetSecret(ctx context.Context, userID uuid.UUID, secretID uuid.UUID) (*domain.Secret, error) {
-	// Implement your business logic and call to the repository's GetSecretByID method
+func (ss *SecretService) GetSecret(ctx context.Context, userID, collectionID, secretID uuid.UUID) (*domain.Secret, error) {
+	if !ss.isUserPartOfCollection(ctx, userID, collectionID) {
+		return nil, domain.ErrUnauthorized
+	}
+
 	secretDAO, err := ss.secretStorage.GetSecretByID(ctx, secretID)
 	if err != nil {
 		ss.log.Error(fmt.Sprintf("Error getting secret %d:", secretID), "error", err.Error())
 		return nil, err
 	}
 
-	// Check if the user is part of the collection associated with the secret
-	// TODO:
-	// if !ss.isUserPartOfCollection(ctx, userID, secretDAO.CollectionID) {
-	// 	return nil, domain.ErrUnauthorized
-	// }
-
 	return converter.ToSecret(secretDAO), nil
 }
 
 // UpdateSecret updates a secret
-func (ss *SecretService) UpdateSecret(ctx context.Context, userID uuid.UUID, secret *domain.Secret) (*domain.Secret, error) {
+func (ss *SecretService) UpdateSecret(ctx context.Context, userID, collectionID uuid.UUID, secret *domain.Secret) (*domain.Secret, error) {
 	// Implement your business logic, validation, and call to the repository's UpdateSecret method
 	// ...
 
@@ -77,9 +74,16 @@ func (ss *SecretService) UpdateSecret(ctx context.Context, userID uuid.UUID, sec
 }
 
 // DeleteSecret deletes a secret
-func (ss *SecretService) DeleteSecret(ctx context.Context, userID uuid.UUID, secretID uuid.UUID) error {
-	// Implement your business logic and call to the repository's DeleteSecret method
-	// ...
+func (ss *SecretService) DeleteSecret(ctx context.Context, userID, collectionID, secretID uuid.UUID) error {
+	if !ss.isUserPartOfCollection(ctx, userID, collectionID) {
+		return domain.ErrUnauthorized
+	}
+
+	err := ss.secretStorage.DeleteSecret(ctx, secretID)
+	if err != nil {
+		ss.log.Error(fmt.Sprintf("Error deleting secrets %d:", secretID), "error", err.Error())
+		return err
+	}
 
 	return nil
 }

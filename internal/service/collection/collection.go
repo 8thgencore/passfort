@@ -66,18 +66,11 @@ func (cs *CollectionService) UpdateCollection(ctx context.Context, userID uuid.U
 
 // DeleteCollection deletes a collection by ID, checking if the user is part of the collection
 func (cs *CollectionService) DeleteCollection(ctx context.Context, userID, collectionID uuid.UUID) error {
-	// Check if the user is part of the collection
-	collectionDAO, err := cs.storage.GetCollectionByID(ctx, collectionID)
-	if err != nil {
-		cs.log.Error(fmt.Sprintf("Error getting collection %d:", collectionID), "error", err.Error())
-		return err
-	}
-
-	if !cs.isUserPartOfCollection(ctx, userID, collectionDAO.ID) {
+	if !cs.isUserPartOfCollection(ctx, userID, collectionID) {
 		return domain.ErrUnauthorized
 	}
 
-	err = cs.storage.DeleteCollection(ctx, collectionID)
+	err := cs.storage.DeleteCollection(ctx, collectionID)
 	if err != nil {
 		cs.log.Error(fmt.Sprintf("Error deleting collection %d:", collectionID), "error", err.Error())
 		return err

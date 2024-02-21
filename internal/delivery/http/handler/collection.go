@@ -119,7 +119,7 @@ func (ch *CollectionHandler) ListMeCollections(ctx *gin.Context) {
 
 // getCollectionRequest represents the request body for getting a collection
 type getCollectionRequest struct {
-	ID string `uri:"id" binding:"required" example:"5950a459-5126-40b7-bd8e-82f7b91c2cf1"`
+	ID string `uri:"collection_id" binding:"required" example:"5950a459-5126-40b7-bd8e-82f7b91c2cf1"`
 }
 
 // GetCollection godoc
@@ -129,12 +129,12 @@ type getCollectionRequest struct {
 //	@Tags			Collections
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		string						true	"Collection ID"
-//	@Success		200	{object}	response.CollectionResponse	"Collection displayed"
-//	@Failure		400	{object}	response.ErrorResponse		"Validation error"
-//	@Failure		404	{object}	response.ErrorResponse		"Data not found error"
-//	@Failure		500	{object}	response.ErrorResponse		"Internal server error"
-//	@Router			/collections/{id} [get]
+//	@Param			collection_id	path		string						true	"Collection ID"
+//	@Success		200				{object}	response.CollectionResponse	"Collection displayed"
+//	@Failure		400				{object}	response.ErrorResponse		"Validation error"
+//	@Failure		404				{object}	response.ErrorResponse		"Data not found error"
+//	@Failure		500				{object}	response.ErrorResponse		"Internal server error"
+//	@Router			/collections/{collection_id} [get]
 //	@Security		BearerAuth
 func (ch *CollectionHandler) GetCollection(ctx *gin.Context) {
 	var req getCollectionRequest
@@ -143,8 +143,7 @@ func (ch *CollectionHandler) GetCollection(ctx *gin.Context) {
 		return
 	}
 
-	uuidString := req.ID
-	uuid, err := uuid.Parse(uuidString)
+	uuid, err := uuid.Parse(req.ID)
 	if err != nil {
 		response.ValidationError(ctx, err)
 		return
@@ -176,7 +175,7 @@ type updateCollectionRequest struct {
 //	@Tags			Collections
 //	@Accept			json
 //	@Produce		json
-//	@Param			id						path		string						true	"Collection ID"
+//	@Param			collection_id			path		string						true	"Collection ID"
 //	@Param			updateCollectionRequest	body		updateCollectionRequest		true	"Update collection request"
 //	@Success		200						{object}	response.CollectionResponse	"Collection updated"
 //	@Failure		400						{object}	response.ErrorResponse		"Validation error"
@@ -184,7 +183,7 @@ type updateCollectionRequest struct {
 //	@Failure		403						{object}	response.ErrorResponse		"Forbidden error"
 //	@Failure		404						{object}	response.ErrorResponse		"Data not found error"
 //	@Failure		500						{object}	response.ErrorResponse		"Internal server error"
-//	@Router			/collections/{id} [put]
+//	@Router			/collections/{collection_id} [put]
 //	@Security		BearerAuth
 func (ch *CollectionHandler) UpdateCollection(ctx *gin.Context) {
 	var req updateCollectionRequest
@@ -193,7 +192,7 @@ func (ch *CollectionHandler) UpdateCollection(ctx *gin.Context) {
 		return
 	}
 
-	uuidString := ctx.Param("id")
+	uuidString := ctx.Param("collection_id")
 	uuid, err := uuid.Parse(uuidString)
 	if err != nil {
 		response.ValidationError(ctx, err)
@@ -221,7 +220,7 @@ func (ch *CollectionHandler) UpdateCollection(ctx *gin.Context) {
 
 // deleteCollectionRequest represents the request body for deleting a collection
 type deleteCollectionRequest struct {
-	ID string `uri:"id" binding:"required" example:"5950a459-5126-40b7-bd8e-82f7b91c2cf1"`
+	ID string `uri:"collection_id" binding:"required" example:"5950a459-5126-40b7-bd8e-82f7b91c2cf1"`
 }
 
 // DeleteCollection godoc
@@ -231,14 +230,14 @@ type deleteCollectionRequest struct {
 //	@Tags			Collections
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		string					true	"Collection ID"
-//	@Success		200	{object}	response.Response		"Collection deleted"
-//	@Failure		400	{object}	response.ErrorResponse	"Validation error"
-//	@Failure		401	{object}	response.ErrorResponse	"Unauthorized error"
-//	@Failure		403	{object}	response.ErrorResponse	"Forbidden error"
-//	@Failure		404	{object}	response.ErrorResponse	"Data not found error"
-//	@Failure		500	{object}	response.ErrorResponse	"Internal server error"
-//	@Router			/collections/{id} [delete]
+//	@Param			collection_id	path		string					true	"Collection ID"
+//	@Success		200				{object}	response.Response		"Collection deleted"
+//	@Failure		400				{object}	response.ErrorResponse	"Validation error"
+//	@Failure		401				{object}	response.ErrorResponse	"Unauthorized error"
+//	@Failure		403				{object}	response.ErrorResponse	"Forbidden error"
+//	@Failure		404				{object}	response.ErrorResponse	"Data not found error"
+//	@Failure		500				{object}	response.ErrorResponse	"Internal server error"
+//	@Router			/collections/{collection_id} [delete]
 //	@Security		BearerAuth
 func (ch *CollectionHandler) DeleteCollection(ctx *gin.Context) {
 	var req deleteCollectionRequest
@@ -247,8 +246,7 @@ func (ch *CollectionHandler) DeleteCollection(ctx *gin.Context) {
 		return
 	}
 
-	uuidString := ctx.Param("id")
-	uuid, err := uuid.Parse(uuidString)
+	uuid, err := uuid.Parse(req.ID)
 	if err != nil {
 		response.ValidationError(ctx, err)
 		return

@@ -59,13 +59,16 @@ func NewRouter(
 	// Swagger
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	// Middleware
+	authMiddleware := middleware.AuthMiddleware(token)
+
 	v1 := router.Group("/v1")
 	{
 		auth := v1.Group("/auth")
 		{
 			auth.POST("/login", authHandler.Login)
 
-			authUser := auth.Group("/").Use(middleware.AuthMiddleware(token))
+			authUser := auth.Group("/").Use(authMiddleware)
 			{
 				authUser.PUT("/change-password", authHandler.ChangePassword)
 			}
@@ -74,7 +77,7 @@ func NewRouter(
 		{
 			user.POST("/register", userHander.Register)
 
-			authUser := user.Group("/").Use(middleware.AuthMiddleware(token))
+			authUser := user.Group("/").Use(authMiddleware)
 			{
 				authUser.GET("/me", userHander.GetUserMe)
 				authUser.GET("/:id", userHander.GetUser)
@@ -89,24 +92,23 @@ func NewRouter(
 		}
 		collection := v1.Group("/collections")
 		{
-			authCollection := collection.Group("/").Use(middleware.AuthMiddleware(token))
+			authCollection := collection.Use(authMiddleware)
 			{
 				authCollection.GET("/me", collectionHandler.ListMeCollections)
 				authCollection.POST("/", collectionHandler.CreateCollection)
-				authCollection.GET("/:id", collectionHandler.GetCollection)
-				authCollection.PUT("/:id", collectionHandler.UpdateCollection)
-				authCollection.DELETE("/:id", collectionHandler.DeleteCollection)
-			}
-		}
-		secret := v1.Group("/secrets")
-		{
-			authSecret := secret.Group("/").Use(middleware.AuthMiddleware(token))
-			{
-				authSecret.GET("/me", secretHandler.ListMeSecrets)
-				authSecret.POST("/", secretHandler.CreateSecret)
-				authSecret.GET("/:id", secretHandler.GetSecret)
-				// authSecret.PUT("/:id", secretHandler.UpdateSecret)
-				authSecret.DELETE("/:id", secretHandler.DeleteSecret)
+				authCollection.GET("/:collection_id", collectionHandler.GetCollection)
+				authCollection.PUT("/:collection_id", collectionHandler.UpdateCollection)
+				authCollection.DELETE("/:collection_id", collectionHandler.DeleteCollection)
+
+				// Nest the /secrets routes under /collections/:id
+				authSecret := collection.Group("/:collection_id/secrets").Use(authMiddleware)
+				{
+					authSecret.GET("/", secretHandler.ListMeSecrets)
+					authSecret.POST("/", secretHandler.CreateSecret)
+					authSecret.GET("/:secret_id", secretHandler.GetSecret)
+					// authSecret.PUT("/:secret_id", secretHandler.UpdateSecret)
+					authSecret.DELETE("/:secret_id", secretHandler.DeleteSecret)
+				}
 			}
 		}
 	}

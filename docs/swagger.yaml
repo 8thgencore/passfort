@@ -45,12 +45,11 @@ definitions:
     type: object
   handler.createSecretRequest:
     properties:
-      collection_id:
-        type: string
       secret_type:
-        $ref: '#/definitions/domain.SecretTypeEnum'
+        allOf:
+        - $ref: '#/definitions/domain.SecretTypeEnum'
+        example: password
     required:
-    - collection_id
     - secret_type
     type: object
   handler.loginRequest:
@@ -93,8 +92,6 @@ definitions:
         type: string
     required:
     - name
-    type: object
-  handler.updateSecretRequest:
     type: object
   handler.updateUserRequest:
     properties:
@@ -345,7 +342,7 @@ paths:
       summary: Create a new collection
       tags:
       - Collections
-  /collections/{id}:
+  /collections/{collection_id}:
     delete:
       consumes:
       - application/json
@@ -353,7 +350,7 @@ paths:
       parameters:
       - description: Collection ID
         in: path
-        name: id
+        name: collection_id
         required: true
         type: string
       produces:
@@ -395,7 +392,7 @@ paths:
       parameters:
       - description: Collection ID
         in: path
-        name: id
+        name: collection_id
         required: true
         type: string
       produces:
@@ -429,7 +426,7 @@ paths:
       parameters:
       - description: Collection ID
         in: path
-        name: id
+        name: collection_id
         required: true
         type: string
       - description: Update collection request
@@ -470,12 +467,17 @@ paths:
       summary: Update a collection
       tags:
       - Collections
-  /collections/me:
+  /collections/{collection_id}/secrets:
     get:
       consumes:
       - application/json
-      description: List me collections associated with pagination
+      description: List me secrets associated with pagination
       parameters:
+      - description: Collection ID
+        in: path
+        name: collection_id
+        required: true
+        type: string
       - description: Skip
         in: query
         name: skip
@@ -490,7 +492,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Collections displayed
+          description: Secrets displayed
           schema:
             $ref: '#/definitions/response.Meta'
         "400":
@@ -503,15 +505,19 @@ paths:
             $ref: '#/definitions/response.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: List me collections
+      summary: List me secrets
       tags:
-      - Collections
-  /secrets:
+      - Secrets
     post:
       consumes:
       - application/json
       description: Create a new secret
       parameters:
+      - description: Collection ID
+        in: path
+        name: collection_id
+        required: true
+        type: string
       - description: Create Secret Request
         in: body
         name: request
@@ -538,15 +544,20 @@ paths:
       summary: Create a new secret
       tags:
       - Secrets
-  /secrets/{id}:
+  /collections/{collection_id}/secrets/{secret_id}:
     delete:
       consumes:
       - application/json
       description: Delete a secret by id
       parameters:
+      - description: Collection ID
+        in: path
+        name: collection_id
+        required: true
+        type: string
       - description: Secret ID
         in: path
-        name: id
+        name: secret_id
         required: true
         type: string
       produces:
@@ -586,9 +597,14 @@ paths:
       - application/json
       description: Get a secret by id
       parameters:
+      - description: Collection ID
+        in: path
+        name: collection_id
+        required: true
+        type: string
       - description: Secret ID
         in: path
-        name: id
+        name: secret_id
         required: true
         type: string
       produces:
@@ -610,62 +626,16 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Get a secret
       tags:
       - Secrets
-    put:
-      consumes:
-      - application/json
-      description: Update a secret's fields by id
-      parameters:
-      - description: Secret ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Update secret request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handler.updateSecretRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Secret updated
-          schema:
-            $ref: '#/definitions/response.SecretResponse'
-        "400":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "401":
-          description: Unauthorized error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "403":
-          description: Forbidden error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "404":
-          description: Data not found error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Update a secret
-      tags:
-      - Secrets
-  /secrets/me:
+  /collections/me:
     get:
       consumes:
       - application/json
-      description: List me secrets associated with pagination
+      description: List me collections associated with pagination
       parameters:
       - description: Skip
         in: query
@@ -681,7 +651,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Secrets displayed
+          description: Collections displayed
           schema:
             $ref: '#/definitions/response.Meta'
         "400":
@@ -694,9 +664,9 @@ paths:
             $ref: '#/definitions/response.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: List me secrets
+      summary: List me collections
       tags:
-      - Secrets
+      - Collections
   /users:
     get:
       consumes:

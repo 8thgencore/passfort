@@ -24,8 +24,7 @@ func NewSecretHandler(svc service.SecretService) *SecretHandler {
 
 // createSecretRequest represents the request body for creating a secret
 type createSecretRequest struct {
-	CollectionID uuid.UUID             `json:"collection_id" binding:"required" example:"5950a459-5126-40b7-bd8e-82f7b91c2cf1"`
-	SecretType   domain.SecretTypeEnum `json:"secret_type" binding:"required,secret_type" example:"password"`
+	SecretType domain.SecretTypeEnum `json:"secret_type" binding:"required,secret_type" example:"password"`
 }
 
 // CreateSecret godoc
@@ -35,11 +34,12 @@ type createSecretRequest struct {
 //	@Tags			Secrets
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		createSecretRequest		true	"Create Secret Request"
-//	@Success		201		{object}	response.SecretResponse	"Secret created"
-//	@Failure		400		{object}	response.ErrorResponse	"Validation error"
-//	@Failure		500		{object}	response.ErrorResponse	"Internal server error"
-//	@Router			/secrets [post]
+//	@Param			collection_id	path		string					true	"Collection ID"
+//	@Param			request			body		createSecretRequest		true	"Create Secret Request"
+//	@Success		201				{object}	response.SecretResponse	"Secret created"
+//	@Failure		400				{object}	response.ErrorResponse	"Validation error"
+//	@Failure		500				{object}	response.ErrorResponse	"Internal server error"
+//	@Router			/collections/{collection_id}/secrets [post]
 //	@Security		BearerAuth
 func (sh *SecretHandler) CreateSecret(ctx *gin.Context) {
 	var req createSecretRequest
@@ -49,8 +49,14 @@ func (sh *SecretHandler) CreateSecret(ctx *gin.Context) {
 		return
 	}
 
+	collectionID, err := uuid.Parse(ctx.Param("collection_id"))
+	if err != nil {
+		response.ValidationError(ctx, err)
+		return
+	}
+
 	newSecret := domain.Secret{
-		CollectionID: req.CollectionID,
+		CollectionID: collectionID,
 		SecretType:   req.SecretType,
 	}
 
@@ -69,9 +75,8 @@ func (sh *SecretHandler) CreateSecret(ctx *gin.Context) {
 
 // listMeSecretsRequest represents the request body for listing secrets by user ID
 type listMeSecretsRequest struct {
-	CollectionID string `form:"collection_id" binding:"required"`
-	Skip         uint64 `form:"skip" binding:"required,min=0" example:"0"`
-	Limit        uint64 `form:"limit" binding:"required,min=5" example:"5"`
+	Skip  uint64 `form:"skip" binding:"required,min=0" example:"0"`
+	Limit uint64 `form:"limit" binding:"required,min=5" example:"5"`
 }
 
 // ListMeSecrets godoc
@@ -81,13 +86,13 @@ type listMeSecretsRequest struct {
 //	@Tags			Secrets
 //	@Accept			json
 //	@Produce		json
-//	@Param			collection_id	query		string					true	"Collection ID"
+//	@Param			collection_id	path		string					true	"Collection ID"
 //	@Param			skip			query		uint64					true	"Skip"
 //	@Param			limit			query		uint64					true	"Limit"
 //	@Success		200				{object}	response.Meta			"Secrets displayed"
 //	@Failure		400				{object}	response.ErrorResponse	"Validation error"
 //	@Failure		500				{object}	response.ErrorResponse	"Internal server error"
-//	@Router			/secrets/me [get]
+//	@Router			/collections/{collection_id}/secrets [get]
 //	@Security		BearerAuth
 func (sh *SecretHandler) ListMeSecrets(ctx *gin.Context) {
 	var req listMeSecretsRequest
@@ -98,8 +103,7 @@ func (sh *SecretHandler) ListMeSecrets(ctx *gin.Context) {
 		return
 	}
 
-	// Parse the UUID from the request
-	collectionID, err := uuid.Parse(req.CollectionID)
+	collectionID, err := uuid.Parse(ctx.Param("collection_id"))
 	if err != nil {
 		response.ValidationError(ctx, err)
 		return
@@ -126,7 +130,8 @@ func (sh *SecretHandler) ListMeSecrets(ctx *gin.Context) {
 
 // getSecretRequest represents the request body for getting a secret
 type getSecretRequest struct {
-	ID string `uri:"id" binding:"required"`
+	CollectionID string `uri:"collection_id" binding:"required"`
+	SecretID     string `uri:"secret_id" binding:"required"`
 }
 
 // GetSecret godoc
@@ -136,12 +141,13 @@ type getSecretRequest struct {
 //	@Tags			Secrets
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		string					true	"Secret ID"
-//	@Success		200	{object}	response.SecretResponse	"Secret displayed"
-//	@Failure		400	{object}	response.ErrorResponse	"Validation error"
-//	@Failure		404	{object}	response.ErrorResponse	"Data not found error"
-//	@Failure		500	{object}	response.ErrorResponse	"Internal server error"
-//	@Router			/secrets/{id} [get]
+//	@Param			collection_id	path		string					true	"Collection ID"
+//	@Param			secret_id		path		string					true	"Secret ID"
+//	@Success		200				{object}	response.SecretResponse	"Secret displayed"
+//	@Failure		400				{object}	response.ErrorResponse	"Validation error"
+//	@Failure		404				{object}	response.ErrorResponse	"Data not found error"
+//	@Failure		500				{object}	response.ErrorResponse	"Internal server error"
+//	@Router			/collections/{collection_id}/secrets/{secret_id} [get]
 //	@Security		BearerAuth
 func (sh *SecretHandler) GetSecret(ctx *gin.Context) {
 	var req getSecretRequest
@@ -150,7 +156,13 @@ func (sh *SecretHandler) GetSecret(ctx *gin.Context) {
 		return
 	}
 
-	secretID, err := uuid.Parse(req.ID)
+	collectionID, err := uuid.Parse(req.CollectionID)
+	if err != nil {
+		response.ValidationError(ctx, err)
+		return
+	}
+
+	secretID, err := uuid.Parse(req.SecretID)
 	if err != nil {
 		response.ValidationError(ctx, err)
 		return
@@ -158,7 +170,7 @@ func (sh *SecretHandler) GetSecret(ctx *gin.Context) {
 
 	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
 
-	secret, err := sh.svc.GetSecret(ctx, authPayload.UserID, secretID)
+	secret, err := sh.svc.GetSecret(ctx, authPayload.UserID, collectionID, secretID)
 	if err != nil {
 		response.HandleError(ctx, err)
 		return
@@ -169,11 +181,11 @@ func (sh *SecretHandler) GetSecret(ctx *gin.Context) {
 	response.HandleSuccess(ctx, rsp)
 }
 
+// TODO:
 // updateSecretRequest represents the request body for updating a secret
-type updateSecretRequest struct {
-	// Define fields to be updated
-}
-
+// type updateSecretRequest struct {
+// 	// Define fields to be updated
+// }
 // UpdateSecret godoc
 //
 //	@Summary		Update a secret
@@ -189,9 +201,8 @@ type updateSecretRequest struct {
 //	@Failure		403		{object}	response.ErrorResponse	"Forbidden error"
 //	@Failure		404		{object}	response.ErrorResponse	"Data not found error"
 //	@Failure		500		{object}	response.ErrorResponse	"Internal server error"
-//	@Router			/secrets/{id} [put]
+//	@Router			/collections/{collection_id}/secrets/{id} [put]
 //	@Security		BearerAuth
-// TODO:
 // func (sh *SecretHandler) UpdateSecret(ctx *gin.Context) {
 // 	var req updateSecretRequest
 // 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -216,7 +227,8 @@ type updateSecretRequest struct {
 
 // deleteSecretRequest represents the request body for deleting a secret
 type deleteSecretRequest struct {
-	ID string `uri:"id" binding:"required"`
+	CollectionID string `uri:"collection_id" binding:"required"`
+	SecretID     string `uri:"secret_id" binding:"required"`
 }
 
 // DeleteSecret godoc
@@ -226,14 +238,15 @@ type deleteSecretRequest struct {
 //	@Tags			Secrets
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		string					true	"Secret ID"
-//	@Success		200	{object}	response.Response		"Secret deleted"
-//	@Failure		400	{object}	response.ErrorResponse	"Validation error"
-//	@Failure		401	{object}	response.ErrorResponse	"Unauthorized error"
-//	@Failure		403	{object}	response.ErrorResponse	"Forbidden error"
-//	@Failure		404	{object}	response.ErrorResponse	"Data not found error"
-//	@Failure		500	{object}	response.ErrorResponse	"Internal server error"
-//	@Router			/secrets/{id} [delete]
+//	@Param			collection_id	path		string					true	"Collection ID"
+//	@Param			secret_id		path		string					true	"Secret ID"
+//	@Success		200				{object}	response.Response		"Secret deleted"
+//	@Failure		400				{object}	response.ErrorResponse	"Validation error"
+//	@Failure		401				{object}	response.ErrorResponse	"Unauthorized error"
+//	@Failure		403				{object}	response.ErrorResponse	"Forbidden error"
+//	@Failure		404				{object}	response.ErrorResponse	"Data not found error"
+//	@Failure		500				{object}	response.ErrorResponse	"Internal server error"
+//	@Router			/collections/{collection_id}/secrets/{secret_id} [delete]
 //	@Security		BearerAuth
 func (sh *SecretHandler) DeleteSecret(ctx *gin.Context) {
 	var req deleteSecretRequest
@@ -242,7 +255,13 @@ func (sh *SecretHandler) DeleteSecret(ctx *gin.Context) {
 		return
 	}
 
-	secretID, err := uuid.Parse(req.ID)
+	collectionID, err := uuid.Parse(req.CollectionID)
+	if err != nil {
+		response.ValidationError(ctx, err)
+		return
+	}
+
+	secretID, err := uuid.Parse(req.SecretID)
 	if err != nil {
 		response.ValidationError(ctx, err)
 		return
@@ -250,7 +269,7 @@ func (sh *SecretHandler) DeleteSecret(ctx *gin.Context) {
 
 	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
 
-	err = sh.svc.DeleteSecret(ctx, authPayload.UserID, secretID)
+	err = sh.svc.DeleteSecret(ctx, authPayload.UserID, collectionID, secretID)
 	if err != nil {
 		response.HandleError(ctx, err)
 		return
