@@ -57,13 +57,13 @@ func (uh *UserHandler) Register(ctx *gin.Context) {
 		Password: req.Password,
 	}
 
-	_, err := uh.svc.Register(ctx, &user)
+	createdUser, err := uh.svc.Register(ctx, &user)
 	if err != nil {
 		response.HandleError(ctx, err)
 		return
 	}
 
-	resp := response.NewUserResponse(&user)
+	resp := response.NewUserResponse(createdUser)
 
 	response.HandleSuccess(ctx, resp)
 }
