@@ -52,7 +52,7 @@ func Run(configPath string) {
 	log := newSlogLogger(cfg.Log.Slog)
 
 	// Log information about the start of the application
-	log.Info("starting url-shortener", slog.String("env", string(cfg.Env)))
+	log.Info("starting passfort", slog.String("env", string(cfg.Env)))
 	log.Debug("debug messages are enabled")
 
 	// Init database

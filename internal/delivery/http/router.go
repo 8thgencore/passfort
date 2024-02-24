@@ -43,6 +43,7 @@ func NewRouter(
 	originsList := strings.Split(allowOrigins, ",")
 	ginConfig.AllowOrigins = originsList
 
+	// Init router
 	router := gin.New()
 	router.Use(sloggin.New(log), gin.Recovery(), cors.New(ginConfig))
 
@@ -61,7 +62,9 @@ func NewRouter(
 
 	// Middleware
 	authMiddleware := middleware.AuthMiddleware(token)
+	adminMiddleware := middleware.AdminMiddleware()
 
+	// Endpoints
 	v1 := router.Group("/v1")
 	{
 		auth := v1.Group("/auth")
@@ -82,7 +85,7 @@ func NewRouter(
 				authUser.GET("/me", userHander.GetUserMe)
 				authUser.GET("/:id", userHander.GetUser)
 
-				admin := authUser.Use(middleware.AdminMiddleware())
+				admin := authUser.Use(adminMiddleware)
 				{
 					admin.GET("/", userHander.ListUsers)
 					admin.PUT("/:id", userHander.UpdateUser)
