@@ -25,6 +25,13 @@ token:
   symmetric_key: "12345678901234567890123456789012"
   duration: "15m"
 
+clients:
+  mail:
+    address: "localhost:44044"
+    timeout: 10s
+    retries_count: 3
+    insecure: false
+
 log:
   slog:
     add_source: true

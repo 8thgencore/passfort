@@ -20,6 +20,7 @@ import (
 	"github.com/8thgencore/passfort/internal/service/token/paseto"
 	userService "github.com/8thgencore/passfort/internal/service/user"
 	"github.com/8thgencore/passfort/pkg/logger/slogpretty"
+	mailService "github.com/8thgencore/passfort/internal/clients/mail/grpc"
 )
 
 // @title						PassFort API
@@ -88,9 +89,23 @@ func Run(configPath string) {
 	// Init token service
 	token, _ := paseto.New(&cfg.Token)
 	if err != nil {
-		slog.Error("Error initializing token service", "error", err)
+		log.Error("Error initializing token service", "error", err)
 		os.Exit(1)
 	}
+
+	// Register external microservices
+	mailService, err := mailService.New(ctx,
+		log,
+		cfg.Clients.Mail.Address,
+		cfg.Clients.Mail.Timeout,
+		cfg.Clients.Mail.RetriesCount,
+	)
+	if err != nil {
+		log.Error("Error initializing mail service", "error", err)
+		os.Exit(1)
+	}
+	// TODO(8thgencore): implemets mailService
+	_ = mailService
 
 	// Dependency injection
 	// User

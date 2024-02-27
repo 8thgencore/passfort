@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"path"
+	"time"
 
 	"github.com/8thgencore/passfort/pkg/logger/slogpretty"
 	"github.com/ilyakaznacheev/cleanenv"
@@ -19,13 +20,14 @@ const (
 
 type (
 	Config struct {
-		Env      Env      `yaml:"env" env-defaul:"local" env-required:"true"` // local, dev or prod
-		App      App      `yaml:"app"`
-		HTTP     HTTP     `yaml:"http"`
-		Database Database `yaml:"database"`
-		Cache    Cache    `yaml:"cache"`
-		Token    Token    `yaml:"token"`
-		Log      Log      `yaml:"log"`
+		Env      Env          `yaml:"env" env-defaul:"local" env-required:"true"` // local, dev or prod
+		App      App          `yaml:"app"`
+		HTTP     HTTP         `yaml:"http"`
+		Database Database     `yaml:"database"`
+		Cache    Cache        `yaml:"cache"`
+		Token    Token        `yaml:"token"`
+		Clients  ClientConfig `yaml:"clients"`
+		Log      Log          `yaml:"log"`
 	}
 
 	// App contains all the environment variables for the application
@@ -61,6 +63,17 @@ type (
 	Token struct {
 		SymmetricKey string `yaml:"symmetric_key"  env-default:"12345678901234567890123456789012"`
 		Duration     string `yaml:"duration"       env-default:"15m"`
+	}
+
+	//  Clients
+	Client struct {
+		Address      string        `yaml:"address"`
+		Timeout      time.Duration `yaml:"timeout"`
+		RetriesCount int           `yaml:"retries_count"`
+		Insecure     bool          `yaml:"insecure"`
+	}
+	ClientConfig struct {
+		Mail Client `yaml:"mail"`
 	}
 
 	// Logger settings
