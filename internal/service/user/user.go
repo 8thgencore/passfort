@@ -29,6 +29,18 @@ func (us *UserService) Register(ctx context.Context, user *domain.User) (*domain
 	}
 	user = converter.ToUser(userDAO)
 
+	// Send confirm otp code
+	otp, err := us.otp.GenerateOTP(ctx, user.ID)
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+	_, err = us.mailClient.SendConfirmationEmail(ctx, user.Email, otp)
+	if err != nil {
+		us.log.Error("failed send confirmation email", "error", err.Error())
+		return nil, domain.ErrInternal
+	}
+
+	// Update cache
 	cacheKey := util.GenerateCacheKey("user", user.ID)
 	userSerialized, err := util.Serialize(user)
 	if err != nil {
@@ -62,8 +74,6 @@ func (us *UserService) GetUser(ctx context.Context, id uuid.UUID) (*domain.User,
 
 		return user, nil
 	}
-
-	us.log.Debug(id.String())
 
 	userDAO, err := us.storage.GetUserByID(ctx, id)
 	if err != nil {

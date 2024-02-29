@@ -63,7 +63,6 @@ func (c *Client) SendConfirmationEmail(ctx context.Context, email, otpCode strin
 		OtpCode: otpCode,
 	})
 	if err != nil {
-		c.log.Error("Failed send confirmation email code", "error", err.Error())
 		return false, fmt.Errorf("%s: %w", op, err)
 	}
 

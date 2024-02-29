@@ -4,7 +4,7 @@ go 1.21.7
 
 require (
 	aidanwoods.dev/go-paseto v1.5.1
-	github.com/8thgencore/mailfort v1.0.0
+	github.com/8thgencore/mailfort v1.1.0
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/fatih/color v1.16.0
 	github.com/gin-contrib/cors v1.5.0
@@ -29,6 +29,7 @@ require (
 	aidanwoods.dev/go-result v0.1.0 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
+	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/bytedance/sonic v1.11.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
@@ -64,6 +65,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b // indirect
 	github.com/pelletier/go-toml/v2 v2.1.1 // indirect
+	github.com/pquerna/otp v1.4.0 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect

@@ -8,6 +8,7 @@ import (
 	"os"
 
 	_ "github.com/8thgencore/passfort/docs"
+	mailGrpc "github.com/8thgencore/passfort/internal/clients/mail/grpc"
 	"github.com/8thgencore/passfort/internal/config"
 	"github.com/8thgencore/passfort/internal/database"
 	"github.com/8thgencore/passfort/internal/delivery/http"
@@ -16,11 +17,11 @@ import (
 	"github.com/8thgencore/passfort/internal/repository/storage/postgres"
 	authService "github.com/8thgencore/passfort/internal/service/auth"
 	collectionService "github.com/8thgencore/passfort/internal/service/collection"
+	"github.com/8thgencore/passfort/internal/service/otp"
 	secretService "github.com/8thgencore/passfort/internal/service/secret"
 	"github.com/8thgencore/passfort/internal/service/token/paseto"
 	userService "github.com/8thgencore/passfort/internal/service/user"
 	"github.com/8thgencore/passfort/pkg/logger/slogpretty"
-	mailService "github.com/8thgencore/passfort/internal/clients/mail/grpc"
 )
 
 // @title						PassFort API
@@ -93,28 +94,31 @@ func Run(configPath string) {
 		os.Exit(1)
 	}
 
+	// Otp service
+	otpService := otp.NewOtpService(log, cache)
+
 	// Register external microservices
-	mailService, err := mailService.New(ctx,
+	mailClient, err := mailGrpc.New(ctx,
 		log,
 		cfg.Clients.Mail.Address,
 		cfg.Clients.Mail.Timeout,
 		cfg.Clients.Mail.RetriesCount,
 	)
 	if err != nil {
-		log.Error("Error initializing mail service", "error", err)
+		log.Error("Error initializing mail client", "error", err)
 		os.Exit(1)
 	}
-	// TODO(8thgencore): implemets mailService
-	_ = mailService
+
+	log.Info("Successfully initializing the mail client")
 
 	// Dependency injection
 	// User
 	userRepo := postgres.NewUserRepository(db)
-	userService := userService.NewUserService(log, userRepo, cache)
+	userService := userService.NewUserService(log, userRepo, cache, otpService, *mailClient)
 	userHandler := handler.NewUserHandler(userService)
 
 	// Auth
-	authService := authService.NewAuthService(log, userRepo, token)
+	authService := authService.NewAuthService(log, userRepo, token, otpService, *mailClient)
 	authHandler := handler.NewAuthHandler(authService)
 
 	// Collection

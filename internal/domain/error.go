@@ -30,6 +30,8 @@ var (
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	// ErrPasswordsDoNotMatch is an error for when the provided passwords do not match
 	ErrPasswordsDoNotMatch = errors.New("provided passwords do not match")
+	// ErrInvalidOTP is an error for when the OTP (One-Time Password) is invalid
+	ErrInvalidOTP = errors.New("invalid OTP")
 	// ErrEmptyAuthorizationHeader is an error for when the authorization header is empty
 	ErrEmptyAuthorizationHeader = errors.New("authorization header is not provided")
 	// ErrInvalidAuthorizationHeader is an error for when the authorization header is invalid
@@ -40,8 +42,12 @@ var (
 	ErrUnauthorized = errors.New("user is unauthorized to access the resource")
 	// ErrForbidden is an error for when the user is forbidden to access the resource
 	ErrForbidden = errors.New("user is forbidden to access the resource")
+	// ErrUserNotVerified is an error for when a user is not verified
+	ErrUserNotVerified = errors.New("user not verified")
 	// ErrDeleteOwnAccount is an error for when a user tries to delete their own account
 	ErrDeleteOwnAccount = errors.New("you cannot delete your own account")
+	// ErrFailedToSendEmail is an error for when sending an email fails
+	ErrFailedToSendEmail = errors.New("failed to send email")
 	// ErrCollectionNotExists is an error for when the requested collection does not exist
 	ErrCollectionNotExists = errors.New("requested collection does not exist")
 )

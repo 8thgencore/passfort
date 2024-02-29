@@ -15,12 +15,28 @@ type TokenService interface {
 	VerifyToken(token string) (*domain.TokenPayload, error)
 }
 
+// OtpService
+type OtpService interface {
+	// GenerateOTP generates a new OTP for the given user ID
+	GenerateOTP(ctx context.Context, userID uuid.UUID) (string, error)
+	// VerifyOTP verifies if the provided OTP is valid for the given user ID
+	VerifyOTP(ctx context.Context, userID uuid.UUID, otp2 string) error
+}
+
 // UserService is an interface for interacting with user authentication-related business logic
 type AuthService interface {
 	// Login authenticates a user by email and password and returns a token
 	Login(ctx context.Context, email, password string) (string, error)
+	// ConfirmRegistration confirms user registration with OTP code
+	ConfirmRegistration(ctx context.Context, email, otp string) error
 	// ChangePassword changes the password for the authenticated user
 	ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error
+	// RequestResetPassword initiates the process of resetting a forgotten password
+	RequestResetPassword(ctx context.Context, email string) error
+	// ConfirmResetPassword confirms password reset with OTP code
+	ConfirmResetPassword(ctx context.Context, email, otp string) error
+	// SetNewPassword resets user password after confirmation with OTP code
+	SetNewPassword(ctx context.Context, email, newPassword, otp string) error
 }
 
 // UserService is an interface for interacting with user-related business logic

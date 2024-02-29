@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/8thgencore/passfort/internal/delivery/http/helper"
 	"github.com/8thgencore/passfort/internal/delivery/http/middleware"
 	"github.com/8thgencore/passfort/internal/delivery/http/response"
@@ -57,15 +59,15 @@ func (uh *UserHandler) Register(ctx *gin.Context) {
 		Password: req.Password,
 	}
 
-	createdUser, err := uh.svc.Register(ctx, &user)
+	_, err := uh.svc.Register(ctx, &user)
 	if err != nil {
 		response.HandleError(ctx, err)
 		return
 	}
 
-	resp := response.NewUserResponse(createdUser)
+	resp := response.NewResponse(true, "Registration successful. OTP code sent to your email.", nil)
 
-	response.HandleSuccess(ctx, resp)
+	ctx.JSON(http.StatusOK, resp)
 }
 
 // listUsersRequest represents the request body for listing users

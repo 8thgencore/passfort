@@ -109,5 +109,5 @@ tasks:
       - swag init -g ./internal/app/app.go  -o ./docs --parseInternal true
 
 
-cd  internal/clients/mail/grpc
-protoc -I proto proto/*.proto --go_out=./gen --go_opt=paths=source_relative --go-grpc_out=./gen --go-grpc_opt=paths=source_relative
+# cd  internal/clients/mail/grpc
+# protoc -I proto proto/*.proto --go_out=./gen --go_opt=paths=source_relative --go-grpc_out=./gen --go-grpc_opt=paths=source_relative

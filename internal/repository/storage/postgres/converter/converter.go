@@ -7,25 +7,27 @@ import (
 
 func ToUserDAO(user *domain.User) *dao.UserDAO {
 	return &dao.UserDAO{
-		ID:        user.ID,
-		Name:      user.Name,
-		Email:     user.Email,
-		Password:  user.Password,
-		Role:      string(user.Role),
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
+		ID:         user.ID,
+		Name:       user.Name,
+		Email:      user.Email,
+		Password:   user.Password,
+		IsVerified: user.IsVerified,
+		Role:       string(user.Role),
+		CreatedAt:  user.CreatedAt,
+		UpdatedAt:  user.UpdatedAt,
 	}
 }
 
 func ToUser(userDAO *dao.UserDAO) *domain.User {
 	return &domain.User{
-		ID:        userDAO.ID,
-		Name:      userDAO.Name,
-		Email:     userDAO.Email,
-		Password:  userDAO.Password,
-		Role:      domain.UserRoleEnum(userDAO.Role),
-		CreatedAt: userDAO.CreatedAt,
-		UpdatedAt: userDAO.UpdatedAt,
+		ID:         userDAO.ID,
+		Name:       userDAO.Name,
+		Email:      userDAO.Email,
+		Password:   userDAO.Password,
+		IsVerified: userDAO.IsVerified,
+		Role:       domain.UserRoleEnum(userDAO.Role),
+		CreatedAt:  userDAO.CreatedAt,
+		UpdatedAt:  userDAO.UpdatedAt,
 	}
 }
 

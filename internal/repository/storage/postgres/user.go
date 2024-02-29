@@ -46,6 +46,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *dao.UserDAO) (*da
 		&userDao.Name,
 		&userDao.Email,
 		&userDao.Password,
+		&userDao.IsVerified,
 		&userDao.Role,
 		&userDao.CreatedAt,
 		&userDao.UpdatedAt,
@@ -79,6 +80,7 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*dao.Us
 		&userDao.Name,
 		&userDao.Email,
 		&userDao.Password,
+		&userDao.IsVerified,
 		&userDao.Role,
 		&userDao.CreatedAt,
 		&userDao.UpdatedAt,
@@ -112,6 +114,7 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*dao
 		&userDao.Name,
 		&userDao.Email,
 		&userDao.Password,
+		&userDao.IsVerified,
 		&userDao.Role,
 		&userDao.CreatedAt,
 		&userDao.UpdatedAt,
@@ -154,6 +157,7 @@ func (r *UserRepository) ListUsers(ctx context.Context, skip, limit uint64) ([]d
 			&userDao.Name,
 			&userDao.Email,
 			&userDao.Password,
+			&userDao.IsVerified,
 			&userDao.Role,
 			&userDao.CreatedAt,
 			&userDao.UpdatedAt,
@@ -176,12 +180,14 @@ func (r *UserRepository) UpdateUser(ctx context.Context, user *dao.UserDAO) (*da
 	name := nullString(user.Name)
 	email := nullString(user.Email)
 	password := nullString(user.Password)
+	isVerified := nullBool(user.IsVerified)
 	role := nullString(string(user.Role))
 
 	query := r.db.QueryBuilder.Update("users").
 		Set("name", sq.Expr("COALESCE(?, name)", name)).
 		Set("email", sq.Expr("COALESCE(?, email)", email)).
 		Set("password", sq.Expr("COALESCE(?, password)", password)).
+		Set("is_verified", sq.Expr("COALESCE(?, is_verified)", isVerified)).
 		Set("role", sq.Expr("COALESCE(?, role)", role)).
 		Set("updated_at", time.Now()).
 		Where(sq.Eq{"id": user.ID}).
@@ -197,6 +203,7 @@ func (r *UserRepository) UpdateUser(ctx context.Context, user *dao.UserDAO) (*da
 		&userDao.Name,
 		&userDao.Email,
 		&userDao.Password,
+		&userDao.IsVerified,
 		&userDao.Role,
 		&userDao.CreatedAt,
 		&userDao.UpdatedAt,

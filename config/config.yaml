@@ -27,7 +27,7 @@ token:
 
 clients:
   mail:
-    address: "localhost:44044"
+    address: "localhost:44350"
     timeout: 10s
     retries_count: 3
     insecure: false

@@ -71,6 +71,22 @@ func NewUserResponse(user *domain.User) UserResponse {
 	}
 }
 
+// RegistrationResponse represents a successful registration response body
+type RegistrationResponse struct {
+	Message    string `json:"message" example:"Registration successful. OTP code sent to your email."`
+	OTPToken   string `json:"otp_token" example:"123456"`
+	UserDetail UserResponse
+}
+
+// NewRegistrationResponse is a helper function to create a response body for successful registration
+func NewRegistrationResponse(otpToken string, user *domain.User) RegistrationResponse {
+	return RegistrationResponse{
+		Message:    "Registration successful. OTP code sent to your email.",
+		OTPToken:   otpToken,
+		UserDetail: NewUserResponse(user),
+	}
+}
+
 // CollectionResponse represents a collection response body
 type CollectionResponse struct {
 	ID          uuid.UUID `json:"id" example:"bb073c91-f09b-4858-b2d1-d14116e73b8d"`

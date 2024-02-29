@@ -53,3 +53,11 @@ func nullFloat64(value float64) sql.NullFloat64 {
 		Valid:   true,
 	}
 }
+
+// nullBool converts a bool to sql.NullBool for empty bool check
+func nullBool(value bool) sql.NullBool {
+	return sql.NullBool{
+		Bool:  value,
+		Valid: value,
+	}
+}
