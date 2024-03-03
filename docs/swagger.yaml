@@ -106,6 +106,14 @@ definitions:
     - name
     - password
     type: object
+  handler.requestNewCodeRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+    required:
+    - email
+    type: object
   handler.resetPasswordRequest:
     properties:
       email:
@@ -120,7 +128,7 @@ definitions:
         example: test@example.com
         type: string
       new_password:
-        example: newpassword
+        example: new_password
         minLength: 8
         type: string
       otp:
@@ -324,76 +332,6 @@ paths:
       summary: Change own password
       tags:
       - Authentication
-      x-order: 3
-  /auth/confirm-registration:
-    post:
-      consumes:
-      - application/json
-      description: Confirm user registration by providing the email and OTP code
-      parameters:
-      - description: Confirm registration request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handler.confirmRegistrationRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Successfully confirmed registration
-          schema:
-            $ref: '#/definitions/response.Response'
-        "400":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "404":
-          description: Data not found error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-      summary: Confirm user registration with OTP code
-      tags:
-      - Authentication
-      x-order: 2
-  /auth/confirm-reset-password:
-    post:
-      consumes:
-      - application/json
-      description: Confirm password reset by providing the email and OTP code
-      parameters:
-      - description: Confirm password reset request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handler.confirmResetPasswordRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Successfully confirmed password reset
-          schema:
-            $ref: '#/definitions/response.Response'
-        "400":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "404":
-          description: Data not found error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-      summary: Confirm password reset with OTP code
-      tags:
-      - Authentication
   /auth/login:
     post:
       consumes:
@@ -429,8 +367,118 @@ paths:
       summary: Login and get an access token
       tags:
       - Authentication
-      x-order: "1"
-  /auth/request-reset-password:
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: create a new user account with default role "user"
+      parameters:
+      - description: Register request
+        in: body
+        name: registerRequest
+        required: true
+        schema:
+          $ref: '#/definitions/handler.registerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User created
+          schema:
+            $ref: '#/definitions/response.UserResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Data not found error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Data conflict error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - Authentication
+  /auth/register/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Confirm user registration by providing the email and OTP code
+      parameters:
+      - description: Confirm registration request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.confirmRegistrationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully confirmed registration
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Data not found error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Confirm user registration with OTP code
+      tags:
+      - Authentication
+  /auth/register/request-new-code:
+    post:
+      consumes:
+      - application/json
+      description: Requests a new OTP code for confirming user registration. If the
+        previous OTP code
+      parameters:
+      - description: Request new OTP request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.requestNewCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OTP code requested successfully
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: Too many requests, try again later
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Request a new OTP code for registration confirmation
+      tags:
+      - Authentication
+  /auth/reset-password:
     post:
       consumes:
       - application/json
@@ -465,7 +513,41 @@ paths:
       summary: Request to reset forgotten password
       tags:
       - Authentication
-  /auth/set-new-password:
+  /auth/reset-password/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Confirm password reset by providing the email and OTP code
+      parameters:
+      - description: Confirm password reset request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.confirmResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully confirmed password reset
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Data not found error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Confirm password reset with OTP code
+      tags:
+      - Authentication
+  /auth/reset-password/new:
     put:
       consumes:
       - application/json
@@ -1045,48 +1127,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Get information about the authenticated user
-      tags:
-      - Users
-  /users/register:
-    post:
-      consumes:
-      - application/json
-      description: create a new user account with default role "user"
-      parameters:
-      - description: Register request
-        in: body
-        name: registerRequest
-        required: true
-        schema:
-          $ref: '#/definitions/handler.registerRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: User created
-          schema:
-            $ref: '#/definitions/response.UserResponse'
-        "400":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "401":
-          description: Unauthorized error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "404":
-          description: Data not found error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "409":
-          description: Data conflict error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-      summary: Register a new user
       tags:
       - Users
 schemes:

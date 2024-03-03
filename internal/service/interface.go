@@ -23,14 +23,19 @@ type OtpService interface {
 	VerifyOTP(ctx context.Context, userID uuid.UUID, otp2 string) error
 }
 
-// UserService is an interface for interacting with user authentication-related business logic
+// AuthService is an interface for interacting with user authentication-related business logic
 type AuthService interface {
 	// Login authenticates a user by email and password and returns a token
 	Login(ctx context.Context, email, password string) (string, error)
+
+	// Register registers a new user
+	Register(ctx context.Context, user *domain.User) (*domain.User, error)
 	// ConfirmRegistration confirms user registration with OTP code
 	ConfirmRegistration(ctx context.Context, email, otp string) error
+
 	// ChangePassword changes the password for the authenticated user
 	ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error
+
 	// RequestResetPassword initiates the process of resetting a forgotten password
 	RequestResetPassword(ctx context.Context, email string) error
 	// ConfirmResetPassword confirms password reset with OTP code
@@ -41,8 +46,6 @@ type AuthService interface {
 
 // UserService is an interface for interacting with user-related business logic
 type UserService interface {
-	// Register registers a new user
-	Register(ctx context.Context, user *domain.User) (*domain.User, error)
 	// GetUser returns a user by id
 	GetUser(ctx context.Context, id uuid.UUID) (*domain.User, error)
 	// ListUsers returns a list of users with pagination

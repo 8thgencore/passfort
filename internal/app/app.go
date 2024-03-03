@@ -114,11 +114,11 @@ func Run(configPath string) {
 	// Dependency injection
 	// User
 	userRepo := postgres.NewUserRepository(db)
-	userService := userService.NewUserService(log, userRepo, cache, otpService, *mailClient)
+	userService := userService.NewUserService(log, userRepo, cache)
 	userHandler := handler.NewUserHandler(userService)
 
 	// Auth
-	authService := authService.NewAuthService(log, userRepo, token, otpService, *mailClient)
+	authService := authService.NewAuthService(log, userRepo, cache, token, otpService, *mailClient)
 	authHandler := handler.NewAuthHandler(authService)
 
 	// Collection

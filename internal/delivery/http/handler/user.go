@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"net/http"
-
 	"github.com/8thgencore/passfort/internal/delivery/http/helper"
 	"github.com/8thgencore/passfort/internal/delivery/http/middleware"
 	"github.com/8thgencore/passfort/internal/delivery/http/response"
@@ -22,52 +20,6 @@ func NewUserHandler(svc service.UserService) *UserHandler {
 	return &UserHandler{
 		svc,
 	}
-}
-
-// registerRequet represents the request body for creating a user
-type registerRequest struct {
-	Name     string `json:"name" binding:"required" example:"John Doe"`
-	Email    string `json:"email" binding:"required,email" example:"test@example.com"`
-	Password string `json:"password" binding:"required,min=8" example:"12345678"`
-}
-
-// Register godoc
-//
-//	@Summary		Register a new user
-//	@Description	create a new user account with default role "user"
-//	@Tags			Users
-//	@Accept			json
-//	@Produce		json
-//	@Param			registerRequest	body		registerRequest			true	"Register request"
-//	@Success		200				{object}	response.UserResponse	"User created"
-//	@Failure		400				{object}	response.ErrorResponse	"Validation error"
-//	@Failure		401				{object}	response.ErrorResponse	"Unauthorized error"
-//	@Failure		404				{object}	response.ErrorResponse	"Data not found error"
-//	@Failure		409				{object}	response.ErrorResponse	"Data conflict error"
-//	@Failure		500				{object}	response.ErrorResponse	"Internal server error"
-//	@Router			/users/register [post]
-func (uh *UserHandler) Register(ctx *gin.Context) {
-	var req registerRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.ValidationError(ctx, err)
-		return
-	}
-
-	user := domain.User{
-		Name:     req.Name,
-		Email:    req.Email,
-		Password: req.Password,
-	}
-
-	_, err := uh.svc.Register(ctx, &user)
-	if err != nil {
-		response.HandleError(ctx, err)
-		return
-	}
-
-	resp := response.NewResponse(true, "Registration successful. OTP code sent to your email.", nil)
-
-	ctx.JSON(http.StatusOK, resp)
 }
 
 // listUsersRequest represents the request body for listing users

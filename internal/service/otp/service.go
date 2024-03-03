@@ -45,8 +45,6 @@ func (os *OtpService) VerifyOTP(ctx context.Context, userID uuid.UUID, otpCode s
 		return domain.ErrInvalidOTP
 	}
 
-	os.log.Info("sdfsdf", otpCode, oldOtpCode)
-
 	if otpCode != oldOtpCode {
 		os.log.Error("Provided OTP does not match stored OTP")
 		return domain.ErrInvalidOTP

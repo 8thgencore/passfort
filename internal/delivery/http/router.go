@@ -70,10 +70,12 @@ func NewRouter(
 		auth := v1.Group("/auth")
 		{
 			auth.POST("/login", authHandler.Login)
-			auth.POST("/confirm-registration", authHandler.ConfirmRegistration)
-			auth.POST("/request-reset-password", authHandler.RequestResetPassword)
-			auth.POST("/confirm-reset-password", authHandler.ConfirmResetPassword)
-			auth.POST("/set-new-password", authHandler.SetNewPassword)
+			auth.POST("/register", authHandler.Register)
+			auth.POST("/register/confirm", authHandler.ConfirmRegistration)
+			auth.POST("/register/request-new-code", authHandler.RequestNewRegistrationCode)
+			auth.POST("/reset-password", authHandler.RequestResetPassword)
+			auth.POST("/reset-password/confirm", authHandler.ConfirmResetPassword)
+			auth.POST("/reset-password/new", authHandler.SetNewPassword)
 
 			authUser := auth.Group("/").Use(authMiddleware)
 			{
@@ -82,8 +84,6 @@ func NewRouter(
 		}
 		user := v1.Group("/users")
 		{
-			user.POST("/register", userHander.Register)
-
 			authUser := user.Group("/").Use(authMiddleware)
 			{
 				authUser.GET("/me", userHander.GetUserMe)

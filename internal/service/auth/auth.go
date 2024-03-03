@@ -31,12 +31,63 @@ func (as *AuthService) Login(ctx context.Context, email, password string) (strin
 		return "", domain.ErrInvalidCredentials
 	}
 
-	accessToken, err := as.ts.CreateToken(user)
+	accessToken, err := as.tokenService.CreateToken(user)
 	if err != nil {
 		return "", domain.ErrTokenCreation
 	}
 
 	return accessToken, nil
+}
+
+// Register creates a new user
+func (as *AuthService) Register(ctx context.Context, user *domain.User) (*domain.User, error) {
+	hashedPassword, err := util.HashPassword(user.Password)
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+
+	user.Password = hashedPassword
+
+	userDAO, err := as.storage.CreateUser(ctx, converter.ToUserDAO(user))
+	if err != nil {
+		if err == domain.ErrConflictingData {
+			return nil, err
+		}
+		as.log.Error("failed to create a user", "error", err.Error())
+
+		return nil, domain.ErrInternal
+	}
+	user = converter.ToUser(userDAO)
+
+	// Send confirm otp code
+	otp, err := as.otp.GenerateOTP(ctx, user.ID)
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+	_, err = as.mailClient.SendConfirmationEmail(ctx, user.Email, otp)
+	if err != nil {
+		as.log.Error("failed send confirmation email", "error", err.Error())
+		return nil, domain.ErrInternal
+	}
+
+	// Update cache
+	cacheKey := util.GenerateCacheKey("user", user.ID)
+	userSerialized, err := util.Serialize(user)
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+
+	err = as.cache.Set(ctx, cacheKey, userSerialized, 0)
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+
+	err = as.cache.DeleteByPrefix(ctx, "users:*")
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+
+	return user, nil
 }
 
 // ConfirmRegistration confirms user registration with OTP code

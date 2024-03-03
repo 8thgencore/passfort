@@ -5,6 +5,7 @@ import (
 
 	mailGrpc "github.com/8thgencore/passfort/internal/clients/mail/grpc"
 	"github.com/8thgencore/passfort/internal/service"
+	"github.com/8thgencore/passfort/internal/service/adapters/cache"
 	"github.com/8thgencore/passfort/internal/service/adapters/storage"
 )
 
@@ -14,17 +15,19 @@ import (
  * and token service
  */
 type AuthService struct {
-	log        *slog.Logger
-	storage    storage.UserRepository
-	ts         service.TokenService
-	otp        service.OtpService
-	mailClient mailGrpc.Client
+	log          *slog.Logger
+	storage      storage.UserRepository
+	cache        cache.CacheRepository
+	tokenService service.TokenService
+	otp          service.OtpService
+	mailClient   mailGrpc.Client
 }
 
 // NewAuthService creates a new auth service instance
 func NewAuthService(log *slog.Logger,
 	storage storage.UserRepository,
-	ts service.TokenService,
+	cache cache.CacheRepository,
+	tokenService service.TokenService,
 	otpService service.OtpService,
 	mailClient mailGrpc.Client,
 
@@ -32,7 +35,8 @@ func NewAuthService(log *slog.Logger,
 	return &AuthService{
 		log,
 		storage,
-		ts,
+		cache,
+		tokenService,
 		otpService,
 		mailClient,
 	}
