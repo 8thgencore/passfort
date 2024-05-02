@@ -118,6 +118,45 @@ func (as *AuthService) ConfirmRegistration(ctx context.Context, email, otp strin
 	return nil
 }
 
+// RequestNewRegistrationCode requests a new registration confirmation code for a user
+func (as *AuthService) RequestNewRegistrationCode(ctx context.Context, email string) error {
+	// Retrieve user by email
+	userDAO, err := as.storage.GetUserByEmail(ctx, email)
+	if err != nil {
+		if err == domain.ErrDataNotFound {
+			return domain.ErrInvalidCredentials
+		}
+		as.log.Error("failed to get the user by email", "error", err.Error())
+		return domain.ErrInternal
+	}
+	user := converter.ToUser(userDAO)
+
+	// Check if OTP already exists for the user
+	exists, err := as.otp.CheckCacheForKey(ctx, user.ID)
+	if err != nil {
+		as.log.Error("failed to check cache for OTP", "error", err.Error())
+		return domain.ErrInternal
+	}
+	if exists {
+		return domain.ErrOTPAlreadySent
+	}
+
+	// Generate and send new registration confirmation OTP
+	otp, err := as.otp.GenerateOTP(ctx, user.ID)
+	if err != nil {
+		as.log.Error("failed to generate new registration confirmation OTP", "error", err.Error())
+		return domain.ErrInternal
+	}
+
+	_, err = as.mailClient.SendConfirmationEmail(ctx, user.Email, otp)
+	if err != nil {
+		as.log.Error("failed to send new registration confirmation email", "error", err.Error())
+		return domain.ErrInternal
+	}
+
+	return nil
+}
+
 // ChangePassword implements the ChangePassword method of the AuthService interface
 func (as *AuthService) ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error {
 	// Retrieve the user based on the userID

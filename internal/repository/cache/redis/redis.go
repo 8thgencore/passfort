@@ -77,6 +77,15 @@ func (r *Redis) DeleteByPrefix(ctx context.Context, prefix string) error {
 	return nil
 }
 
+// Exists checks if a key exists in the redis database
+func (r *Redis) Exists(ctx context.Context, key string) (bool, error) {
+	exists, err := r.client.Exists(ctx, key).Result()
+	if err != nil {
+		return false, err
+	}
+	return exists == 1, nil
+}
+
 // Close closes the connection to the redis database
 func (r *Redis) Close() error {
 	return r.client.Close()

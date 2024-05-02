@@ -21,6 +21,8 @@ type OtpService interface {
 	GenerateOTP(ctx context.Context, userID uuid.UUID) (string, error)
 	// VerifyOTP verifies if the provided OTP is valid for the given user ID
 	VerifyOTP(ctx context.Context, userID uuid.UUID, otp2 string) error
+	// CheckCacheForKey checks if a value exists in the cache for the given user ID
+	CheckCacheForKey(ctx context.Context, userID uuid.UUID) (bool, error)
 }
 
 // AuthService is an interface for interacting with user authentication-related business logic
@@ -32,6 +34,8 @@ type AuthService interface {
 	Register(ctx context.Context, user *domain.User) (*domain.User, error)
 	// ConfirmRegistration confirms user registration with OTP code
 	ConfirmRegistration(ctx context.Context, email, otp string) error
+	// RequestNewRegistrationCode requests a new registration confirmation code for a user
+	RequestNewRegistrationCode(ctx context.Context, email string) error
 
 	// ChangePassword changes the password for the authenticated user
 	ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error

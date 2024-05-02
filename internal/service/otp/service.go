@@ -59,3 +59,18 @@ func (os *OtpService) VerifyOTP(ctx context.Context, userID uuid.UUID, otpCode s
 
 	return nil
 }
+
+// CheckCacheForKey checks if a value exists in the cache for the given key
+func (os *OtpService) CheckCacheForKey(ctx context.Context, userID uuid.UUID) (bool, error) {
+	// Retrieve the stored OTP for the user
+	key := util.GenerateCacheKey("user_otp", userID)
+
+	// Check if the value exists in the cache for the given key
+	exists, err := os.cache.Exists(ctx, key)
+	if err != nil {
+		os.log.Error("Error checking cache for key:", "error", err.Error())
+		return false, domain.ErrInternal
+	}
+
+	return exists, nil
+}

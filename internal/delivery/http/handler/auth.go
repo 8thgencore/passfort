@@ -141,8 +141,8 @@ func (ah *AuthHandler) ConfirmRegistration(ctx *gin.Context) {
 	response.HandleSuccess(ctx, nil)
 }
 
-// requestNewCodeRequest represents the request body for requesting a new OTP code
-type requestNewCodeRequest struct {
+// newRegistrationCodeRequest represents the request body for requesting a new OTP code
+type newRegistrationCodeRequest struct {
 	Email string `json:"email" binding:"required,email" example:"user@example.com"`
 }
 
@@ -155,24 +155,25 @@ type requestNewCodeRequest struct {
 //	@Tags			Authentication
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		requestNewCodeRequest	true	"Request new OTP request body"
+//	@Param			request	body		newRegistrationCodeRequest	true	"Request new OTP request body"
 //	@Success		200		{object}	response.Response		"OTP code requested successfully"
 //	@Failure		400		{object}	response.ErrorResponse	"Validation error"
 //	@Failure		429		{object}	response.ErrorResponse	"Too many requests, try again later"
 //	@Failure		500		{object}	response.ErrorResponse	"Internal server error"
 //	@Router			/auth/register/request-new-code [post]
 func (ah *AuthHandler) RequestNewRegistrationCode(ctx *gin.Context) {
-	var req requestNewCodeRequest
+	var req newRegistrationCodeRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(ctx, err)
 		return
 	}
 
-	// Implement logic to check if the user has requested OTP too frequently.
-	// If so, respond with a 429 status code and appropriate error message.
-
-	// Implement logic to generate and send a new OTP code to the user's email.
-	// You can use the OtpService or other relevant services for this purpose.
+	// Call RequestNewRegistrationCode method
+	err := ah.svc.RequestNewRegistrationCode(ctx.Request.Context(), req.Email)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
 
 	response.HandleSuccess(ctx, nil)
 }

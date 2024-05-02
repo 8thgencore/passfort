@@ -32,6 +32,8 @@ var (
 	ErrPasswordsDoNotMatch = errors.New("provided passwords do not match")
 	// ErrInvalidOTP is an error for when the OTP (One-Time Password) is invalid
 	ErrInvalidOTP = errors.New("invalid OTP")
+	// ErrOTPAlreadySent is an error for when an OTP (One-Time Password) has already been sent to the user
+	ErrOTPAlreadySent = errors.New("an OTP has already been sent to the user")
 	// ErrEmptyAuthorizationHeader is an error for when the authorization header is empty
 	ErrEmptyAuthorizationHeader = errors.New("authorization header is not provided")
 	// ErrInvalidAuthorizationHeader is an error for when the authorization header is invalid

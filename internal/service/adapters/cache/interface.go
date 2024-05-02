@@ -15,6 +15,8 @@ type CacheRepository interface {
 	Delete(ctx context.Context, key string) error
 	// DeleteByPrefix removes the value from the cache with the given prefix
 	DeleteByPrefix(ctx context.Context, prefix string) error
+	// Exists checks if a key exists in the redis database
+	Exists(ctx context.Context, key string) (bool, error)
 	// Close closes the connection to the cache server
 	Close() error
 }
