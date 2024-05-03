@@ -44,18 +44,6 @@ definitions:
     - email
     - otp
     type: object
-  handler.confirmResetPasswordRequest:
-    properties:
-      email:
-        example: test@example.com
-        type: string
-      otp:
-        example: "123456"
-        type: string
-    required:
-    - email
-    - otp
-    type: object
   handler.createCollectionRequest:
     properties:
       description:
@@ -76,6 +64,14 @@ definitions:
     required:
     - secret_type
     type: object
+  handler.forgotPasswordRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+    required:
+    - email
+    type: object
   handler.loginRequest:
     properties:
       email:
@@ -88,6 +84,14 @@ definitions:
     required:
     - email
     - password
+    type: object
+  handler.newRegistrationCodeRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+    required:
+    - email
     type: object
   handler.registerRequest:
     properties:
@@ -106,23 +110,7 @@ definitions:
     - name
     - password
     type: object
-  handler.requestNewCodeRequest:
-    properties:
-      email:
-        example: user@example.com
-        type: string
-    required:
-    - email
-    type: object
   handler.resetPasswordRequest:
-    properties:
-      email:
-        example: user@example.com
-        type: string
-    required:
-    - email
-    type: object
-  handler.setNewPasswordRequest:
     properties:
       email:
         example: test@example.com
@@ -332,6 +320,41 @@ paths:
       summary: Change own password
       tags:
       - Authentication
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Initiate the process of resetting a forgotten password by providing
+        the user's email
+      parameters:
+      - description: Request reset forgot password request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.forgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password reset request initiated successfully
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: User not found error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Request to reset forgotten password
+      tags:
+      - Authentication
   /auth/login:
     post:
       consumes:
@@ -455,7 +478,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.requestNewCodeRequest'
+          $ref: '#/definitions/handler.newRegistrationCodeRequest'
       produces:
       - application/json
       responses:
@@ -482,10 +505,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Initiate the process of resetting a forgotten password by providing
-        the user's email
+      description: Resets user's password after confirmation with OTP code.
       parameters:
-      - description: Request reset forgot password request body
+      - description: Request reset password request body
         in: body
         name: request
         required: true
@@ -495,95 +517,26 @@ paths:
       - application/json
       responses:
         "200":
-          description: Password reset request initiated successfully
+          description: Password reset successfully
           schema:
-            $ref: '#/definitions/response.Response'
+            type: string
         "400":
-          description: Validation error
+          description: Invalid email or password format
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            type: string
+        "401":
+          description: Invalid OTP code
+          schema:
+            type: string
         "404":
-          description: User not found error
+          description: User not found
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            type: string
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
-      summary: Request to reset forgotten password
-      tags:
-      - Authentication
-  /auth/reset-password/confirm:
-    post:
-      consumes:
-      - application/json
-      description: Confirm password reset by providing the email and OTP code
-      parameters:
-      - description: Confirm password reset request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handler.confirmResetPasswordRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Successfully confirmed password reset
-          schema:
-            $ref: '#/definitions/response.Response'
-        "400":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "404":
-          description: Data not found error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-      summary: Confirm password reset with OTP code
-      tags:
-      - Authentication
-  /auth/reset-password/new:
-    put:
-      consumes:
-      - application/json
-      description: Reset user password by providing the email, new password, and OTP
-        code
-      parameters:
-      - description: Reset password request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handler.setNewPasswordRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Successfully reset password
-          schema:
-            $ref: '#/definitions/response.Response'
-        "400":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "404":
-          description: Data not found error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "422":
-          description: Passwords do not match
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-      summary: Reset user password after confirmation with OTP code
+            type: string
+      summary: Reset user's password
       tags:
       - Authentication
   /collections:

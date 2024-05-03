@@ -98,6 +98,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/forgot-password": {
+            "post": {
+                "description": "Initiate the process of resetting a forgotten password by providing the user's email",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Request to reset forgotten password",
+                "parameters": [
+                    {
+                        "description": "Request reset forgot password request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.forgotPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Password reset request initiated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "Logs in a registered user and returns an access token if the credentials are valid.",
@@ -286,7 +338,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.requestNewCodeRequest"
+                            "$ref": "#/definitions/handler.newRegistrationCodeRequest"
                         }
                     }
                 ],
@@ -320,7 +372,7 @@ const docTemplate = `{
         },
         "/auth/reset-password": {
             "post": {
-                "description": "Initiate the process of resetting a forgotten password by providing the user's email",
+                "description": "Resets user's password after confirmation with OTP code.",
                 "consumes": [
                     "application/json"
                 ],
@@ -330,10 +382,10 @@ const docTemplate = `{
                 "tags": [
                     "Authentication"
                 ],
-                "summary": "Request to reset forgotten password",
+                "summary": "Reset user's password",
                 "parameters": [
                     {
-                        "description": "Request reset forgot password request body",
+                        "description": "Request reset password request body",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -344,137 +396,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Password reset request initiated successfully",
+                        "description": "Password reset successfully",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "type": "string"
                         }
                     },
                     "400": {
-                        "description": "Validation error",
+                        "description": "Invalid email or password format",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid OTP code",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "404": {
-                        "description": "User not found error",
+                        "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "type": "string"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/reset-password/confirm": {
-            "post": {
-                "description": "Confirm password reset by providing the email and OTP code",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Authentication"
-                ],
-                "summary": "Confirm password reset with OTP code",
-                "parameters": [
-                    {
-                        "description": "Confirm password reset request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.confirmResetPasswordRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successfully confirmed password reset",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "400": {
-                        "description": "Validation error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Data not found error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/reset-password/new": {
-            "put": {
-                "description": "Reset user password by providing the email, new password, and OTP code",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Authentication"
-                ],
-                "summary": "Reset user password after confirmation with OTP code",
-                "parameters": [
-                    {
-                        "description": "Reset password request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.setNewPasswordRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successfully reset password",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "400": {
-                        "description": "Validation error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Data not found error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Passwords do not match",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "type": "string"
                         }
                     }
                 }
@@ -1386,23 +1334,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.confirmResetPasswordRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "otp"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "test@example.com"
-                },
-                "otp": {
-                    "type": "string",
-                    "example": "123456"
-                }
-            }
-        },
         "handler.createCollectionRequest": {
             "type": "object",
             "required": [
@@ -1435,6 +1366,18 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.forgotPasswordRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                }
+            }
+        },
         "handler.loginRequest": {
             "type": "object",
             "required": [
@@ -1450,6 +1393,18 @@ const docTemplate = `{
                     "type": "string",
                     "minLength": 8,
                     "example": "12345678"
+                }
+            }
+        },
+        "handler.newRegistrationCodeRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
                 }
             }
         },
@@ -1476,31 +1431,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.requestNewCodeRequest": {
-            "type": "object",
-            "required": [
-                "email"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "user@example.com"
-                }
-            }
-        },
         "handler.resetPasswordRequest": {
-            "type": "object",
-            "required": [
-                "email"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "user@example.com"
-                }
-            }
-        },
-        "handler.setNewPasswordRequest": {
             "type": "object",
             "required": [
                 "email",

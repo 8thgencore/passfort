@@ -123,11 +123,8 @@ func (as *AuthService) RequestNewRegistrationCode(ctx context.Context, email str
 	// Retrieve user by email
 	userDAO, err := as.storage.GetUserByEmail(ctx, email)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return domain.ErrInvalidCredentials
-		}
 		as.log.Error("failed to get the user by email", "error", err.Error())
-		return domain.ErrInternal
+		return nil
 	}
 	user := converter.ToUser(userDAO)
 
@@ -182,17 +179,13 @@ func (as *AuthService) ChangePassword(ctx context.Context, userID uuid.UUID, old
 	return err
 }
 
-// RequestResetPassword initiates the process of resetting a forgotten password
-func (as *AuthService) RequestResetPassword(ctx context.Context, email string) error {
-	// Implement the logic to initiate the process of resetting a forgotten password
+// ForgotPassword initiates the process of resetting a forgotten password
+func (as *AuthService) ForgotPassword(ctx context.Context, email string) error {
 	// Retrieve user by email
 	userDAO, err := as.storage.GetUserByEmail(ctx, email)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return domain.ErrInvalidCredentials
-		}
 		as.log.Error("failed to get the user by email", "error", err.Error())
-		return domain.ErrInternal
+		return nil
 	}
 	user := converter.ToUser(userDAO)
 
@@ -212,31 +205,8 @@ func (as *AuthService) RequestResetPassword(ctx context.Context, email string) e
 	return nil
 }
 
-// ConfirmResetPassword confirms password reset with OTP code
-func (as *AuthService) ConfirmResetPassword(ctx context.Context, email, otp string) error {
-	// Implement the logic to confirm password reset with OTP code
-	// Retrieve user by email
-	userDAO, err := as.storage.GetUserByEmail(ctx, email)
-	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return domain.ErrInvalidOTP
-		}
-		as.log.Error("failed to get the user by email", "error", err.Error())
-		return domain.ErrInternal
-	}
-	user := converter.ToUser(userDAO)
-
-	// Validate OTP
-	if err := as.otp.VerifyOTP(ctx, user.ID, otp); err != nil {
-		return domain.ErrInvalidOTP
-	}
-
-	return nil
-}
-
-// SetNewPassword resets user password after confirmation with OTP code
-func (as *AuthService) SetNewPassword(ctx context.Context, email, newPassword, otp string) error {
-	// Implement the logic to set a new password after confirmation with OTP code
+// ResetPassword confirms password reset with OTP code
+func (as *AuthService) ResetPassword(ctx context.Context, email, newPassword, otp string) error {
 	// Retrieve user by email
 	userDAO, err := as.storage.GetUserByEmail(ctx, email)
 	if err != nil {

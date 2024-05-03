@@ -73,9 +73,8 @@ func NewRouter(
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/register/confirm", authHandler.ConfirmRegistration)
 			auth.POST("/register/request-new-code", authHandler.RequestNewRegistrationCode)
-			auth.POST("/reset-password", authHandler.RequestResetPassword)
-			auth.POST("/reset-password/confirm", authHandler.ConfirmResetPassword)
-			auth.POST("/reset-password/new", authHandler.SetNewPassword)
+			auth.POST("/forgot-password", authHandler.ForgotPassword)
+			auth.POST("/reset-password", authHandler.ResetPassword)
 
 			authUser := auth.Group("/").Use(authMiddleware)
 			{

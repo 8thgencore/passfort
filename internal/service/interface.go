@@ -40,12 +40,10 @@ type AuthService interface {
 	// ChangePassword changes the password for the authenticated user
 	ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error
 
-	// RequestResetPassword initiates the process of resetting a forgotten password
-	RequestResetPassword(ctx context.Context, email string) error
-	// ConfirmResetPassword confirms password reset with OTP code
-	ConfirmResetPassword(ctx context.Context, email, otp string) error
-	// SetNewPassword resets user password after confirmation with OTP code
-	SetNewPassword(ctx context.Context, email, newPassword, otp string) error
+	// ForgotPassword initiates the process of resetting a forgotten password
+	ForgotPassword(ctx context.Context, email string) error
+	// ResetPassword confirms password reset with OTP code
+	ResetPassword(ctx context.Context, email, newPassword, otp string) error
 }
 
 // UserService is an interface for interacting with user-related business logic

@@ -13,7 +13,7 @@ var (
 	// ErrNoUpdatedData is an error for when no data is provided to update
 	ErrNoUpdatedData = errors.New("no data to update")
 	// ErrConflictingData is an error for when data conflicts with existing data
-	ErrConflictingData = errors.New("data conflicts with existing data in unique column")
+	ErrConflictingData = errors.New("data conflicts with existing data")
 	// ErrInsufficientStock is an error for when product stock is not enough
 	ErrInsufficientStock = errors.New("product stock is not enough")
 	// ErrInsufficientPayment is an error for when total paid is less than total price
