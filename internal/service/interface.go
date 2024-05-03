@@ -13,6 +13,8 @@ type TokenService interface {
 	CreateToken(user *domain.User) (string, error)
 	// VerifyToken verifies the token and returns the payload
 	VerifyToken(token string) (*domain.TokenPayload, error)
+	// CheckTokenRevoked checks if the token is invalidated or outdated
+	CheckTokenRevoked(ctx context.Context, token *domain.TokenPayload) (bool, error)
 }
 
 // OtpService
@@ -36,6 +38,9 @@ type AuthService interface {
 	ConfirmRegistration(ctx context.Context, email, otp string) error
 	// RequestNewRegistrationCode requests a new registration confirmation code for a user
 	RequestNewRegistrationCode(ctx context.Context, email string) error
+
+	// Logout invalidates the access token, logging the user out
+	Logout(ctx context.Context, token *domain.TokenPayload) error
 
 	// ChangePassword changes the password for the authenticated user
 	ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error

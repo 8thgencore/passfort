@@ -52,6 +52,17 @@ func AuthMiddleware(token service.TokenService) gin.HandlerFunc {
 			return
 		}
 
+		exists, err := token.CheckTokenRevoked(ctx, payload)
+		if err != nil {
+			response.HandleAbort(ctx, err)
+			return
+		}
+		if exists {
+			err := domain.ErrUnauthorized
+			response.HandleAbort(ctx, err)
+			return
+		}
+
 		ctx.Set(AuthorizationPayloadKey, payload)
 		ctx.Next()
 	}

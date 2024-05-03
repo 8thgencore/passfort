@@ -154,6 +154,30 @@ func (as *AuthService) RequestNewRegistrationCode(ctx context.Context, email str
 	return nil
 }
 
+// Logout invalidates the access token, logging the user out
+func (as *AuthService) Logout(ctx context.Context, token *domain.TokenPayload) error {
+	_, err := as.storage.GetUserByID(ctx, token.UserID)
+	if err != nil {
+		if err == domain.ErrDataNotFound {
+			return err
+		}
+		return domain.ErrInternal
+	}
+
+	cacheKey := util.GenerateCacheKey("token", token.ID)
+	userSerialized, err := util.Serialize(token)
+	if err != nil {
+		return domain.ErrInternal
+	}
+
+	err = as.cache.Set(ctx, cacheKey, userSerialized, 0)
+	if err != nil {
+		return domain.ErrInternal
+	}
+
+	return nil
+}
+
 // ChangePassword implements the ChangePassword method of the AuthService interface
 func (as *AuthService) ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error {
 	// Retrieve the user based on the userID

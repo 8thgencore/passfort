@@ -1,9 +1,11 @@
 package paseto
 
 import (
+	"context"
 	"time"
 
 	"github.com/8thgencore/passfort/internal/domain"
+	"github.com/8thgencore/passfort/pkg/util"
 	"github.com/google/uuid"
 )
 
@@ -55,4 +57,21 @@ func (pt *Token) VerifyToken(token string) (*domain.TokenPayload, error) {
 	}
 
 	return payload, nil
+}
+
+// CheckTokenRevoked checks if the token is invalidated or outdated
+func (pt *Token) CheckTokenRevoked(ctx context.Context, token *domain.TokenPayload) (bool, error) {
+	cacheKey := util.GenerateCacheKey("token", token.ID)
+	_, err := util.Serialize(token)
+	if err != nil {
+		return false, domain.ErrInternal
+	}
+
+	// Check if the value exists in the cache for the given key
+	exists, err := pt.cache.Exists(ctx, cacheKey)
+	if err != nil {
+		return false, domain.ErrInternal
+	}
+
+	return exists, nil
 }

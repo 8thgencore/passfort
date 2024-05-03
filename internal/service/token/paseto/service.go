@@ -7,10 +7,11 @@ import (
 	"github.com/8thgencore/passfort/internal/config"
 	"github.com/8thgencore/passfort/internal/domain"
 	"github.com/8thgencore/passfort/internal/service"
+	"github.com/8thgencore/passfort/internal/service/adapters/cache"
 )
 
 /**
- * Token implements port.TokenService interface
+ * Token implements service.TokenService interface
  * and provides an access to the paseto library
  */
 type Token struct {
@@ -18,10 +19,11 @@ type Token struct {
 	key      *paseto.V4SymmetricKey
 	parser   *paseto.Parser
 	duration time.Duration
+	cache    cache.CacheRepository
 }
 
 // New creates a new paseto instance
-func New(config *config.Token) (service.TokenService, error) {
+func New(config *config.Token, cache cache.CacheRepository) (service.TokenService, error) {
 	durationStr := config.Duration
 	duration, err := time.ParseDuration(durationStr)
 	if err != nil {
@@ -37,5 +39,6 @@ func New(config *config.Token) (service.TokenService, error) {
 		&key,
 		&parser,
 		duration,
+		cache,
 	}, nil
 }

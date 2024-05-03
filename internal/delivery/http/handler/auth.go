@@ -178,6 +178,30 @@ func (ah *AuthHandler) RequestNewRegistrationCode(ctx *gin.Context) {
 	response.HandleSuccess(ctx, nil)
 }
 
+// Logout godoc
+//
+//	@Summary		Logout a user
+//	@Description	Logs out a user by invalidating the access token
+//	@Tags			Authentication
+//	@Accept			json
+//	@Produce		json
+//	@Security		Bearer
+//	@Success		200		string	"Successfully logged out"
+//	@Failure		401		{object}	response.ErrorResponse	"Unauthorized error"
+//	@Router			/auth/logout [post]
+func (ah *AuthHandler) Logout(ctx *gin.Context) {
+	// Retrieve the user ID from the context (assuming it's stored during authentication)
+	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
+
+	err := ah.svc.Logout(ctx, authPayload)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+
+	response.HandleSuccess(ctx, nil)
+}
+
 type changePasswordRequest struct {
 	OldPassword string `json:"old_password" binding:"required,min=8" example:"oldpassword"`
 	NewPassword string `json:"new_password" binding:"required,min=8" example:"newpassword"`

@@ -88,7 +88,7 @@ func Run(configPath string) {
 	log.Info("Successfully connected to the cache server")
 
 	// Init token service
-	token, _ := paseto.New(&cfg.Token)
+	token, _ := paseto.New(&cfg.Token, cache)
 	if err != nil {
 		log.Error("Error initializing token service", "error", err)
 		os.Exit(1)
