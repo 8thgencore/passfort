@@ -19,7 +19,7 @@ import (
 	collectionService "github.com/8thgencore/passfort/internal/service/collection"
 	"github.com/8thgencore/passfort/internal/service/otp"
 	secretService "github.com/8thgencore/passfort/internal/service/secret"
-	"github.com/8thgencore/passfort/internal/service/token/paseto"
+	"github.com/8thgencore/passfort/internal/service/token"
 	userService "github.com/8thgencore/passfort/internal/service/user"
 	"github.com/8thgencore/passfort/pkg/logger/slogpretty"
 )
@@ -88,11 +88,7 @@ func Run(configPath string) {
 	log.Info("Successfully connected to the cache server")
 
 	// Init token service
-	token, _ := paseto.New(&cfg.Token, cache)
-	if err != nil {
-		log.Error("Error initializing token service", "error", err)
-		os.Exit(1)
-	}
+	tokenService := token.New(cfg.Token.SigningKey, cfg.Token.AccessTokenTTL, cfg.Token.RefreshTokenTTL, cache)
 
 	// Otp service
 	otpService := otp.NewOtpService(log, cache)
@@ -118,7 +114,7 @@ func Run(configPath string) {
 	userHandler := handler.NewUserHandler(userService)
 
 	// Auth
-	authService := authService.NewAuthService(log, userRepo, cache, token, otpService, *mailClient)
+	authService := authService.NewAuthService(log, userRepo, cache, *tokenService, otpService, *mailClient)
 	authHandler := handler.NewAuthHandler(authService)
 
 	// Collection
@@ -132,7 +128,7 @@ func Run(configPath string) {
 	secretHandler := handler.NewSecretHandler(secretService)
 
 	// Init router
-	router, err := http.NewRouter(log, cfg, token, *userHandler, *authHandler, *collectionHandler, *secretHandler)
+	router, err := http.NewRouter(log, cfg, *tokenService, *userHandler, *authHandler, *collectionHandler, *secretHandler)
 	if err != nil {
 		log.Error("Error initializing router", "error", err.Error())
 		os.Exit(1)

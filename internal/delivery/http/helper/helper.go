@@ -9,8 +9,8 @@ import (
 )
 
 // GetAuthPayload is a helper function to get the auth payload from the context
-func GetAuthPayload(ctx *gin.Context, key string) *domain.TokenPayload {
-	return ctx.MustGet(key).(*domain.TokenPayload)
+func GetAuthPayload(ctx *gin.Context, key string) *domain.UserClaims {
+	return ctx.MustGet(key).(*domain.UserClaims)
 }
 
 // StringToUint64 is a helper function to convert a string to uint64

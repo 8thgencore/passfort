@@ -10,33 +10,38 @@ import (
 )
 
 // Login gives a registered user an access token if the credentials are valid
-func (as *AuthService) Login(ctx context.Context, email, password string) (string, error) {
+func (as *AuthService) Login(ctx context.Context, email, password string) (string, string, error) {
 	userDAO, err := as.storage.GetUserByEmail(ctx, email)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
-			return "", domain.ErrInvalidCredentials
+			return "", "", domain.ErrInvalidCredentials
 		}
 		as.log.Error("failed to get the user by email", "error", err.Error())
 
-		return "", domain.ErrInternal
+		return "", "", domain.ErrInternal
 	}
 	user := converter.ToUser(userDAO)
 
 	if !user.IsVerified {
-		return "", domain.ErrUserNotVerified
+		return "", "", domain.ErrUserNotVerified
 	}
 
 	err = util.ComparePassword(password, user.Password)
 	if err != nil {
-		return "", domain.ErrInvalidCredentials
+		return "", "", domain.ErrInvalidCredentials
 	}
 
-	accessToken, err := as.tokenService.CreateToken(user)
+	accessToken, err := as.tokenManager.GenerateAccessToken(user.ID, user.Role)
 	if err != nil {
-		return "", domain.ErrTokenCreation
+		return "", "", domain.ErrTokenCreation
 	}
 
-	return accessToken, nil
+	refreshToken, err := as.tokenManager.GenerateRefreshToken(user.ID)
+	if err != nil {
+		return "", "", domain.ErrTokenCreation
+	}
+
+	return accessToken, refreshToken, nil
 }
 
 // Register creates a new user
@@ -155,7 +160,7 @@ func (as *AuthService) RequestNewRegistrationCode(ctx context.Context, email str
 }
 
 // Logout invalidates the access token, logging the user out
-func (as *AuthService) Logout(ctx context.Context, token *domain.TokenPayload) error {
+func (as *AuthService) Logout(ctx context.Context, token *domain.UserClaims) error {
 	_, err := as.storage.GetUserByID(ctx, token.UserID)
 	if err != nil {
 		if err == domain.ErrDataNotFound {

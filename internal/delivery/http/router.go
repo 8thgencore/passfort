@@ -8,7 +8,7 @@ import (
 	"github.com/8thgencore/passfort/internal/delivery/http/handler"
 	"github.com/8thgencore/passfort/internal/delivery/http/helper"
 	"github.com/8thgencore/passfort/internal/delivery/http/middleware"
-	"github.com/8thgencore/passfort/internal/service"
+	"github.com/8thgencore/passfort/internal/service/token"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -26,7 +26,7 @@ type Router struct {
 func NewRouter(
 	log *slog.Logger,
 	cfg *config.Config,
-	token service.TokenService,
+	tokenManager token.TokenService,
 	userHander handler.UserHandler,
 	authHandler handler.AuthHandler,
 	collectionHandler handler.CollectionHandler,
@@ -61,7 +61,7 @@ func NewRouter(
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Middleware
-	authMiddleware := middleware.AuthMiddleware(token)
+	authMiddleware := middleware.AuthMiddleware(tokenManager)
 	adminMiddleware := middleware.AdminMiddleware()
 
 	// Endpoints

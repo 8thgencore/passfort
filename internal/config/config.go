@@ -61,8 +61,9 @@ type (
 
 	// Token contains all the environment variables for the token service
 	Token struct {
-		SymmetricKey string `yaml:"symmetric_key"  env-default:"12345678901234567890123456789012"`
-		Duration     string `yaml:"duration"       env-default:"15m"`
+		SigningKey      string        `yaml:"signing_key"       env:"TOKEN_SIGNING_KEY"  env-default:"SUPERKEY"`
+		AccessTokenTTL  time.Duration `yaml:"access_token_ttl"                           env-default:"30m"`
+		RefreshTokenTTL time.Duration `yaml:"refresh_token_ttl"                          env-default:"720h"`
 	}
 
 	//  Clients

@@ -22,8 +22,9 @@ cache:
   password: "password"
 
 token:
-  symmetric_key: "12345678901234567890123456789012"
-  duration: "15m"
+  signing_key: "qqqqqqqqqqq"
+  access_token_ttl: 30m
+  refresh_token_ttl: 720h
 
 clients:
   mail:

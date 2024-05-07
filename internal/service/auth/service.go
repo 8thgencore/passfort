@@ -7,6 +7,7 @@ import (
 	"github.com/8thgencore/passfort/internal/service"
 	"github.com/8thgencore/passfort/internal/service/adapters/cache"
 	"github.com/8thgencore/passfort/internal/service/adapters/storage"
+	"github.com/8thgencore/passfort/internal/service/token"
 )
 
 /**
@@ -18,7 +19,7 @@ type AuthService struct {
 	log          *slog.Logger
 	storage      storage.UserRepository
 	cache        cache.CacheRepository
-	tokenService service.TokenService
+	tokenManager token.TokenService
 	otp          service.OtpService
 	mailClient   mailGrpc.Client
 }
@@ -27,7 +28,7 @@ type AuthService struct {
 func NewAuthService(log *slog.Logger,
 	storage storage.UserRepository,
 	cache cache.CacheRepository,
-	tokenService service.TokenService,
+	tokenManager token.TokenService,
 	otpService service.OtpService,
 	mailClient mailGrpc.Client,
 
@@ -36,7 +37,7 @@ func NewAuthService(log *slog.Logger,
 		log,
 		storage,
 		cache,
-		tokenService,
+		tokenManager,
 		otpService,
 		mailClient,
 	}

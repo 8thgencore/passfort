@@ -7,14 +7,16 @@ import (
 	"github.com/google/uuid"
 )
 
-// TokenService is an interface for interacting with token-related business logic
+// TokenService represents a service for handling tokens.
 type TokenService interface {
-	// CreateToken creates a new token for a given user
-	CreateToken(user *domain.User) (string, error)
-	// VerifyToken verifies the token and returns the payload
-	VerifyToken(token string) (*domain.TokenPayload, error)
-	// CheckTokenRevoked checks if the token is invalidated or outdated
-	CheckTokenRevoked(ctx context.Context, token *domain.TokenPayload) (bool, error)
+	// GenerateAccessToken generates a new JWT access token based on the provided user claims.
+	GenerateAccessToken(userID uuid.UUID, role domain.UserRoleEnum) (string, error)
+	// GenerateRefreshToken generates a new refresh token.
+	GenerateRefreshToken(userID uuid.UUID) (string, error)
+	// ParseUserClaims parses the access token and returns the user claims.
+	ParseUserClaims(accessToken string) (*domain.UserClaims, error)
+	// CheckJWTTokenRevoked checks if the JWT token is revoked.
+	CheckJWTTokenRevoked(ctx context.Context, token string) (bool, error)
 }
 
 // OtpService
@@ -30,7 +32,7 @@ type OtpService interface {
 // AuthService is an interface for interacting with user authentication-related business logic
 type AuthService interface {
 	// Login authenticates a user by email and password and returns a token
-	Login(ctx context.Context, email, password string) (string, error)
+	Login(ctx context.Context, email, password string) (string, string, error)
 
 	// Register registers a new user
 	Register(ctx context.Context, user *domain.User) (*domain.User, error)
@@ -40,7 +42,7 @@ type AuthService interface {
 	RequestNewRegistrationCode(ctx context.Context, email string) error
 
 	// Logout invalidates the access token, logging the user out
-	Logout(ctx context.Context, token *domain.TokenPayload) error
+	Logout(ctx context.Context, token *domain.UserClaims) error
 
 	// ChangePassword changes the password for the authenticated user
 	ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error
