@@ -88,7 +88,7 @@ func Run(configPath string) {
 	log.Info("Successfully connected to the cache server")
 
 	// Init token service
-	tokenService := token.New(cfg.Token.SigningKey, cfg.Token.AccessTokenTTL, cfg.Token.RefreshTokenTTL, cache)
+	tokenService := token.NewTokenService(log, cfg.Token.SigningKey, cfg.Token.AccessTokenTTL, cfg.Token.RefreshTokenTTL, cache)
 
 	// Otp service
 	otpService := otp.NewOtpService(log, cache)
@@ -114,7 +114,7 @@ func Run(configPath string) {
 	userHandler := handler.NewUserHandler(userService)
 
 	// Auth
-	authService := authService.NewAuthService(log, userRepo, cache, *tokenService, otpService, *mailClient)
+	authService := authService.NewAuthService(log, cfg.Token.RefreshTokenTTL, userRepo, cache, tokenService, otpService, mailClient)
 	authHandler := handler.NewAuthHandler(authService)
 
 	// Collection

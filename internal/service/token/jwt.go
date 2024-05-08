@@ -11,51 +11,41 @@ import (
 	"github.com/google/uuid"
 )
 
-// GenerateAccessToken generates a new JWT access token based on the provided user claims.
-func (ts *TokenService) GenerateAccessToken(userID uuid.UUID, role domain.UserRoleEnum) (string, error) {
+// GenerateToken generates a new JWT token pair based on the provided user claims.
+func (ts *TokenService) GenerateToken(userID uuid.UUID, role domain.UserRoleEnum) (string, string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	tokenId, err := uuid.NewRandom()
 	if err != nil {
-		return "", domain.ErrTokenCreation
+		return "", "", domain.ErrTokenCreation
 	}
 
+	var accessTokenTTL, refreshTokenTTL time.Duration
+	accessTokenTTL = ts.accessTokenTTL
+	refreshTokenTTL = ts.refreshTokenTTL
+
 	claims := token.Claims.(jwt.MapClaims)
-	claims["exp"] = time.Now().Add(ts.accessTokenTTL).Unix()
+	claims["exp"] = time.Now().Add(accessTokenTTL).Unix()
 	claims["iat"] = time.Now().Unix()
 	claims["id"] = tokenId
 	claims["user_id"] = userID
 	claims["role"] = role
 
-	tokenString, err := token.SignedString([]byte(ts.signingKey))
+	accessToken, err := token.SignedString([]byte(ts.signingKey))
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return tokenString, nil
-}
+	// Reset the expiration time for the refresh token
+	claims = token.Claims.(jwt.MapClaims)
+	claims["exp"] = time.Now().Add(refreshTokenTTL).Unix()
 
-// GenerateRefreshToken generates a new refresh token.
-func (ts *TokenService) GenerateRefreshToken(userID uuid.UUID) (string, error) {
-	token := jwt.New(jwt.SigningMethodHS256)
-
-	tokenId, err := uuid.NewRandom()
+	refreshToken, err := token.SignedString([]byte(ts.signingKey))
 	if err != nil {
-		return "", domain.ErrTokenCreation
+		return "", "", err
 	}
 
-	claims := token.Claims.(jwt.MapClaims)
-	claims["exp"] = time.Now().Add(ts.refreshTokenTTL).Unix()
-	claims["iat"] = time.Now().Unix()
-	claims["id"] = tokenId
-	claims["user_id"] = userID
-
-	tokenString, err := token.SignedString([]byte(ts.signingKey))
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
+	return accessToken, refreshToken, nil
 }
 
 // ParseUserClaims parses the access token and returns the user claims.

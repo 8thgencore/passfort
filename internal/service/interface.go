@@ -9,14 +9,12 @@ import (
 
 // TokenService represents a service for handling tokens.
 type TokenService interface {
-	// GenerateAccessToken generates a new JWT access token based on the provided user claims.
-	GenerateAccessToken(userID uuid.UUID, role domain.UserRoleEnum) (string, error)
-	// GenerateRefreshToken generates a new refresh token.
-	GenerateRefreshToken(userID uuid.UUID) (string, error)
+	// GenerateToken generates a new JWT token pair based on the provided user claims.
+	GenerateToken(userID uuid.UUID, role domain.UserRoleEnum) (string, string, error)
 	// ParseUserClaims parses the access token and returns the user claims.
 	ParseUserClaims(accessToken string) (*domain.UserClaims, error)
 	// CheckJWTTokenRevoked checks if the JWT token is revoked.
-	CheckJWTTokenRevoked(ctx context.Context, token string) (bool, error)
+	CheckJWTTokenRevoked(ctx context.Context, token uuid.UUID) (bool, error)
 }
 
 // OtpService
@@ -43,6 +41,9 @@ type AuthService interface {
 
 	// Logout invalidates the access token, logging the user out
 	Logout(ctx context.Context, token *domain.UserClaims) error
+
+	// RefreshToken refreshes the access token for the user
+	RefreshToken(ctx context.Context, refreshToken string) (string, string, error)
 
 	// ChangePassword changes the password for the authenticated user
 	ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error

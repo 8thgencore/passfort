@@ -2,12 +2,12 @@ package auth
 
 import (
 	"log/slog"
+	"time"
 
 	mailGrpc "github.com/8thgencore/passfort/internal/clients/mail/grpc"
 	"github.com/8thgencore/passfort/internal/service"
 	"github.com/8thgencore/passfort/internal/service/adapters/cache"
 	"github.com/8thgencore/passfort/internal/service/adapters/storage"
-	"github.com/8thgencore/passfort/internal/service/token"
 )
 
 /**
@@ -16,25 +16,29 @@ import (
  * and token service
  */
 type AuthService struct {
-	log          *slog.Logger
-	storage      storage.UserRepository
-	cache        cache.CacheRepository
-	tokenManager token.TokenService
-	otp          service.OtpService
-	mailClient   mailGrpc.Client
+	log             *slog.Logger
+	refreshTokenTTL time.Duration
+	storage         storage.UserRepository
+	cache           cache.CacheRepository
+	tokenManager    service.TokenService
+	otp             service.OtpService
+	mailClient      *mailGrpc.Client
 }
 
 // NewAuthService creates a new auth service instance
-func NewAuthService(log *slog.Logger,
+func NewAuthService(
+	log *slog.Logger,
+	refreshTokenTTL time.Duration,
 	storage storage.UserRepository,
 	cache cache.CacheRepository,
-	tokenManager token.TokenService,
+	tokenManager service.TokenService,
 	otpService service.OtpService,
-	mailClient mailGrpc.Client,
+	mailClient *mailGrpc.Client,
 
 ) *AuthService {
 	return &AuthService{
 		log,
+		refreshTokenTTL,
 		storage,
 		cache,
 		tokenManager,

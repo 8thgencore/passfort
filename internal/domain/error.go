@@ -26,6 +26,8 @@ var (
 	ErrExpiredToken = errors.New("access token has expired")
 	// ErrInvalidToken is an error for when the access token is invalid
 	ErrInvalidToken = errors.New("access token is invalid")
+	// ErrInvalidRefreshToken is an error for when the refresh token is invalid
+	ErrInvalidRefreshToken = errors.New("refresh token is invalid")
 	// ErrInvalidCredentials is an error for when the credentials are invalid
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	// ErrPasswordsDoNotMatch is an error for when the provided passwords do not match

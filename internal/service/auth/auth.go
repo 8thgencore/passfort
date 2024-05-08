@@ -31,12 +31,7 @@ func (as *AuthService) Login(ctx context.Context, email, password string) (strin
 		return "", "", domain.ErrInvalidCredentials
 	}
 
-	accessToken, err := as.tokenManager.GenerateAccessToken(user.ID, user.Role)
-	if err != nil {
-		return "", "", domain.ErrTokenCreation
-	}
-
-	refreshToken, err := as.tokenManager.GenerateRefreshToken(user.ID)
+	accessToken, refreshToken, err := as.tokenManager.GenerateToken(user.ID, user.Role)
 	if err != nil {
 		return "", "", domain.ErrTokenCreation
 	}
@@ -159,6 +154,40 @@ func (as *AuthService) RequestNewRegistrationCode(ctx context.Context, email str
 	return nil
 }
 
+// RefreshToken refreshes the access token for the user
+func (as *AuthService) RefreshToken(ctx context.Context, refreshToken string) (string, string, error) {
+	token, err := as.tokenManager.ParseUserClaims(refreshToken)
+	if err != nil {
+		return "", "", domain.ErrInvalidRefreshToken
+	}
+
+	// Caching a revoked token
+	cacheKey := util.GenerateCacheKey("token", token.ID)
+	userSerialized, err := util.Serialize(token)
+	if err != nil {
+		return "", "", domain.ErrInternal
+	}
+
+	err = as.cache.Set(ctx, cacheKey, userSerialized, as.refreshTokenTTL)
+	if err != nil {
+		return "", "", domain.ErrInternal
+	}
+
+	userDAO, err := as.storage.GetUserByID(ctx, token.UserID)
+	if err != nil {
+		return "", "", domain.ErrDataNotFound
+	}
+
+	user := converter.ToUser(userDAO)
+
+	accessToken, refreshToken, err := as.tokenManager.GenerateToken(user.ID, user.Role)
+	if err != nil {
+		return "", "", domain.ErrTokenCreation
+	}
+
+	return accessToken, refreshToken, nil
+}
+
 // Logout invalidates the access token, logging the user out
 func (as *AuthService) Logout(ctx context.Context, token *domain.UserClaims) error {
 	_, err := as.storage.GetUserByID(ctx, token.UserID)
@@ -169,13 +198,14 @@ func (as *AuthService) Logout(ctx context.Context, token *domain.UserClaims) err
 		return domain.ErrInternal
 	}
 
+	// Caching a revoked token
 	cacheKey := util.GenerateCacheKey("token", token.ID)
 	userSerialized, err := util.Serialize(token)
 	if err != nil {
 		return domain.ErrInternal
 	}
 
-	err = as.cache.Set(ctx, cacheKey, userSerialized, 0)
+	err = as.cache.Set(ctx, cacheKey, userSerialized, as.refreshTokenTTL)
 	if err != nil {
 		return domain.ErrInternal
 	}

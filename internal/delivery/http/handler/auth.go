@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/8thgencore/passfort/internal/delivery/http/helper"
 	"github.com/8thgencore/passfort/internal/delivery/http/middleware"
@@ -176,6 +177,54 @@ func (ah *AuthHandler) RequestNewRegistrationCode(ctx *gin.Context) {
 	}
 
 	response.HandleSuccess(ctx, nil)
+}
+
+// RefreshToken godoc
+//
+//	@Summary		Refresh an access token
+//	@Description	Refreshes an access token by providing the refresh token
+//	@Tags			Authentication
+//	@Accept			json
+//	@Produce		json
+//	@Success		200		{object}	response.AuthResponse	"Succesfully refreshed"
+//	@Failure		400		{object}	response.ErrorResponse	"Validation error"
+//	@Failure		401		{object}	response.ErrorResponse	"Unauthorized error"
+//	@Failure		500		{object}	response.ErrorResponse	"Internal server error"
+//	@Router			/auth/refresh-token [get]
+func (ah *AuthHandler) RefreshToken(ctx *gin.Context) {
+	authorizationHeader := ctx.GetHeader(middleware.AuthorizationHeaderKey)
+
+	isEmpty := len(authorizationHeader) == 0
+	if isEmpty {
+		err := domain.ErrEmptyAuthorizationHeader
+		response.HandleAbort(ctx, err)
+		return
+	}
+
+	fields := strings.Fields(authorizationHeader)
+	isValid := len(fields) == 2
+	if !isValid {
+		err := domain.ErrInvalidAuthorizationHeader
+		response.HandleAbort(ctx, err)
+		return
+	}
+
+	currentAuthorizationType := strings.ToLower(fields[0])
+	if currentAuthorizationType != middleware.AuthorizationType {
+		err := domain.ErrInvalidAuthorizationType
+		response.HandleAbort(ctx, err)
+		return
+	}
+
+	accessToken, refreshToken, err := ah.svc.RefreshToken(ctx, fields[1])
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+
+	rsp := response.NewAuthResponse(accessToken, refreshToken)
+
+	response.HandleSuccess(ctx, rsp)
 }
 
 // Logout godoc

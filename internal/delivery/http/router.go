@@ -78,6 +78,7 @@ func NewRouter(
 
 			authUser := auth.Group("/").Use(authMiddleware)
 			{
+				authUser.GET("/refresh-token", authHandler.RefreshToken)
 				authUser.GET("/logout", authHandler.Logout)
 				authUser.PUT("/change-password", authHandler.ChangePassword)
 			}

@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	// authorizationHeaderKey is the key for authorization header in the request
-	authorizationHeaderKey = "authorization"
-	// authorizationType is the accepted authorization type
-	authorizationType = "bearer"
+	// AuthorizationHeaderKey is the key for authorization header in the request
+	AuthorizationHeaderKey = "authorization"
+	// AuthorizationType is the accepted authorization type
+	AuthorizationType = "bearer"
 	// AuthorizationPayloadKey is the key for authorization payload in the context
 	AuthorizationPayloadKey = "authorization_payload"
 )
@@ -21,7 +21,7 @@ const (
 // AuthMiddleware is a middleware to check if the user is authenticated
 func AuthMiddleware(tokenService token.TokenService) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		authorizationHeader := ctx.GetHeader(authorizationHeaderKey)
+		authorizationHeader := ctx.GetHeader(AuthorizationHeaderKey)
 
 		isEmpty := len(authorizationHeader) == 0
 		if isEmpty {
@@ -39,14 +39,13 @@ func AuthMiddleware(tokenService token.TokenService) gin.HandlerFunc {
 		}
 
 		currentAuthorizationType := strings.ToLower(fields[0])
-		if currentAuthorizationType != authorizationType {
+		if currentAuthorizationType != AuthorizationType {
 			err := domain.ErrInvalidAuthorizationType
 			response.HandleAbort(ctx, err)
 			return
-		}
+		}	
 
-		accessToken := fields[1]
-		payload, err := tokenService.ParseUserClaims(accessToken)
+		payload, err := tokenService.ParseUserClaims(fields[1])
 		if err != nil {
 			response.HandleAbort(ctx, err)
 			return
