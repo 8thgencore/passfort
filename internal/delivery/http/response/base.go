@@ -94,6 +94,8 @@ type CollectionResponse struct {
 	ID          uuid.UUID `json:"id" example:"bb073c91-f09b-4858-b2d1-d14116e73b8d"`
 	Name        string    `json:"name" example:"My Collection"`
 	Description string    `json:"description,omitempty" example:"Collection description"`
+	CreatedBy   uuid.UUID `json:"created_by" example:"bb073c91-f09b-4858-b2d1-d14116e73b8d"`
+	UpdatedBy   uuid.UUID `json:"updated_by" example:"bb073c91-f09b-4858-b2d1-d14116e73b8d"`
 	CreatedAt   time.Time `json:"created_at" example:"1970-01-01T00:00:00Z"`
 	UpdatedAt   time.Time `json:"updated_at" example:"1970-01-01T00:00:00Z"`
 }
@@ -104,6 +106,8 @@ func NewCollectionResponse(collection *domain.Collection) CollectionResponse {
 		ID:          collection.ID,
 		Name:        collection.Name,
 		Description: collection.Description,
+		CreatedBy:   collection.CreatedBy,
+		UpdatedBy:   collection.UpdatedBy,
 		CreatedAt:   collection.CreatedAt,
 		UpdatedAt:   collection.UpdatedAt,
 	}

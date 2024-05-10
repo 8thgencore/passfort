@@ -40,8 +40,8 @@ func (r *CollectionRepository) CreateCollection(ctx context.Context, userID uuid
 
 	// Insert into collections table
 	collectionQuery := r.db.QueryBuilder.Insert("collections").
-		Columns("name", "description").
-		Values(collection.Name, collection.Description).
+		Columns("name", "description", "created_by", "updated_by").
+		Values(collection.Name, collection.Description, collection.CreatedBy, collection.UpdatedBy).
 		Suffix("RETURNING *")
 
 	collectionSQL, collectionArgs, err := collectionQuery.ToSql()
@@ -53,6 +53,8 @@ func (r *CollectionRepository) CreateCollection(ctx context.Context, userID uuid
 		&collectionDAO.ID,
 		&collectionDAO.Name,
 		&collectionDAO.Description,
+		&collectionDAO.CreatedBy,
+		&collectionDAO.UpdatedBy,
 		&collectionDAO.CreatedAt,
 		&collectionDAO.UpdatedAt,
 	)
@@ -103,6 +105,8 @@ func (r *CollectionRepository) GetCollectionByID(ctx context.Context, id uuid.UU
 		&collectionDAO.ID,
 		&collectionDAO.Name,
 		&collectionDAO.Description,
+		&collectionDAO.CreatedBy,
+		&collectionDAO.UpdatedBy,
 		&collectionDAO.CreatedAt,
 		&collectionDAO.UpdatedAt,
 	)
@@ -121,7 +125,7 @@ func (r *CollectionRepository) ListCollectionsByUserID(ctx context.Context, user
 	var collectionDAO dao.CollectionDAO
 	var collectionsDAO []dao.CollectionDAO
 
-	query := r.db.QueryBuilder.Select("c.id, c.name, c.description, c.created_at, c.updated_at").
+	query := r.db.QueryBuilder.Select("c.id, c.name, c.description, c.created_by, c.updated_by, c.created_at, c.updated_at").
 		From("collections c").
 		Join("users_collections uc ON c.id = uc.collection_id").
 		Where(sq.Eq{"uc.user_id": userID}).
@@ -145,6 +149,8 @@ func (r *CollectionRepository) ListCollectionsByUserID(ctx context.Context, user
 			&collectionDAO.ID,
 			&collectionDAO.Name,
 			&collectionDAO.Description,
+			&collectionDAO.CreatedBy,
+			&collectionDAO.UpdatedBy,
 			&collectionDAO.CreatedAt,
 			&collectionDAO.UpdatedAt,
 		)
@@ -163,13 +169,14 @@ func (r *CollectionRepository) ListCollectionsByUserID(ctx context.Context, user
 func (r *CollectionRepository) UpdateCollection(ctx context.Context, collection *dao.CollectionDAO) (*dao.CollectionDAO, error) {
 	var collectionDAO dao.CollectionDAO
 
-	name := nullString(collection.Name)
-	description := nullString(collection.Description)
+	name := NullString(collection.Name)
+	description := NullString(collection.Description)
 
 	query := r.db.QueryBuilder.Update("collections").
 		Set("name", sq.Expr("COALESCE(?, name)", name)).
 		Set("description", sq.Expr("COALESCE(?, description)", description)).
 		Set("updated_at", time.Now()).
+		Set("updated_by", collection.UpdatedBy).
 		Where(sq.Eq{"id": collection.ID}).
 		Suffix("RETURNING *")
 
@@ -182,6 +189,8 @@ func (r *CollectionRepository) UpdateCollection(ctx context.Context, collection 
 		&collectionDAO.ID,
 		&collectionDAO.Name,
 		&collectionDAO.Description,
+		&collectionDAO.CreatedBy,
+		&collectionDAO.UpdatedBy,
 		&collectionDAO.CreatedAt,
 		&collectionDAO.UpdatedAt,
 	)

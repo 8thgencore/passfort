@@ -31,8 +31,8 @@ func (r *SecretRepository) CreateSecret(ctx context.Context, collectionID uuid.U
 	var secretDao dao.SecretDAO
 
 	query := r.db.QueryBuilder.Insert("secrets").
-		Columns("collection_id", "secret_type", "created_at", "updated_at", "created_by", "updated_by").
-		Values(collectionID, secret.SecretType, secret.CreatedAt, secret.UpdatedAt, secret.CreatedBy, secret.UpdatedBy).
+		Columns("collection_id", "secret_type", "created_by", "updated_by").
+		Values(collectionID, secret.SecretType, secret.CreatedBy, secret.UpdatedBy).
 		Suffix("RETURNING *")
 
 	sql, args, err := query.ToSql()
@@ -44,10 +44,10 @@ func (r *SecretRepository) CreateSecret(ctx context.Context, collectionID uuid.U
 		&secretDao.ID,
 		&secretDao.CollectionID,
 		&secretDao.SecretType,
-		&secretDao.CreatedAt,
-		&secretDao.UpdatedAt,
 		&secretDao.CreatedBy,
 		&secretDao.UpdatedBy,
+		&secretDao.CreatedAt,
+		&secretDao.UpdatedAt,
 	)
 	if err != nil {
 		if errCode := r.db.ErrorCode(err); errCode == "23503" {
@@ -74,10 +74,10 @@ func (r *SecretRepository) GetSecretByID(ctx context.Context, id uuid.UUID) (*da
 		&secret.ID,
 		&secret.CollectionID,
 		&secret.SecretType,
-		&secret.CreatedAt,
-		&secret.UpdatedAt,
 		&secret.CreatedBy,
 		&secret.UpdatedBy,
+		&secret.CreatedAt,
+		&secret.UpdatedAt,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -114,10 +114,10 @@ func (r *SecretRepository) ListSecretsByCollectionID(ctx context.Context, collec
 			&secret.ID,
 			&secret.CollectionID,
 			&secret.SecretType,
-			&secret.CreatedAt,
-			&secret.UpdatedAt,
 			&secret.CreatedBy,
 			&secret.UpdatedBy,
+			&secret.CreatedAt,
+			&secret.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -149,10 +149,10 @@ func (r *SecretRepository) UpdateSecret(ctx context.Context, secret *dao.SecretD
 		&updatedSecret.ID,
 		&updatedSecret.CollectionID,
 		&updatedSecret.SecretType,
-		&updatedSecret.CreatedAt,
-		&updatedSecret.UpdatedAt,
 		&updatedSecret.CreatedBy,
 		&updatedSecret.UpdatedBy,
+		&updatedSecret.CreatedAt,
+		&updatedSecret.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err

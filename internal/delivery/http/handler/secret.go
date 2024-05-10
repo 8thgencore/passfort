@@ -55,12 +55,14 @@ func (sh *SecretHandler) CreateSecret(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
+
 	newSecret := domain.Secret{
 		CollectionID: collectionID,
 		SecretType:   req.SecretType,
+		CreatedBy:    authPayload.UserID,
+		UpdatedBy:    authPayload.UserID,
 	}
-
-	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
 
 	createdSecret, err := sh.svc.CreateSecret(ctx, authPayload.UserID, &newSecret)
 	if err != nil {

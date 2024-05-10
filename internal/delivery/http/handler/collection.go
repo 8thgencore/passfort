@@ -49,13 +49,15 @@ func (ch *CollectionHandler) CreateCollection(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
+
 	// Assuming your CollectionService has a method CreateCollection
 	newCollection := domain.Collection{
 		Name:        req.Name,
 		Description: req.Description,
+		CreatedBy:   authPayload.UserID,
+		UpdatedBy:   authPayload.UserID,
 	}
-
-	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
 
 	createdCollection, err := ch.svc.CreateCollection(ctx, authPayload.UserID, &newCollection)
 	if err != nil {
@@ -199,13 +201,14 @@ func (ch *CollectionHandler) UpdateCollection(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
+
 	collection := domain.Collection{
 		ID:          uuid,
 		Name:        req.Name,
 		Description: req.Description,
+		UpdatedBy:   authPayload.UserID,
 	}
-
-	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
 
 	updatedCollection, err := ch.svc.UpdateCollection(ctx, authPayload.UserID, &collection)
 	if err != nil {
