@@ -32,8 +32,8 @@ type (
 
 	// App contains all the environment variables for the application
 	App struct {
-		Name    string `env-required:"true" yaml:"name"    env:"APP_NAME"`
-		Version string `env-required:"true" yaml:"version" env:"APP_VERSION"`
+		Name    string `yaml:"name"    env:"APP_NAME"    env-required:"true"`
+		Version string `yaml:"version" env:"APP_VERSION" env-required:"true"`
 	}
 
 	// HTTP contains all the environment variables for the http server
@@ -55,15 +55,15 @@ type (
 
 	// Cache contains all the environment variables for the cache service
 	Cache struct {
-		Addr     string `yaml:"address"  env-default:"localhost:6379"`
-		Password string `yaml:"password" env-default:"password"`
+		Addr     string `yaml:"address"  env:"REDIS_ADDRESS"  env-default:"localhost:6379"`
+		Password string `yaml:"password" env:"REDIS_PASSWORD" env-default:"password"`
 	}
 
 	// Token contains all the environment variables for the token service
 	Token struct {
-		SigningKey      string        `yaml:"signing_key"       env:"TOKEN_SIGNING_KEY"  env-default:"SUPERKEY"`
-		AccessTokenTTL  time.Duration `yaml:"access_token_ttl"                           env-default:"30m"`
-		RefreshTokenTTL time.Duration `yaml:"refresh_token_ttl"                          env-default:"720h"`
+		SigningKey      string        `yaml:"signing_key"       env:"TOKEN_SIGNING_KEY"`
+		AccessTokenTTL  time.Duration `yaml:"access_token_ttl"  env-default:"30m"`
+		RefreshTokenTTL time.Duration `yaml:"refresh_token_ttl" env-default:"720h"`
 	}
 
 	//  Clients

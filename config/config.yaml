@@ -14,15 +14,12 @@ database:
   host: "localhost"
   port: 5432
   user: "user"
-  password: "password"
   name: "passfort"
 
 cache:
   address: "localhost:6379"
-  password: "password"
 
 token:
-  signing_key: "qqqqqqqqqqq"
   access_token_ttl: 30m
   refresh_token_ttl: 720h
 
