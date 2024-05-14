@@ -6,18 +6,21 @@ import (
 )
 
 var (
+	// Internal Errors
 	// ErrInternal is an error for when an internal service fails to process the request
 	ErrInternal = errors.New("internal error")
+	// ErrFailedToSendEmail is an error for when sending an email fails
+	ErrFailedToSendEmail = errors.New("failed to send email")
+
+	// Data Errors
 	// ErrDataNotFound is an error for when requested data is not found
 	ErrDataNotFound = errors.New("data not found")
 	// ErrNoUpdatedData is an error for when no data is provided to update
 	ErrNoUpdatedData = errors.New("no data to update")
 	// ErrConflictingData is an error for when data conflicts with existing data
 	ErrConflictingData = errors.New("data conflicts with existing data")
-	// ErrInsufficientStock is an error for when product stock is not enough
-	ErrInsufficientStock = errors.New("product stock is not enough")
-	// ErrInsufficientPayment is an error for when total paid is less than total price
-	ErrInsufficientPayment = errors.New("total paid is less than total price")
+
+	// Token Errors
 	// ErrTokenDuration is an error for when the token duration format is invalid
 	ErrTokenDuration = errors.New("invalid token duration format")
 	// ErrTokenCreation is an error for when the token creation fails
@@ -28,6 +31,8 @@ var (
 	ErrInvalidToken = errors.New("access token is invalid")
 	// ErrInvalidRefreshToken is an error for when the refresh token is invalid
 	ErrInvalidRefreshToken = errors.New("refresh token is invalid")
+
+	// Authentication Errors
 	// ErrInvalidCredentials is an error for when the credentials are invalid
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	// ErrPasswordsDoNotMatch is an error for when the provided passwords do not match
@@ -36,6 +41,8 @@ var (
 	ErrInvalidOTP = errors.New("invalid OTP")
 	// ErrOTPAlreadySent is an error for when an OTP (One-Time Password) has already been sent to the user
 	ErrOTPAlreadySent = errors.New("an OTP has already been sent to the user")
+
+	// Authorization Errors
 	// ErrEmptyAuthorizationHeader is an error for when the authorization header is empty
 	ErrEmptyAuthorizationHeader = errors.New("authorization header is not provided")
 	// ErrInvalidAuthorizationHeader is an error for when the authorization header is invalid
@@ -46,14 +53,22 @@ var (
 	ErrUnauthorized = errors.New("user is unauthorized to access the resource")
 	// ErrForbidden is an error for when the user is forbidden to access the resource
 	ErrForbidden = errors.New("user is forbidden to access the resource")
+
+	// User Errors
 	// ErrUserNotVerified is an error for when a user is not verified
 	ErrUserNotVerified = errors.New("user not verified")
 	// ErrDeleteOwnAccount is an error for when a user tries to delete their own account
 	ErrDeleteOwnAccount = errors.New("you cannot delete your own account")
-	// ErrFailedToSendEmail is an error for when sending an email fails
-	ErrFailedToSendEmail = errors.New("failed to send email")
-	// ErrCollectionNotExists is an error for when the requested collection does not exist
-	ErrCollectionNotExists = errors.New("requested collection does not exist")
+
+	// Master Password Errors
+	// ErrMasterPasswordValidationExpired is an error for when master password validation has expired
+	ErrMasterPasswordValidationExpired = errors.New("master password validation has expired")
+	// ErrMasterPasswordNotSet is an error for when a master password has not been set by the user
+	ErrMasterPasswordNotSet = errors.New("master password has not been set")
+	// ErrInvalidMasterPassword is an error for when the master password provided is invalid
+	ErrInvalidMasterPassword = errors.New("invalid master password")
+	// ErrMasterPasswordAlreadyExists is an error for when a master password already exists for the user
+	ErrMasterPasswordAlreadyExists = errors.New("master password already exists")
 )
 
 // IsUniqueConstraintViolationError checks if the error is a unique constraint violation error

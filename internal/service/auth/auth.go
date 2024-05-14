@@ -31,7 +31,7 @@ func (as *AuthService) Login(ctx context.Context, email, password string) (strin
 		return "", "", domain.ErrInvalidCredentials
 	}
 
-	accessToken, refreshToken, err := as.tokenManager.GenerateToken(user.ID, user.Role)
+	accessToken, refreshToken, err := as.tokenService.GenerateToken(user.ID, user.Role)
 	if err != nil {
 		return "", "", domain.ErrTokenCreation
 	}
@@ -156,21 +156,15 @@ func (as *AuthService) RequestNewRegistrationCode(ctx context.Context, email str
 
 // RefreshToken refreshes the access token for the user
 func (as *AuthService) RefreshToken(ctx context.Context, refreshToken string) (string, string, error) {
-	token, err := as.tokenManager.ParseUserClaims(refreshToken)
+	token, err := as.tokenService.ParseUserClaims(refreshToken)
 	if err != nil {
 		return "", "", domain.ErrInvalidRefreshToken
 	}
 
 	// Caching a revoked token
-	cacheKey := util.GenerateCacheKey("token", token.ID)
-	userSerialized, err := util.Serialize(token)
+	err = as.tokenService.RevokeToken(ctx, token.ID)
 	if err != nil {
-		return "", "", domain.ErrInternal
-	}
-
-	err = as.cache.Set(ctx, cacheKey, userSerialized, as.refreshTokenTTL)
-	if err != nil {
-		return "", "", domain.ErrInternal
+		return "", "", err
 	}
 
 	userDAO, err := as.storage.GetUserByID(ctx, token.UserID)
@@ -180,7 +174,7 @@ func (as *AuthService) RefreshToken(ctx context.Context, refreshToken string) (s
 
 	user := converter.ToUser(userDAO)
 
-	accessToken, refreshToken, err := as.tokenManager.GenerateToken(user.ID, user.Role)
+	accessToken, refreshToken, err := as.tokenService.GenerateToken(user.ID, user.Role)
 	if err != nil {
 		return "", "", domain.ErrTokenCreation
 	}
@@ -199,15 +193,9 @@ func (as *AuthService) Logout(ctx context.Context, token *domain.UserClaims) err
 	}
 
 	// Caching a revoked token
-	cacheKey := util.GenerateCacheKey("token", token.ID)
-	userSerialized, err := util.Serialize(token)
+	err = as.tokenService.RevokeToken(ctx, token.ID)
 	if err != nil {
-		return domain.ErrInternal
-	}
-
-	err = as.cache.Set(ctx, cacheKey, userSerialized, as.refreshTokenTTL)
-	if err != nil {
-		return domain.ErrInternal
+		return err
 	}
 
 	return nil
@@ -221,16 +209,16 @@ func (as *AuthService) ChangePassword(ctx context.Context, userID uuid.UUID, old
 		return err
 	}
 
-	// Verify the old password
-	err = util.ComparePassword(oldPassword, user.Password)
-	if err != nil {
-		return domain.ErrPasswordsDoNotMatch
-	}
-
 	// Update the password
 	hashedPassword, err := util.HashPassword(newPassword)
 	if err != nil {
 		return domain.ErrInternal
+	}
+
+	// Verify the old password
+	err = util.ComparePassword(hashedPassword, user.Password)
+	if err != nil {
+		return domain.ErrPasswordsDoNotMatch
 	}
 
 	user.Password = hashedPassword

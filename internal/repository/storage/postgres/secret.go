@@ -51,7 +51,7 @@ func (r *SecretRepository) CreateSecret(ctx context.Context, collectionID uuid.U
 	)
 	if err != nil {
 		if errCode := r.db.ErrorCode(err); errCode == "23503" {
-			return nil, domain.ErrCollectionNotExists
+			return nil, domain.ErrDataNotFound
 		}
 		return nil, err
 	}

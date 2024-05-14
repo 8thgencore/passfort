@@ -92,6 +92,23 @@ func (ts *TokenService) ParseUserClaims(accessToken string) (*domain.UserClaims,
 	}, nil
 }
 
+// RevokeToken revokes the specified JWT token.
+func (ts *TokenService) RevokeToken(ctx context.Context, token uuid.UUID) error {
+	// Caching a revoked token
+	cacheKey := util.GenerateCacheKey("token", token.ID)
+	userSerialized, err := util.Serialize(token)
+	if err != nil {
+		return domain.ErrInternal
+	}
+
+	err = ts.cache.Set(ctx, cacheKey, userSerialized, ts.refreshTokenTTL)
+	if err != nil {
+		return domain.ErrInternal
+	}
+
+	return nil
+}
+
 // CheckJWTTokenRevoked checks if the JWT token is revoked.
 func (ts *TokenService) CheckJWTTokenRevoked(ctx context.Context, tokenId uuid.UUID) (bool, error) {
 	cacheKey := util.GenerateCacheKey("token", tokenId)

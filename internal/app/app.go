@@ -6,6 +6,7 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"time"
 
 	_ "github.com/8thgencore/passfort/docs"
 	mailGrpc "github.com/8thgencore/passfort/internal/clients/mail/grpc"
@@ -17,6 +18,7 @@ import (
 	"github.com/8thgencore/passfort/internal/repository/storage/postgres"
 	authService "github.com/8thgencore/passfort/internal/service/auth"
 	collectionService "github.com/8thgencore/passfort/internal/service/collection"
+	masterPasswordService "github.com/8thgencore/passfort/internal/service/master_password"
 	"github.com/8thgencore/passfort/internal/service/otp"
 	secretService "github.com/8thgencore/passfort/internal/service/secret"
 	"github.com/8thgencore/passfort/internal/service/token"
@@ -114,8 +116,12 @@ func Run(configPath string) {
 	userHandler := handler.NewUserHandler(userService)
 
 	// Auth
-	authService := authService.NewAuthService(log, cfg.Token.RefreshTokenTTL, userRepo, cache, tokenService, otpService, mailClient)
+	authService := authService.NewAuthService(log, userRepo, cache, tokenService, otpService, mailClient)
 	authHandler := handler.NewAuthHandler(authService)
+
+	// MasterPassword
+	masterPasswordService := masterPasswordService.NewMasterPasswordService(log, userRepo, cache, 30*time.Minute)
+	masterPasswordHandler := handler.NewMasterPasswordHandler(masterPasswordService)
 
 	// Collection
 	collectionRepo := postgres.NewCollectionRepository(db)
@@ -128,7 +134,17 @@ func Run(configPath string) {
 	secretHandler := handler.NewSecretHandler(secretService)
 
 	// Init router
-	router, err := http.NewRouter(log, cfg, *tokenService, *userHandler, *authHandler, *collectionHandler, *secretHandler)
+	router, err := http.NewRouter(
+		log,
+		cfg,
+		*tokenService,
+		masterPasswordService,
+		*userHandler,
+		*authHandler,
+		*collectionHandler,
+		*secretHandler,
+		*masterPasswordHandler,
+	)
 	if err != nil {
 		log.Error("Error initializing router", "error", err.Error())
 		os.Exit(1)

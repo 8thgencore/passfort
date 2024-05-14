@@ -13,6 +13,8 @@ type TokenService interface {
 	GenerateToken(userID uuid.UUID, role domain.UserRoleEnum) (string, string, error)
 	// ParseUserClaims parses the access token and returns the user claims.
 	ParseUserClaims(accessToken string) (*domain.UserClaims, error)
+	// RevokeToken revokes the specified JWT token.
+	RevokeToken(ctx context.Context, token uuid.UUID) error
 	// CheckJWTTokenRevoked checks if the JWT token is revoked.
 	CheckJWTTokenRevoked(ctx context.Context, token uuid.UUID) (bool, error)
 }
@@ -52,6 +54,18 @@ type AuthService interface {
 	ForgotPassword(ctx context.Context, email string) error
 	// ResetPassword confirms password reset with OTP code
 	ResetPassword(ctx context.Context, email, newPassword, otp string) error
+}
+
+// MasterPasswordService is an interface for interacting with master password-related business logic
+type MasterPasswordService interface {
+	// MasterPasswordExists checks if a master password already exists for the given user
+	MasterPasswordExists(ctx context.Context, userID uuid.UUID) (bool, error)
+	// SaveMasterPassword saves or updates the master password for the given user
+	SaveMasterPassword(ctx context.Context, userID uuid.UUID, password string) error
+	// ValidateMasterPassword validates the master password for the given user
+	ValidateMasterPassword(ctx context.Context, userID uuid.UUID, password string) error
+	// IsMasterPasswordValidated checks if the master password for the given user has been recently validated
+	IsMasterPasswordValidated(ctx context.Context, userID uuid.UUID) (bool, error)
 }
 
 // UserService is an interface for interacting with user-related business logic

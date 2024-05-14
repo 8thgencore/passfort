@@ -186,10 +186,10 @@ func (ah *AuthHandler) RequestNewRegistrationCode(ctx *gin.Context) {
 //	@Tags			Authentication
 //	@Accept			json
 //	@Produce		json
-//	@Success		200		{object}	response.AuthResponse	"Succesfully refreshed"
-//	@Failure		400		{object}	response.ErrorResponse	"Validation error"
-//	@Failure		401		{object}	response.ErrorResponse	"Unauthorized error"
-//	@Failure		500		{object}	response.ErrorResponse	"Internal server error"
+//	@Success		200	{object}	response.AuthResponse	"Succesfully refreshed"
+//	@Failure		400	{object}	response.ErrorResponse	"Validation error"
+//	@Failure		401	{object}	response.ErrorResponse	"Unauthorized error"
+//	@Failure		500	{object}	response.ErrorResponse	"Internal server error"
 //	@Router			/auth/refresh-token [get]
 func (ah *AuthHandler) RefreshToken(ctx *gin.Context) {
 	authorizationHeader := ctx.GetHeader(middleware.AuthorizationHeaderKey)
@@ -235,8 +235,8 @@ func (ah *AuthHandler) RefreshToken(ctx *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		Bearer
-//	@Success		200		string	"Successfully logged out"
-//	@Failure		401		{object}	response.ErrorResponse	"Unauthorized error"
+//	@Success		200	string		"Successfully logged out"
+//	@Failure		401	{object}	response.ErrorResponse	"Unauthorized error"
 //	@Router			/auth/logout [post]
 func (ah *AuthHandler) Logout(ctx *gin.Context) {
 	// Retrieve the user ID from the context (assuming it's stored during authentication)

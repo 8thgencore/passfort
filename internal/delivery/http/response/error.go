@@ -11,19 +11,44 @@ import (
 
 // errorStatusMap is a map of defined error messages and their corresponding http status codes
 var errorStatusMap = map[error]int{
-	domain.ErrDataNotFound:               http.StatusNotFound,
-	domain.ErrConflictingData:            http.StatusConflict,
-	domain.ErrInvalidCredentials:         http.StatusUnauthorized,
-	domain.ErrUnauthorized:               http.StatusUnauthorized,
+	// Internal Errors
+	domain.ErrInternal:          http.StatusInternalServerError,
+	domain.ErrFailedToSendEmail: http.StatusInternalServerError,
+
+	// Data Errors
+	domain.ErrDataNotFound:    http.StatusNotFound,
+	domain.ErrNoUpdatedData:   http.StatusBadRequest,
+	domain.ErrConflictingData: http.StatusConflict,
+
+	// Token Errors
+	domain.ErrTokenDuration:       http.StatusBadRequest,
+	domain.ErrTokenCreation:       http.StatusInternalServerError,
+	domain.ErrExpiredToken:        http.StatusUnauthorized,
+	domain.ErrInvalidToken:        http.StatusUnauthorized,
+	domain.ErrInvalidRefreshToken: http.StatusUnauthorized,
+
+	// Authentication Errors
+	domain.ErrInvalidCredentials:  http.StatusUnauthorized,
+	domain.ErrPasswordsDoNotMatch: http.StatusBadRequest,
+	domain.ErrInvalidOTP:          http.StatusUnauthorized,
+	domain.ErrOTPAlreadySent:      http.StatusTooManyRequests,
+
+	// Authorization Errors
 	domain.ErrEmptyAuthorizationHeader:   http.StatusUnauthorized,
 	domain.ErrInvalidAuthorizationHeader: http.StatusUnauthorized,
 	domain.ErrInvalidAuthorizationType:   http.StatusUnauthorized,
-	domain.ErrInvalidToken:               http.StatusUnauthorized,
-	domain.ErrExpiredToken:               http.StatusUnauthorized,
+	domain.ErrUnauthorized:               http.StatusUnauthorized,
 	domain.ErrForbidden:                  http.StatusForbidden,
-	domain.ErrNoUpdatedData:              http.StatusBadRequest,
-	domain.ErrInsufficientStock:          http.StatusBadRequest,
-	domain.ErrInsufficientPayment:        http.StatusBadRequest,
+
+	// User Errors
+	domain.ErrUserNotVerified:  http.StatusUnauthorized,
+	domain.ErrDeleteOwnAccount: http.StatusForbidden,
+
+	// Master Password Errors
+	domain.ErrMasterPasswordValidationExpired: http.StatusUnauthorized,
+	domain.ErrMasterPasswordNotSet:            http.StatusUnauthorized,
+	domain.ErrInvalidMasterPassword:           http.StatusUnauthorized,
+	domain.ErrMasterPasswordAlreadyExists:     http.StatusConflict,
 }
 
 // ValidationError sends an error response for some specific request validation error

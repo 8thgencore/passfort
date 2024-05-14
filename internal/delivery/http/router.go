@@ -8,6 +8,7 @@ import (
 	"github.com/8thgencore/passfort/internal/delivery/http/handler"
 	"github.com/8thgencore/passfort/internal/delivery/http/helper"
 	"github.com/8thgencore/passfort/internal/delivery/http/middleware"
+	"github.com/8thgencore/passfort/internal/service"
 	"github.com/8thgencore/passfort/internal/service/token"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -23,14 +24,17 @@ type Router struct {
 	*gin.Engine
 }
 
+// NewRouter creates a new router with the given parameters
 func NewRouter(
 	log *slog.Logger,
 	cfg *config.Config,
-	tokenManager token.TokenService,
+	tokenService token.TokenService,
+	masterPasswordService service.MasterPasswordService,
 	userHander handler.UserHandler,
 	authHandler handler.AuthHandler,
 	collectionHandler handler.CollectionHandler,
 	secretHandler handler.SecretHandler,
+	masterPasswordHandler handler.MasterPasswordHandler,
 ) (*Router, error) {
 	// Disable debug mode in production
 	if cfg.Env == config.Prod {
@@ -61,12 +65,14 @@ func NewRouter(
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Middleware
-	authMiddleware := middleware.AuthMiddleware(tokenManager)
+	authMiddleware := middleware.AuthMiddleware(tokenService)
 	adminMiddleware := middleware.AdminMiddleware()
+	masterPasswordMiddleware := middleware.MasterPasswordMiddleware(masterPasswordService)
 
 	// Endpoints
 	v1 := router.Group("/v1")
 	{
+		// Authentication Routes
 		auth := v1.Group("/auth")
 		{
 			auth.POST("/login", authHandler.Login)
@@ -79,13 +85,23 @@ func NewRouter(
 			authUser := auth.Group("/").Use(authMiddleware)
 			{
 				authUser.GET("/refresh-token", authHandler.RefreshToken)
-				authUser.GET("/logout", authHandler.Logout)
+				authUser.POST("/logout", authHandler.Logout)
 				authUser.PUT("/change-password", authHandler.ChangePassword)
 			}
 		}
-		user := v1.Group("/users")
+
+		// Master Password Routes
+		masterPassword := v1.Group("/master-password").Use(authMiddleware)
 		{
-			authUser := user.Group("/").Use(authMiddleware)
+			masterPassword.POST("/", masterPasswordHandler.CreateMasterPassword)
+			masterPassword.PUT("/", masterPasswordHandler.ChangeMasterPassword)
+			masterPassword.POST("/validate", masterPasswordHandler.ValidateMasterPassword)
+		}
+
+		// User Routes
+		users := v1.Group("/users")
+		{
+			authUser := users.Group("/").Use(authMiddleware)
 			{
 				authUser.GET("/me", userHander.GetUserMe)
 				authUser.GET("/:id", userHander.GetUser)
@@ -98,25 +114,27 @@ func NewRouter(
 				}
 			}
 		}
-		collection := v1.Group("/collections")
-		{
-			authCollection := collection.Use(authMiddleware)
-			{
-				authCollection.GET("/me", collectionHandler.ListMeCollections)
-				authCollection.POST("/", collectionHandler.CreateCollection)
-				authCollection.GET("/:collection_id", collectionHandler.GetCollection)
-				authCollection.PUT("/:collection_id", collectionHandler.UpdateCollection)
-				authCollection.DELETE("/:collection_id", collectionHandler.DeleteCollection)
 
-				// Nest the /secrets routes under /collections/:id
-				authSecret := collection.Group("/:collection_id/secrets").Use(authMiddleware)
-				{
-					authSecret.GET("/", secretHandler.ListMeSecrets)
-					authSecret.POST("/", secretHandler.CreateSecret)
-					authSecret.GET("/:secret_id", secretHandler.GetSecret)
-					// authSecret.PUT("/:secret_id", secretHandler.UpdateSecret)
-					authSecret.DELETE("/:secret_id", secretHandler.DeleteSecret)
-				}
+		// Collection Routes
+		collectionsGroup := v1.Group("/collections")
+		{
+			collections := collectionsGroup.Use(authMiddleware).Use(masterPasswordMiddleware)
+			{
+				collections.GET("/me", collectionHandler.ListMeCollections)
+				collections.POST("/", collectionHandler.CreateCollection)
+				collections.GET("/:collection_id", collectionHandler.GetCollection)
+				collections.PUT("/:collection_id", collectionHandler.UpdateCollection)
+				collections.DELETE("/:collection_id", collectionHandler.DeleteCollection)
+			}
+
+			// Nest the /secrets routes under /collections/:id
+			secrets := collectionsGroup.Group("/:collection_id/secrets").Use(authMiddleware).Use(masterPasswordMiddleware)
+			{
+				secrets.GET("/", secretHandler.ListMeSecrets)
+				secrets.POST("/", secretHandler.CreateSecret)
+				secrets.GET("/:secret_id", secretHandler.GetSecret)
+				// secrets.PUT("/:secret_id", secretHandler.UpdateSecret)
+				secrets.DELETE("/:secret_id", secretHandler.DeleteSecret)
 			}
 		}
 	}

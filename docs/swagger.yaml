@@ -18,6 +18,20 @@ definitions:
     x-enum-varnames:
     - AdminRole
     - UserRole
+  handler.changeMasterPasswordRequest:
+    properties:
+      current_password:
+        example: currentmasterpassword
+        minLength: 8
+        type: string
+      new_password:
+        example: newmasterpassword
+        minLength: 8
+        type: string
+    required:
+    - current_password
+    - new_password
+    type: object
   handler.changePasswordRequest:
     properties:
       new_password:
@@ -54,6 +68,15 @@ definitions:
         type: string
     required:
     - name
+    type: object
+  handler.createMasterPasswordRequest:
+    properties:
+      password:
+        example: masterpassword
+        minLength: 8
+        type: string
+    required:
+    - password
     type: object
   handler.createSecretRequest:
     properties:
@@ -155,16 +178,31 @@ definitions:
     - name
     - role
     type: object
+  handler.validateMasterPasswordRequest:
+    properties:
+      password:
+        example: masterpassword
+        minLength: 8
+        type: string
+    required:
+    - password
+    type: object
   response.AuthResponse:
     properties:
-      token:
-        example: v2.local.Gdh5kiOTyyaQ3_bNykYDeYHO21Jg2...
+      access_token:
+        example: eyJhbGciOiJIUzUxMi.eyJhbGciOiJIUzUxMi.eyJhbGciOiJIUzUxMi
+        type: string
+      refresh_token:
+        example: eyJhbGciOiJIUzUxMi.eyJhbGciOiJIUzUxMi.eyJhbGciOiJIUzUxMi
         type: string
     type: object
   response.CollectionResponse:
     properties:
       created_at:
         example: "1970-01-01T00:00:00Z"
+        type: string
+      created_by:
+        example: bb073c91-f09b-4858-b2d1-d14116e73b8d
         type: string
       description:
         example: Collection description
@@ -177,6 +215,9 @@ definitions:
         type: string
       updated_at:
         example: "1970-01-01T00:00:00Z"
+        type: string
+      updated_by:
+        example: bb073c91-f09b-4858-b2d1-d14116e73b8d
         type: string
     type: object
   response.ErrorResponse:
@@ -388,6 +429,54 @@ paths:
           schema:
             $ref: '#/definitions/response.ErrorResponse'
       summary: Login and get an access token
+      tags:
+      - Authentication
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logs out a user by invalidating the access token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully logged out
+          schema:
+            type: string
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Logout a user
+      tags:
+      - Authentication
+  /auth/refresh-token:
+    get:
+      consumes:
+      - application/json
+      description: Refreshes an access token by providing the refresh token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Succesfully refreshed
+          schema:
+            $ref: '#/definitions/response.AuthResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Refresh an access token
       tags:
       - Authentication
   /auth/register:
@@ -896,6 +985,113 @@ paths:
       summary: List me collections
       tags:
       - Collections
+  /master-password:
+    post:
+      consumes:
+      - application/json
+      description: Create a master password for the authenticated user
+      parameters:
+      - description: Create master password request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createMasterPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Master password created successfully
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Master password already exists
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create master password
+      tags:
+      - MasterPassword
+    put:
+      consumes:
+      - application/json
+      description: Change the master password for the authenticated user
+      parameters:
+      - description: Change master password request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.changeMasterPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Master password changed successfully
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Change master password
+      tags:
+      - MasterPassword
+  /master-password/validate:
+    post:
+      consumes:
+      - application/json
+      description: Validate the master password for the authenticated user
+      parameters:
+      - description: Validate master password request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.validateMasterPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Master password is valid
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Invalid master password
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Validate master password
+      tags:
+      - MasterPassword
   /users:
     get:
       consumes:
