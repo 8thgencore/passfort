@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// MasterPasswordMiddleware is a middleware to check if the master password is validated recently
+// MasterPasswordMiddleware is a middleware to check if the master password is activated recently
 func MasterPasswordMiddleware(masterPasswordService service.MasterPasswordService) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authPayload, exists := ctx.Get(AuthorizationPayloadKey)
@@ -24,13 +24,13 @@ func MasterPasswordMiddleware(masterPasswordService service.MasterPasswordServic
 
 		userID := payload.UserID
 
-		valid, err := masterPasswordService.IsMasterPasswordValidated(ctx, userID) 
+		activated, err := masterPasswordService.IsMasterPasswordActivated(ctx, userID)
 		if err != nil {
 			response.HandleAbort(ctx, err)
 			return
 		}
-		if !valid {
-			err := domain.ErrMasterPasswordValidationExpired
+		if !activated {
+			err := domain.ErrMasterPasswordActivationExpired
 			response.HandleAbort(ctx, err)
 			return
 		}

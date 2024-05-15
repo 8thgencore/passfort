@@ -20,14 +20,15 @@ const (
 
 type (
 	Config struct {
-		Env      Env          `yaml:"env" env-defaul:"local" env-required:"true"` // local, dev or prod
-		App      App          `yaml:"app"`
-		HTTP     HTTP         `yaml:"http"`
-		Database Database     `yaml:"database"`
-		Cache    Cache        `yaml:"cache"`
-		Token    Token        `yaml:"token"`
-		Clients  ClientConfig `yaml:"clients"`
-		Log      Log          `yaml:"log"`
+		Env            Env            `yaml:"env" env-defaul:"local" env-required:"true"` // local, dev or prod
+		App            App            `yaml:"app"`
+		HTTP           HTTP           `yaml:"http"`
+		Database       Database       `yaml:"database"`
+		Cache          Cache          `yaml:"cache"`
+		Token          Token          `yaml:"token"`
+		MasterPassword MasterPassword `yaml:"master_password"`
+		Clients        ClientConfig   `yaml:"clients"`
+		Log            Log            `yaml:"log"`
 	}
 
 	// App contains all the environment variables for the application
@@ -64,6 +65,11 @@ type (
 		SigningKey      string        `yaml:"signing_key"       env:"TOKEN_SIGNING_KEY"`
 		AccessTokenTTL  time.Duration `yaml:"access_token_ttl"  env-default:"30m"`
 		RefreshTokenTTL time.Duration `yaml:"refresh_token_ttl" env-default:"720h"`
+	}
+
+	// MasterPassword contains all the environment variables for the master password service
+	MasterPassword struct {
+		MasterPasswordTTL time.Duration `yaml:"master_password_ttl" env-default:"MasterPassword"`
 	}
 
 	//  Clients

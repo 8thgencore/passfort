@@ -108,8 +108,8 @@ func (h *MasterPasswordHandler) ChangeMasterPassword(ctx *gin.Context) {
 		return
 	}
 
-	// Validate current master password
-	if err := h.svc.ValidateMasterPassword(ctx, userID, req.CurrentPassword); err != nil {
+	// Activate current master password
+	if err := h.svc.ActivateMasterPassword(ctx, userID, req.CurrentPassword); err != nil {
 		response.HandleError(ctx, domain.ErrInvalidMasterPassword)
 		return
 	}
@@ -117,27 +117,27 @@ func (h *MasterPasswordHandler) ChangeMasterPassword(ctx *gin.Context) {
 	response.HandleSuccess(ctx, nil)
 }
 
-// validateMasterPasswordRequest represents the request body for validating a master password
-type validateMasterPasswordRequest struct {
+// activateMasterPasswordRequest represents the request body for validating a master password
+type activateMasterPasswordRequest struct {
 	Password string `json:"password" binding:"required,min=8" example:"masterpassword"`
 }
 
-// ValidateMasterPassword godoc
+// ActivateMasterPassword godoc
 //
-//	@Summary		Validate master password
-//	@Description	Validate the master password for the authenticated user
+//	@Summary		Activate master password
+//	@Description	Activate the master password for the authenticated user
 //	@Tags			MasterPassword
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		validateMasterPasswordRequest	true	"Validate master password request"
-//	@Success		200		{object}	response.Response				"Master password is valid"
+//	@Param			request	body		activateMasterPasswordRequest	true	"Activate master password request"
+//	@Success		200		{object}	response.Response				"Master password is activated"
 //	@Failure		400		{object}	response.ErrorResponse			"Validation error"
 //	@Failure		401		{object}	response.ErrorResponse			"Invalid master password"
 //	@Failure		500		{object}	response.ErrorResponse			"Internal server error"
-//	@Router			/master-password/validate [post]
+//	@Router			/master-password/activate [post]
 //	@Security		BearerAuth
-func (h *MasterPasswordHandler) ValidateMasterPassword(ctx *gin.Context) {
-	var req validateMasterPasswordRequest
+func (h *MasterPasswordHandler) ActivateMasterPassword(ctx *gin.Context) {
+	var req activateMasterPasswordRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(ctx, err)
 		return
@@ -146,8 +146,8 @@ func (h *MasterPasswordHandler) ValidateMasterPassword(ctx *gin.Context) {
 	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
 	userID := authPayload.UserID
 
-	// Validate current master password
-	if err := h.svc.ValidateMasterPassword(ctx, userID, req.Password); err != nil {
+	// Activate current master password
+	if err := h.svc.ActivateMasterPassword(ctx, userID, req.Password); err != nil {
 		response.HandleError(ctx, domain.ErrInvalidMasterPassword)
 		return
 	}

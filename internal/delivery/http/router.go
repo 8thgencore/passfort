@@ -95,7 +95,7 @@ func NewRouter(
 		{
 			masterPassword.POST("/", masterPasswordHandler.CreateMasterPassword)
 			masterPassword.PUT("/", masterPasswordHandler.ChangeMasterPassword)
-			masterPassword.POST("/validate", masterPasswordHandler.ValidateMasterPassword)
+			masterPassword.POST("/activate", masterPasswordHandler.ActivateMasterPassword)
 		}
 
 		// User Routes

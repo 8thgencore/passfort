@@ -62,10 +62,10 @@ type MasterPasswordService interface {
 	MasterPasswordExists(ctx context.Context, userID uuid.UUID) (bool, error)
 	// SaveMasterPassword saves or updates the master password for the given user
 	SaveMasterPassword(ctx context.Context, userID uuid.UUID, password string) error
-	// ValidateMasterPassword validates the master password for the given user
-	ValidateMasterPassword(ctx context.Context, userID uuid.UUID, password string) error
-	// IsMasterPasswordValidated checks if the master password for the given user has been recently validated
-	IsMasterPasswordValidated(ctx context.Context, userID uuid.UUID) (bool, error)
+	// ActivateMasterPassword validates the master password for the given user
+	ActivateMasterPassword(ctx context.Context, userID uuid.UUID, password string) error
+	// IsMasterPasswordActivated checks if the master password for the given user has been recently validated
+	IsMasterPasswordActivated(ctx context.Context, userID uuid.UUID) (bool, error)
 }
 
 // UserService is an interface for interacting with user-related business logic

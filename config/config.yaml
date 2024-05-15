@@ -23,6 +23,9 @@ token:
   access_token_ttl: 30m
   refresh_token_ttl: 720h
 
+master_password:
+  master_password_ttl: 30m
+
 clients:
   mail:
     address: "localhost:44350"

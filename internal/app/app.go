@@ -6,7 +6,6 @@ import (
 	"log"
 	"log/slog"
 	"os"
-	"time"
 
 	_ "github.com/8thgencore/passfort/docs"
 	mailGrpc "github.com/8thgencore/passfort/internal/clients/mail/grpc"
@@ -120,7 +119,7 @@ func Run(configPath string) {
 	authHandler := handler.NewAuthHandler(authService)
 
 	// MasterPassword
-	masterPasswordService := masterPasswordService.NewMasterPasswordService(log, userRepo, cache, 30*time.Minute)
+	masterPasswordService := masterPasswordService.NewMasterPasswordService(log, userRepo, cache, cfg.MasterPassword.MasterPasswordTTL)
 	masterPasswordHandler := handler.NewMasterPasswordHandler(masterPasswordService)
 
 	// Collection

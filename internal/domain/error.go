@@ -61,8 +61,8 @@ var (
 	ErrDeleteOwnAccount = errors.New("you cannot delete your own account")
 
 	// Master Password Errors
-	// ErrMasterPasswordValidationExpired is an error for when master password validation has expired
-	ErrMasterPasswordValidationExpired = errors.New("master password validation has expired")
+	// ErrMasterPasswordActivationExpired is an error for when master password validation has expired
+	ErrMasterPasswordActivationExpired = errors.New("master password validation has expired")
 	// ErrMasterPasswordNotSet is an error for when a master password has not been set by the user
 	ErrMasterPasswordNotSet = errors.New("master password has not been set")
 	// ErrInvalidMasterPassword is an error for when the master password provided is invalid

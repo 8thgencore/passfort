@@ -44,12 +44,12 @@ func (s *MasterPasswordService) SaveMasterPassword(ctx context.Context, userID u
 	return nil
 }
 
-// ValidateMasterPassword validates the master password for the given user.
-func (s *MasterPasswordService) ValidateMasterPassword(ctx context.Context, userID uuid.UUID, password string) error {
+// ActivateMasterPassword activates the master password for the given user.
+func (s *MasterPasswordService) ActivateMasterPassword(ctx context.Context, userID uuid.UUID, password string) error {
 	user, err := s.storage.GetUserByID(ctx, userID)
 	if err != nil {
-		s.log.Error("failed to validate master password", "error", err.Error())
-		return  domain.ErrInternal
+		s.log.Error("failed to activate master password", "error", err.Error())
+		return domain.ErrInternal
 	}
 
 	if !user.MasterPassword.Valid {
@@ -62,8 +62,8 @@ func (s *MasterPasswordService) ValidateMasterPassword(ctx context.Context, user
 
 	}
 
-	// Store validation status in cache with a TTL
-	cacheKey := util.GenerateCacheKey("master_password_validated", userID.String())
+	// Store activation status in cache with a TTL
+	cacheKey := util.GenerateCacheKey("master_password_activated", userID.String())
 	valueSerialized, err := util.Serialize(user)
 	if err != nil {
 		return domain.ErrInternal
@@ -71,28 +71,28 @@ func (s *MasterPasswordService) ValidateMasterPassword(ctx context.Context, user
 
 	err = s.cache.Set(ctx, cacheKey, valueSerialized, s.masterPasswordTTL)
 	if err != nil {
-		s.log.Error("failed to store master password validation status", "error", err.Error())
+		s.log.Error("failed to store master password activation status", "error", err.Error())
 		return domain.ErrInternal
 	}
 
 	return nil
 }
 
-// IsMasterPasswordValidated checks if the master password has been validated recently.
-func (s *MasterPasswordService) IsMasterPasswordValidated(ctx context.Context, userID uuid.UUID) (bool, error) {
-	var validated bool
+// IsMasterPasswordActivated checks if the master password has been activated recently.
+func (s *MasterPasswordService) IsMasterPasswordActivated(ctx context.Context, userID uuid.UUID) (bool, error) {
+	var activated bool
 
-	cacheKey := util.GenerateCacheKey("master_password_validated", userID.String())
+	cacheKey := util.GenerateCacheKey("master_password_activated", userID.String())
 	valueSerialized, err := s.cache.Get(ctx, cacheKey)
 	if err != nil {
-		s.log.Error("failed to get master password validation status", "error", err.Error())
-		return false, domain.ErrMasterPasswordValidationExpired
+		s.log.Error("failed to get master password activation status", "error", err.Error())
+		return false, domain.ErrMasterPasswordActivationExpired
 	}
 
-	err = util.Deserialize(valueSerialized, &validated)
+	err = util.Deserialize(valueSerialized, &activated)
 	if err != nil {
 		return false, domain.ErrInternal
 	}
 
-	return validated, nil
+	return activated, nil
 }

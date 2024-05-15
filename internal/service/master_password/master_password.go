@@ -11,7 +11,7 @@ import (
 /**
  * MasterPasswordService implements service.MasterPasswordService interface
  * and provides an access to the user repository
- * and cache for storing master password validation states
+ * and cache for storing master password activation states
  */
 type MasterPasswordService struct {
 	log               *slog.Logger

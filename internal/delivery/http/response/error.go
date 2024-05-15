@@ -45,7 +45,7 @@ var errorStatusMap = map[error]int{
 	domain.ErrDeleteOwnAccount: http.StatusForbidden,
 
 	// Master Password Errors
-	domain.ErrMasterPasswordValidationExpired: http.StatusUnauthorized,
+	domain.ErrMasterPasswordActivationExpired: http.StatusUnauthorized,
 	domain.ErrMasterPasswordNotSet:            http.StatusUnauthorized,
 	domain.ErrInvalidMasterPassword:           http.StatusUnauthorized,
 	domain.ErrMasterPasswordAlreadyExists:     http.StatusConflict,
