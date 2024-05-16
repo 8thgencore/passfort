@@ -62,6 +62,8 @@ type MasterPasswordService interface {
 	MasterPasswordExists(ctx context.Context, userID uuid.UUID) (bool, error)
 	// SaveMasterPassword saves or updates the master password for the given user
 	SaveMasterPassword(ctx context.Context, userID uuid.UUID, password string) error
+	// ChangeMasterPassword changes the master password for the given user.
+	ChangeMasterPassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error
 	// ActivateMasterPassword validates the master password for the given user
 	ActivateMasterPassword(ctx context.Context, userID uuid.UUID, password string) error
 	// IsMasterPasswordActivated checks if the master password for the given user has been recently validated

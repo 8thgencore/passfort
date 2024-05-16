@@ -7,13 +7,13 @@ import (
 )
 
 type User struct {
-	ID             uuid.UUID
-	Name           string
-	Email          string
-	Password       string
-	MasterPassword string
-	IsVerified     bool
-	Role           UserRoleEnum
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	ID             uuid.UUID    `json:"id"`
+	Name           string       `json:"name"`
+	Email          string       `json:"email"`
+	Password       string       `json:"-"` // Hide the password field
+	MasterPassword string       `json:"-"` // Hide the master password field
+	IsVerified     bool         `json:"is_verified"`
+	Role           UserRoleEnum `json:"role"`
+	CreatedAt      time.Time    `json:"created_at"`
+	UpdatedAt      time.Time    `json:"updated_at"`
 }

@@ -103,14 +103,14 @@ func (h *MasterPasswordHandler) ChangeMasterPassword(ctx *gin.Context) {
 	userID := authPayload.UserID
 
 	// Save the new master password (hashed)
-	if err := h.svc.SaveMasterPassword(ctx, userID, req.NewPassword); err != nil {
+	if err := h.svc.ChangeMasterPassword(ctx, userID, req.CurrentPassword, req.NewPassword); err != nil {
 		response.HandleError(ctx, err)
 		return
 	}
 
 	// Activate current master password
-	if err := h.svc.ActivateMasterPassword(ctx, userID, req.CurrentPassword); err != nil {
-		response.HandleError(ctx, domain.ErrInvalidMasterPassword)
+	if err := h.svc.ActivateMasterPassword(ctx, userID, req.NewPassword); err != nil {
+		response.HandleError(ctx, err)
 		return
 	}
 
