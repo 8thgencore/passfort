@@ -54,7 +54,7 @@ func (s *MasterPasswordService) ChangeMasterPassword(ctx context.Context, userID
 	user := converter.ToUser(userDAO)
 
 	// Verify the old master password
-	err = util.CompareHashAndPassword(user.MasterPassword, oldPassword)
+	err = util.CompareHash(oldPassword, user.MasterPassword)
 	if err != nil {
 		return domain.ErrInvalidMasterPassword
 	}
@@ -89,7 +89,7 @@ func (s *MasterPasswordService) ActivateMasterPassword(ctx context.Context, user
 	}
 
 	// Verify the master password
-	err = util.CompareHashAndPassword(user.MasterPassword.String, password)
+	err = util.CompareHash(password, user.MasterPassword.String)
 	if err != nil {
 		return domain.ErrInvalidMasterPassword
 	}

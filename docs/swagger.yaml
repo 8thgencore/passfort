@@ -89,11 +89,19 @@ definitions:
     type: object
   handler.createSecretRequest:
     properties:
+      description:
+        example: This is a secret
+        type: string
+      name:
+        example: My Secret
+        type: string
       secret_type:
         allOf:
         - $ref: '#/definitions/domain.SecretTypeEnum'
         example: password
     required:
+    - description
+    - name
     - secret_type
     type: object
   handler.forgotPasswordRequest:
@@ -117,14 +125,6 @@ definitions:
     - email
     - password
     type: object
-  handler.newRegistrationCodeRequest:
-    properties:
-      email:
-        example: user@example.com
-        type: string
-    required:
-    - email
-    type: object
   handler.registerRequest:
     properties:
       email:
@@ -141,6 +141,14 @@ definitions:
     - email
     - name
     - password
+    type: object
+  handler.resendOTPCodeRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+    required:
+    - email
     type: object
   handler.resetPasswordRequest:
     properties:
@@ -567,7 +575,7 @@ paths:
       summary: Confirm user registration with OTP code
       tags:
       - Authentication
-  /auth/register/request-new-code:
+  /auth/register/resend-otp:
     post:
       consumes:
       - application/json
@@ -579,7 +587,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.newRegistrationCodeRequest'
+          $ref: '#/definitions/handler.resendOTPCodeRequest'
       produces:
       - application/json
       responses:

@@ -78,7 +78,7 @@ func NewRouter(
 			auth.POST("/login", authHandler.Login)
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/register/confirm", authHandler.ConfirmRegistration)
-			auth.POST("/register/request-new-code", authHandler.RequestNewRegistrationCode)
+			auth.POST("/register/resend-otp", authHandler.ResendOTPCode)
 			auth.POST("/forgot-password", authHandler.ForgotPassword)
 			auth.POST("/reset-password", authHandler.ResetPassword)
 
@@ -99,19 +99,19 @@ func NewRouter(
 		}
 
 		// User Routes
-		users := v1.Group("/users")
+		usersGroup := v1.Group("/users")
 		{
-			authUser := users.Group("/").Use(authMiddleware)
+			users := usersGroup.Group("/").Use(authMiddleware)
 			{
-				authUser.GET("/me", userHander.GetUserMe)
-				authUser.GET("/:id", userHander.GetUser)
+				users.GET("/me", userHander.GetUserMe)
+				users.GET("/:id", userHander.GetUser)
+			}
 
-				admin := authUser.Use(adminMiddleware)
-				{
-					admin.GET("/", userHander.ListUsers)
-					admin.PUT("/:id", userHander.UpdateUser)
-					admin.DELETE("/:id", userHander.DeleteUser)
-				}
+			admin := users.Use(adminMiddleware)
+			{
+				admin.GET("/", userHander.ListUsers)
+				admin.PUT("/:id", userHander.UpdateUser)
+				admin.DELETE("/:id", userHander.DeleteUser)
 			}
 		}
 

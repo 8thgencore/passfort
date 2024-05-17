@@ -393,7 +393,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/register/request-new-code": {
+        "/auth/register/resend-otp": {
             "post": {
                 "description": "Requests a new OTP code for confirming user registration. If the previous OTP code",
                 "consumes": [
@@ -413,7 +413,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.newRegistrationCodeRequest"
+                            "$ref": "#/definitions/handler.resendOTPCodeRequest"
                         }
                     }
                 ],
@@ -1711,9 +1711,19 @@ const docTemplate = `{
         "handler.createSecretRequest": {
             "type": "object",
             "required": [
+                "description",
+                "name",
                 "secret_type"
             ],
             "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "This is a secret"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "My Secret"
+                },
                 "secret_type": {
                     "allOf": [
                         {
@@ -1754,18 +1764,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.newRegistrationCodeRequest": {
-            "type": "object",
-            "required": [
-                "email"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "user@example.com"
-                }
-            }
-        },
         "handler.registerRequest": {
             "type": "object",
             "required": [
@@ -1786,6 +1784,18 @@ const docTemplate = `{
                     "type": "string",
                     "minLength": 8,
                     "example": "12345678"
+                }
+            }
+        },
+        "handler.resendOTPCodeRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
                 }
             }
         },

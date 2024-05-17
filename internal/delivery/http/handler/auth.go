@@ -142,12 +142,12 @@ func (ah *AuthHandler) ConfirmRegistration(ctx *gin.Context) {
 	response.HandleSuccess(ctx, nil)
 }
 
-// newRegistrationCodeRequest represents the request body for requesting a new OTP code
-type newRegistrationCodeRequest struct {
+// resendOTPCodeRequest represents the request body for requesting a new OTP code
+type resendOTPCodeRequest struct {
 	Email string `json:"email" binding:"required,email" example:"user@example.com"`
 }
 
-// RequestNewRegistrationCode godoc
+// ResendOTPCode godoc
 //
 //	@Summary		Request a new OTP code for registration confirmation
 //	@Description	Requests a new OTP code for confirming user registration. If the previous OTP code
@@ -156,14 +156,14 @@ type newRegistrationCodeRequest struct {
 //	@Tags			Authentication
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		newRegistrationCodeRequest	true	"Request new OTP request body"
-//	@Success		200		{object}	response.Response			"OTP code requested successfully"
-//	@Failure		400		{object}	response.ErrorResponse		"Validation error"
-//	@Failure		429		{object}	response.ErrorResponse		"Too many requests, try again later"
-//	@Failure		500		{object}	response.ErrorResponse		"Internal server error"
-//	@Router			/auth/register/request-new-code [post]
-func (ah *AuthHandler) RequestNewRegistrationCode(ctx *gin.Context) {
-	var req newRegistrationCodeRequest
+//	@Param			request	body		resendOTPCodeRequest	true	"Request new OTP request body"
+//	@Success		200		{object}	response.Response		"OTP code requested successfully"
+//	@Failure		400		{object}	response.ErrorResponse	"Validation error"
+//	@Failure		429		{object}	response.ErrorResponse	"Too many requests, try again later"
+//	@Failure		500		{object}	response.ErrorResponse	"Internal server error"
+//	@Router			/auth/register/resend-otp [post]
+func (ah *AuthHandler) ResendOTPCode(ctx *gin.Context) {
+	var req resendOTPCodeRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.ValidationError(ctx, err)
 		return

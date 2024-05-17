@@ -26,7 +26,7 @@ func (as *AuthService) Login(ctx context.Context, email, password string) (strin
 		return "", "", domain.ErrUserNotVerified
 	}
 
-	err = util.CompareHashAndPassword(user.Password, password)
+	err = util.CompareHash(password, user.Password)
 	if err != nil {
 		return "", "", domain.ErrInvalidCredentials
 	}
@@ -210,7 +210,7 @@ func (as *AuthService) ChangePassword(ctx context.Context, userID uuid.UUID, old
 	}
 
 	// Verify the old password
-	err = util.CompareHashAndPassword(user.Password, oldPassword)
+	err = util.CompareHash(oldPassword, user.Password)
 	if err != nil {
 		return domain.ErrPasswordsDoNotMatch
 	}
