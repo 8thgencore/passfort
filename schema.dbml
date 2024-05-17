@@ -68,6 +68,8 @@ Table "secrets" {
   "id" uuid [pk, increment]
   "collection_id" uuid
   "secret_type" secret_type_enum
+  "name" varchar [not null]
+  "description" varchar [null]
   "created_by" uuid
   "updated_by" uuid
   "created_at" timestamptz [not null, default: `now()`]

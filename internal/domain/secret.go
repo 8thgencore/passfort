@@ -20,8 +20,10 @@ type Secret struct {
 	ID           uuid.UUID
 	CollectionID uuid.UUID
 	SecretType   SecretTypeEnum
-	CreatedBy uuid.UUID
-	UpdatedBy uuid.UUID
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Name         string
+	Description  string
+	CreatedBy    uuid.UUID
+	UpdatedBy    uuid.UUID
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }

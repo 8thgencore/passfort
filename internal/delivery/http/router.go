@@ -133,7 +133,7 @@ func NewRouter(
 				secrets.GET("/", secretHandler.ListMeSecrets)
 				secrets.POST("/", secretHandler.CreateSecret)
 				secrets.GET("/:secret_id", secretHandler.GetSecret)
-				// secrets.PUT("/:secret_id", secretHandler.UpdateSecret)
+				secrets.PUT("/:secret_id", secretHandler.UpdateSecret)
 				secrets.DELETE("/:secret_id", secretHandler.DeleteSecret)
 			}
 		}

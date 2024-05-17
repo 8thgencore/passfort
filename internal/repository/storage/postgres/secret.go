@@ -134,7 +134,8 @@ func (r *SecretRepository) UpdateSecret(ctx context.Context, secret *dao.SecretD
 
 	query := r.db.QueryBuilder.Update("secrets").
 		Set("collection_id", secret.CollectionID).
-		Set("secret_type", secret.SecretType).
+		Set("name", secret.Name).
+		Set("description", secret.Description).
 		Set("updated_at", secret.UpdatedAt).
 		Set("updated_by", secret.UpdatedBy).
 		Where(sq.Eq{"id": secret.ID}).
@@ -149,6 +150,8 @@ func (r *SecretRepository) UpdateSecret(ctx context.Context, secret *dao.SecretD
 		&updatedSecret.ID,
 		&updatedSecret.CollectionID,
 		&updatedSecret.SecretType,
+		&updatedSecret.Name,
+		&updatedSecret.Description,
 		&updatedSecret.CreatedBy,
 		&updatedSecret.UpdatedBy,
 		&updatedSecret.CreatedAt,

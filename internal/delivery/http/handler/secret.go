@@ -24,7 +24,9 @@ func NewSecretHandler(svc service.SecretService) *SecretHandler {
 
 // createSecretRequest represents the request body for creating a secret
 type createSecretRequest struct {
-	SecretType domain.SecretTypeEnum `json:"secret_type" binding:"required,secret_type" example:"password"`
+	SecretType  domain.SecretTypeEnum `json:"secret_type" binding:"required,secret_type" example:"password"`
+	Name        string                `json:"name" binding:"required" example:"My Secret"`
+	Description string                `json:"description" binding:"required" example:"This is a secret"`
 }
 
 // CreateSecret godoc
@@ -60,6 +62,8 @@ func (sh *SecretHandler) CreateSecret(ctx *gin.Context) {
 	newSecret := domain.Secret{
 		CollectionID: collectionID,
 		SecretType:   req.SecretType,
+		Name:         req.Name,
+		Description:  req.Description,
 		CreatedBy:    authPayload.UserID,
 		UpdatedBy:    authPayload.UserID,
 	}
@@ -183,49 +187,66 @@ func (sh *SecretHandler) GetSecret(ctx *gin.Context) {
 	response.HandleSuccess(ctx, rsp)
 }
 
-// TODO:
 // updateSecretRequest represents the request body for updating a secret
-// type updateSecretRequest struct {
-// 	// Define fields to be updated
-// }
+type updateSecretRequest struct {
+	Name        string `json:"name" binding:"required" example:"My Secret"`
+	Description string `json:"description" binding:"required" example:"This is a secret"`
+}
+
 // UpdateSecret godoc
 //
 //	@Summary		Update a secret
-//	@Description	Update a secret's fields by id
+//	@Description	Update a secret by id
 //	@Tags			Secrets
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		string					true	"Secret ID"
-//	@Param			request	body		updateSecretRequest		true	"Update secret request"
-//	@Success		200		{object}	response.SecretResponse	"Secret updated"
-//	@Failure		400		{object}	response.ErrorResponse	"Validation error"
-//	@Failure		401		{object}	response.ErrorResponse	"Unauthorized error"
-//	@Failure		403		{object}	response.ErrorResponse	"Forbidden error"
-//	@Failure		404		{object}	response.ErrorResponse	"Data not found error"
-//	@Failure		500		{object}	response.ErrorResponse	"Internal server error"
-//	@Router			/collections/{collection_id}/secrets/{id} [put]
+//	@Param			collection_id	path		string					true	"Collection ID"
+//	@Param			secret_id		path		string					true	"Secret ID"
+//	@Param			request			body		updateSecretRequest		true	"Update Secret Request"
+//	@Success		200				{object}	response.SecretResponse	"Secret updated"
+//	@Failure		400				{object}	response.ErrorResponse	"Validation error"
+//	@Failure		404				{object}	response.ErrorResponse	"Data not found error"
+//	@Failure		500				{object}	response.ErrorResponse	"Internal server error"
+//	@Router			/collections/{collection_id}/secrets/{secret_id} [put]
 //	@Security		BearerAuth
-// func (sh *SecretHandler) UpdateSecret(ctx *gin.Context) {
-// 	var req updateSecretRequest
-// 	if err := ctx.ShouldBindJSON(&req); err != nil {
-// 		response.ValidationError(ctx, err)
-// 		return
-// 	}
+func (sh *SecretHandler) UpdateSecret(ctx *gin.Context) {
+	var req updateSecretRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		response.ValidationError(ctx, err)
+		return
+	}
 
-// 	secretID, err := uuid.Parse(ctx.Param("id"))
-// 	if err != nil {
-// 		response.ValidationError(ctx, err)
-// 		return
-// 	}
+	collectionID, err := uuid.Parse(ctx.Param("collection_id"))
+	if err != nil {
+		response.ValidationError(ctx, err)
+		return
+	}
 
-// 	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
+	secretID, err := uuid.Parse(ctx.Param("secret_id"))
+	if err != nil {
+		response.ValidationError(ctx, err)
+		return
+	}
 
-// 	sh.svc.UpdateSecret(ctx, authPayload.UserID)
-// 	// Update the secret using the SecretService's UpdateSecret method
-// 	// ...
+	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
 
-// 	response.HandleSuccess(ctx, nil)
-// }
+	secret := &domain.Secret{
+		ID:           secretID,
+		CollectionID: collectionID,
+		Name:         req.Name,
+		Description:  req.Description,
+		UpdatedBy:    authPayload.UserID,
+	}
+
+	updatedSecret, err := sh.svc.UpdateSecret(ctx, authPayload.UserID, collectionID, secret)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+
+	rsp := response.NewSecretResponse(updatedSecret)
+	response.HandleSuccess(ctx, rsp)
+}
 
 // deleteSecretRequest represents the request body for deleting a secret
 type deleteSecretRequest struct {

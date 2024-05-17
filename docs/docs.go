@@ -984,6 +984,75 @@ const docTemplate = `{
                     }
                 }
             },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a secret by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Secrets"
+                ],
+                "summary": "Update a secret",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection ID",
+                        "name": "collection_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Secret ID",
+                        "name": "secret_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Secret Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.updateSecretRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Secret updated",
+                        "schema": {
+                            "$ref": "#/definitions/response.SecretResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Data not found error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "delete": {
                 "security": [
                     {
@@ -1169,14 +1238,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/master-password/validate": {
+        "/master-password/activate": {
             "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Validate the master password for the authenticated user",
+                "description": "Activate the master password for the authenticated user",
                 "consumes": [
                     "application/json"
                 ],
@@ -1186,21 +1255,21 @@ const docTemplate = `{
                 "tags": [
                     "MasterPassword"
                 ],
-                "summary": "Validate master password",
+                "summary": "Activate master password",
                 "parameters": [
                     {
-                        "description": "Validate master password request",
+                        "description": "Activate master password request",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.validateMasterPasswordRequest"
+                            "$ref": "#/definitions/handler.activateMasterPasswordRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Master password is valid",
+                        "description": "Master password is activated",
                         "schema": {
                             "$ref": "#/definitions/response.Response"
                         }
@@ -1542,6 +1611,19 @@ const docTemplate = `{
                 "UserRole"
             ]
         },
+        "handler.activateMasterPasswordRequest": {
+            "type": "object",
+            "required": [
+                "password"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "masterpassword"
+                }
+            }
+        },
         "handler.changeMasterPasswordRequest": {
             "type": "object",
             "required": [
@@ -1746,6 +1828,23 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.updateSecretRequest": {
+            "type": "object",
+            "required": [
+                "description",
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "This is a secret"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "My Secret"
+                }
+            }
+        },
         "handler.updateUserRequest": {
             "type": "object",
             "required": [
@@ -1769,19 +1868,6 @@ const docTemplate = `{
                         }
                     ],
                     "example": "admin"
-                }
-            }
-        },
-        "handler.validateMasterPasswordRequest": {
-            "type": "object",
-            "required": [
-                "password"
-            ],
-            "properties": {
-                "password": {
-                    "type": "string",
-                    "minLength": 8,
-                    "example": "masterpassword"
                 }
             }
         },

@@ -18,6 +18,15 @@ definitions:
     x-enum-varnames:
     - AdminRole
     - UserRole
+  handler.activateMasterPasswordRequest:
+    properties:
+      password:
+        example: masterpassword
+        minLength: 8
+        type: string
+    required:
+    - password
+    type: object
   handler.changeMasterPasswordRequest:
     properties:
       current_password:
@@ -161,6 +170,18 @@ definitions:
     required:
     - name
     type: object
+  handler.updateSecretRequest:
+    properties:
+      description:
+        example: This is a secret
+        type: string
+      name:
+        example: My Secret
+        type: string
+    required:
+    - description
+    - name
+    type: object
   handler.updateUserRequest:
     properties:
       email:
@@ -177,15 +198,6 @@ definitions:
     - email
     - name
     - role
-    type: object
-  handler.validateMasterPasswordRequest:
-    properties:
-      password:
-        example: masterpassword
-        minLength: 8
-        type: string
-    required:
-    - password
     type: object
   response.AuthResponse:
     properties:
@@ -949,6 +961,51 @@ paths:
       summary: Get a secret
       tags:
       - Secrets
+    put:
+      consumes:
+      - application/json
+      description: Update a secret by id
+      parameters:
+      - description: Collection ID
+        in: path
+        name: collection_id
+        required: true
+        type: string
+      - description: Secret ID
+        in: path
+        name: secret_id
+        required: true
+        type: string
+      - description: Update Secret Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.updateSecretRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Secret updated
+          schema:
+            $ref: '#/definitions/response.SecretResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Data not found error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a secret
+      tags:
+      - Secrets
   /collections/me:
     get:
       consumes:
@@ -1056,23 +1113,23 @@ paths:
       summary: Change master password
       tags:
       - MasterPassword
-  /master-password/validate:
+  /master-password/activate:
     post:
       consumes:
       - application/json
-      description: Validate the master password for the authenticated user
+      description: Activate the master password for the authenticated user
       parameters:
-      - description: Validate master password request
+      - description: Activate master password request
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.validateMasterPasswordRequest'
+          $ref: '#/definitions/handler.activateMasterPasswordRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: Master password is valid
+          description: Master password is activated
           schema:
             $ref: '#/definitions/response.Response'
         "400":
@@ -1089,7 +1146,7 @@ paths:
             $ref: '#/definitions/response.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Validate master password
+      summary: Activate master password
       tags:
       - MasterPassword
   /users:

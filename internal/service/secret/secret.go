@@ -14,8 +14,6 @@ import (
 func (ss *SecretService) CreateSecret(ctx context.Context, userID uuid.UUID, secret *domain.Secret) (*domain.Secret, error) {
 	secret.CreatedBy = userID
 	secret.UpdatedBy = userID
-	secret.CreatedAt = time.Now()
-	secret.UpdatedAt = time.Now()
 
 	if !ss.isUserPartOfCollection(ctx, userID, secret.CollectionID) {
 		return nil, domain.ErrUnauthorized
@@ -67,10 +65,27 @@ func (ss *SecretService) GetSecret(ctx context.Context, userID, collectionID, se
 
 // UpdateSecret updates a secret
 func (ss *SecretService) UpdateSecret(ctx context.Context, userID, collectionID uuid.UUID, secret *domain.Secret) (*domain.Secret, error) {
-	// Implement your business logic, validation, and call to the repository's UpdateSecret method
-	// ...
+	// Check if the user is part of the collection
+	if !ss.isUserPartOfCollection(ctx, userID, collectionID) {
+		return nil, domain.ErrUnauthorized
+	}
 
-	return nil, nil
+	// Update the fields related to who updated the secret and when
+	secret.UpdatedBy = userID
+	secret.UpdatedAt = time.Now()
+
+	// Convert the domain.Secret to dao.SecretDAO
+	secretDAO := converter.ToSecretDAO(secret)
+
+	// Call the repository to update the secret
+	updatedSecretDAO, err := ss.secretStorage.UpdateSecret(ctx, secretDAO)
+	if err != nil {
+		ss.log.Error("Error updating secret:", "error", err.Error())
+		return nil, err
+	}
+
+	// Convert the updated dao.SecretDAO back to domain.Secret and return it
+	return converter.ToSecret(updatedSecretDAO), nil
 }
 
 // DeleteSecret deletes a secret
