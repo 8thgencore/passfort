@@ -118,6 +118,8 @@ type SecretResponse struct {
 	ID           uuid.UUID             `json:"id" example:"bb073c91-f09b-4858-b2d1-d14116e73b8d"`
 	CollectionID uuid.UUID             `json:"collection_id" example:"fab8dfe9-7cd0-4cd7-a387-7d6835a910d3"`
 	SecretType   domain.SecretTypeEnum `json:"secret_type" example:"password"`
+	Name         string                `json:"name" example:"My Secret"`
+	Description  string                `json:"description,omitempty" example:"Secret description"`
 	CreatedAt    time.Time             `json:"created_at" example:"1970-01-01T00:00:00Z"`
 	UpdatedAt    time.Time             `json:"updated_at" example:"1970-01-01T00:00:00Z"`
 	CreatedBy    uuid.UUID             `json:"created_by" example:"f10ff052-b316-47f0-9788-ae8ebfa91b86"`
@@ -130,6 +132,8 @@ func NewSecretResponse(secret *domain.Secret) SecretResponse {
 		ID:           secret.ID,
 		CollectionID: secret.CollectionID,
 		SecretType:   secret.SecretType,
+		Name:         secret.Name,
+		Description:  secret.Description,
 		CreatedAt:    secret.CreatedAt,
 		UpdatedAt:    secret.UpdatedAt,
 		CreatedBy:    secret.CreatedBy,

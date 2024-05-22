@@ -28,11 +28,11 @@ func NewSecretRepository(db *database.DB) *SecretRepository {
 
 // CreateSecret creates a new secret in the data warehouse.
 func (r *SecretRepository) CreateSecret(ctx context.Context, collectionID uuid.UUID, secret *dao.SecretDAO) (*dao.SecretDAO, error) {
-	var secretDao dao.SecretDAO
+	var createdSecret dao.SecretDAO
 
 	query := r.db.QueryBuilder.Insert("secrets").
-		Columns("collection_id", "secret_type", "created_by", "updated_by").
-		Values(collectionID, secret.SecretType, secret.CreatedBy, secret.UpdatedBy).
+		Columns("collection_id", "secret_type", "name", "description", "created_by", "updated_by").
+		Values(collectionID, secret.SecretType, secret.Name, secret.Description, secret.CreatedBy, secret.UpdatedBy).
 		Suffix("RETURNING *")
 
 	sql, args, err := query.ToSql()
@@ -41,13 +41,15 @@ func (r *SecretRepository) CreateSecret(ctx context.Context, collectionID uuid.U
 	}
 
 	err = r.db.QueryRow(ctx, sql, args...).Scan(
-		&secretDao.ID,
-		&secretDao.CollectionID,
-		&secretDao.SecretType,
-		&secretDao.CreatedBy,
-		&secretDao.UpdatedBy,
-		&secretDao.CreatedAt,
-		&secretDao.UpdatedAt,
+		&createdSecret.ID,
+		&createdSecret.CollectionID,
+		&createdSecret.SecretType,
+		&createdSecret.Name,
+		&createdSecret.Description,
+		&createdSecret.CreatedBy,
+		&createdSecret.UpdatedBy,
+		&createdSecret.CreatedAt,
+		&createdSecret.UpdatedAt,
 	)
 	if err != nil {
 		if errCode := r.db.ErrorCode(err); errCode == "23503" {
@@ -56,7 +58,7 @@ func (r *SecretRepository) CreateSecret(ctx context.Context, collectionID uuid.U
 		return nil, err
 	}
 
-	return &secretDao, nil
+	return &createdSecret, nil
 }
 
 // GetSecretByID returns the secret by the specified identifier.
@@ -74,6 +76,8 @@ func (r *SecretRepository) GetSecretByID(ctx context.Context, id uuid.UUID) (*da
 		&secret.ID,
 		&secret.CollectionID,
 		&secret.SecretType,
+		&secret.Name,
+		&secret.Description,
 		&secret.CreatedBy,
 		&secret.UpdatedBy,
 		&secret.CreatedAt,
@@ -114,6 +118,8 @@ func (r *SecretRepository) ListSecretsByCollectionID(ctx context.Context, collec
 			&secret.ID,
 			&secret.CollectionID,
 			&secret.SecretType,
+			&secret.Name,
+			&secret.Description,
 			&secret.CreatedBy,
 			&secret.UpdatedBy,
 			&secret.CreatedAt,

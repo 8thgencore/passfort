@@ -20,9 +20,10 @@ func (ss *SecretService) CreateSecret(ctx context.Context, userID uuid.UUID, sec
 	}
 
 	createdSecretDAO, err := ss.secretStorage.CreateSecret(ctx, secret.CollectionID, converter.ToSecretDAO(secret))
+
 	if err != nil {
 		ss.log.Error("Error creating secret:", "error", err.Error())
-		return nil, err
+		return nil, domain.ErrInternal
 	}
 
 	return converter.ToSecret(createdSecretDAO), nil
@@ -37,7 +38,7 @@ func (ss *SecretService) ListSecretsByCollectionID(ctx context.Context, userID u
 	secretsDAO, err := ss.secretStorage.ListSecretsByCollectionID(ctx, collectionID, skip, limit)
 	if err != nil {
 		ss.log.Error(fmt.Sprintf("Error listing secrets for collection %d:", collectionID), "error", err.Error())
-		return nil, err
+		return nil, domain.ErrDataNotFound
 	}
 
 	var secrets []domain.Secret
@@ -57,7 +58,7 @@ func (ss *SecretService) GetSecret(ctx context.Context, userID, collectionID, se
 	secretDAO, err := ss.secretStorage.GetSecretByID(ctx, secretID)
 	if err != nil {
 		ss.log.Error(fmt.Sprintf("Error getting secret %d:", secretID), "error", err.Error())
-		return nil, err
+		return nil, domain.ErrDataNotFound
 	}
 
 	return converter.ToSecret(secretDAO), nil
@@ -81,7 +82,7 @@ func (ss *SecretService) UpdateSecret(ctx context.Context, userID, collectionID 
 	updatedSecretDAO, err := ss.secretStorage.UpdateSecret(ctx, secretDAO)
 	if err != nil {
 		ss.log.Error("Error updating secret:", "error", err.Error())
-		return nil, err
+		return nil, domain.ErrNoUpdatedData
 	}
 
 	// Convert the updated dao.SecretDAO back to domain.Secret and return it
@@ -97,7 +98,7 @@ func (ss *SecretService) DeleteSecret(ctx context.Context, userID, collectionID,
 	err := ss.secretStorage.DeleteSecret(ctx, secretID)
 	if err != nil {
 		ss.log.Error(fmt.Sprintf("Error deleting secrets %d:", secretID), "error", err.Error())
-		return err
+		return domain.ErrInternal
 	}
 
 	return nil
