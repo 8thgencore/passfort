@@ -9,13 +9,6 @@ http:
   port: 8080
   allow_origins: "*" # Example: 127.0.0.1, example.com
 
-database:
-  connection: "postgres"
-  host: "localhost"
-  port: 5432
-  user: "user"
-  name: "passfort"
-
 cache:
   address: "localhost:6379"
 
