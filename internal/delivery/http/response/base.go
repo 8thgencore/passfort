@@ -113,6 +113,18 @@ func NewCollectionResponse(collection *domain.Collection) CollectionResponse {
 	}
 }
 
+// PasswordSecretResponse represents a password secret response body
+type PasswordSecretResponse struct {
+	URL      string `json:"url" example:"https://example.com"`
+	Login    string `json:"login" example:"user@example.com"`
+	Password string `json:"password" example:"password123"`
+}
+
+// TextSecretResponse represents a text secret response body
+type TextSecretResponse struct {
+	Text string `json:"text" example:"This is some secret text"`
+}
+
 // SecretResponse represents a secret response body
 type SecretResponse struct {
 	ID           uuid.UUID             `json:"id" example:"bb073c91-f09b-4858-b2d1-d14116e73b8d"`
@@ -124,11 +136,14 @@ type SecretResponse struct {
 	UpdatedAt    time.Time             `json:"updated_at" example:"1970-01-01T00:00:00Z"`
 	CreatedBy    uuid.UUID             `json:"created_by" example:"f10ff052-b316-47f0-9788-ae8ebfa91b86"`
 	UpdatedBy    uuid.UUID             `json:"updated_by" example:"f10ff052-b316-47f0-9788-ae8ebfa91b86"`
+	// Nested fields for specific secret types
+	PasswordSecret *PasswordSecretResponse `json:"password_secret,omitempty"`
+	TextSecret     *TextSecretResponse     `json:"text_secret,omitempty"`
 }
 
 // NewSecretResponse is a helper function to create a response body for handling secret data
 func NewSecretResponse(secret *domain.Secret) SecretResponse {
-	return SecretResponse{
+	response := SecretResponse{
 		ID:           secret.ID,
 		CollectionID: secret.CollectionID,
 		SecretType:   secret.SecretType,
@@ -139,4 +154,23 @@ func NewSecretResponse(secret *domain.Secret) SecretResponse {
 		CreatedBy:    secret.CreatedBy,
 		UpdatedBy:    secret.UpdatedBy,
 	}
+
+	switch secret.SecretType {
+	case domain.PasswordSecretType:
+		if secret.PasswordSecret != nil {
+			response.PasswordSecret = &PasswordSecretResponse{
+				URL:      secret.PasswordSecret.URL,
+				Login:    secret.PasswordSecret.Login,
+				Password: secret.PasswordSecret.Password,
+			}
+		}
+	case domain.TextSecretType:
+		if secret.TextSecret != nil {
+			response.TextSecret = &TextSecretResponse{
+				Text: secret.TextSecret.Text,
+			}
+		}
+	}
+
+	return response
 }

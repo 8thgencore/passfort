@@ -19,6 +19,8 @@ var errorStatusMap = map[error]int{
 	domain.ErrDataNotFound:    http.StatusNotFound,
 	domain.ErrNoUpdatedData:   http.StatusBadRequest,
 	domain.ErrConflictingData: http.StatusConflict,
+	domain.ErrDataNotAdded:    http.StatusBadRequest,
+	domain.ErrDataNotDeleted:  http.StatusBadRequest,
 
 	// Token Errors
 	domain.ErrTokenDuration:       http.StatusBadRequest,
@@ -49,6 +51,9 @@ var errorStatusMap = map[error]int{
 	domain.ErrMasterPasswordNotSet:            http.StatusUnauthorized,
 	domain.ErrInvalidMasterPassword:           http.StatusUnauthorized,
 	domain.ErrMasterPasswordAlreadyExists:     http.StatusConflict,
+
+	// Secrets
+	domain.ErrInvalidSecretType: http.StatusBadRequest,
 }
 
 // ValidationError sends an error response for some specific request validation error

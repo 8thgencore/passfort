@@ -18,6 +18,7 @@ Table "users" {
     "email" varchar [not null]
     "password" varchar [not null]
     "master_password" varchar [null]
+    "is_verified" boolean [null]
     "role" users_role_enum [default: "user"]
     "created_at" timestamptz [not null, default: `now()`]
     "updated_at" timestamptz [not null, default: `now()`]
@@ -74,9 +75,30 @@ Table "secrets" {
   "updated_by" uuid
   "created_at" timestamptz [not null, default: `now()`]
   "updated_at" timestamptz [not null, default: `now()`]
+  "linked_secret_id" uuid
 }
 
 Ref: users.id < secrets.created_by
 Ref: users.id < secrets.updated_by
 
 Ref: collections.id < secrets.collection_id
+
+
+// Password Secrets table
+
+Table "password_secrets" {
+  "id" uuid [pk, increment]
+  "url" varchar [not null]
+  "login" varchar [not null]
+  "password" varchar [not null]
+}
+
+// Text Secrets table
+
+Table "text_secrets" {
+  "id" uuid [pk, increment]
+  "text" varchar [not null]
+}
+
+Ref: secrets.linked_secret_id < password_secrets.id
+Ref: secrets.linked_secret_id < text_secrets.id

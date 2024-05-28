@@ -1,3 +1,3 @@
-DROP TABLE IF EXISTS "users";
+DROP TABLE IF EXISTS users;
 
-DROP TYPE IF EXISTS "users_role_enum";
+DROP TYPE IF EXISTS users_role_enum;

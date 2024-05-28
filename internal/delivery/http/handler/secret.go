@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"errors"
+
 	"github.com/8thgencore/passfort/internal/delivery/http/helper"
 	"github.com/8thgencore/passfort/internal/delivery/http/middleware"
 	"github.com/8thgencore/passfort/internal/delivery/http/response"
@@ -24,20 +26,24 @@ func NewSecretHandler(svc service.SecretService) *SecretHandler {
 
 // createSecretRequest represents the request body for creating a secret
 type createSecretRequest struct {
-	SecretType  domain.SecretTypeEnum `json:"secret_type" binding:"required,secret_type" example:"password"`
-	Name        string                `json:"name" binding:"required" example:"My Secret"`
-	Description string                `json:"description" binding:"required" example:"This is a secret"`
+	Name        string `json:"name" binding:"required" example:"My Secret"`
+	Description string `json:"description" binding:"required" example:"This is a secret"`
+	URL         string `json:"url,omitempty" example:"https://example.com"`       // Optional for PasswordSecret
+	Login       string `json:"login,omitempty" example:"user@example.com"`        // Optional for PasswordSecret
+	Password    string `json:"password,omitempty" example:"password123"`          // Optional for PasswordSecret
+	Text        string `json:"text,omitempty" example:"This is some secret text"` // Optional for TextSecret
+	SecretType  string `json:"secret_type" binding:"required" example:"password"` // "password" or "text"
 }
 
 // CreateSecret godoc
 //
 //	@Summary		Create a new secret
-//	@Description	Create a new secret
+//	@Description	Create a new secret (password or text)
 //	@Tags			Secrets
 //	@Accept			json
 //	@Produce		json
-//	@Param			collection_id	path		string					true	"Collection ID"
-//	@Param			request			body		createSecretRequest		true	"Create Secret Request"
+//	@Param			collection_id	path		string				true	"Collection ID"
+//	@Param			request			body		createSecretRequest	true	"Create Secret Request"
 //	@Success		201				{object}	response.SecretResponse	"Secret created"
 //	@Failure		400				{object}	response.ErrorResponse	"Validation error"
 //	@Failure		500				{object}	response.ErrorResponse	"Internal server error"
@@ -59,16 +65,48 @@ func (sh *SecretHandler) CreateSecret(ctx *gin.Context) {
 
 	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
 
-	newSecret := domain.Secret{
-		CollectionID: collectionID,
-		SecretType:   req.SecretType,
-		Name:         req.Name,
-		Description:  req.Description,
-		CreatedBy:    authPayload.UserID,
-		UpdatedBy:    authPayload.UserID,
+	var newSecret *domain.Secret
+	switch req.SecretType {
+	case string(domain.PasswordSecretType):
+		if req.URL == "" || req.Login == "" || req.Password == "" {
+			response.ValidationError(ctx, errors.New("missing fields for password secret"))
+			return
+		}
+		newSecret = &domain.Secret{
+			CollectionID: collectionID,
+			SecretType:   domain.PasswordSecretType,
+			Name:         req.Name,
+			Description:  req.Description,
+			CreatedBy:    authPayload.UserID,
+			UpdatedBy:    authPayload.UserID,
+			PasswordSecret: &domain.PasswordSecret{
+				URL:      req.URL,
+				Login:    req.Login,
+				Password: req.Password,
+			},
+		}
+	case string(domain.TextSecretType):
+		if req.Text == "" {
+			response.ValidationError(ctx, errors.New("missing fields for text secret"))
+			return
+		}
+		newSecret = &domain.Secret{
+			CollectionID: collectionID,
+			SecretType:   domain.TextSecretType,
+			Name:         req.Name,
+			Description:  req.Description,
+			CreatedBy:    authPayload.UserID,
+			UpdatedBy:    authPayload.UserID,
+			TextSecret: &domain.TextSecret{
+				Text: req.Text,
+			},
+		}
+	default:
+		response.ValidationError(ctx, domain.ErrInvalidSecretType)
+		return
 	}
 
-	createdSecret, err := sh.svc.CreateSecret(ctx, authPayload.UserID, &newSecret)
+	createdSecret, err := sh.svc.CreateSecret(ctx, authPayload.UserID, newSecret)
 	if err != nil {
 		response.HandleError(ctx, err)
 		return
@@ -187,22 +225,26 @@ func (sh *SecretHandler) GetSecret(ctx *gin.Context) {
 	response.HandleSuccess(ctx, rsp)
 }
 
-// updateSecretRequest represents the request body for updating a secret
 type updateSecretRequest struct {
 	Name        string `json:"name" binding:"required" example:"My Secret"`
 	Description string `json:"description" binding:"required" example:"This is a secret"`
+	URL         string `json:"url,omitempty" example:"https://example.com"`       // Optional for PasswordSecret
+	Login       string `json:"login,omitempty" example:"user@example.com"`        // Optional for PasswordSecret
+	Password    string `json:"password,omitempty" example:"password123"`          // Optional for PasswordSecret
+	Text        string `json:"text,omitempty" example:"This is some secret text"` // Optional for TextSecret
+	SecretType  string `json:"secret_type" binding:"required" example:"password"` // "password" or "text"
 }
 
 // UpdateSecret godoc
 //
 //	@Summary		Update a secret
-//	@Description	Update a secret by id
+//	@Description	Update a secret (password or text) by id
 //	@Tags			Secrets
 //	@Accept			json
 //	@Produce		json
-//	@Param			collection_id	path		string					true	"Collection ID"
-//	@Param			secret_id		path		string					true	"Secret ID"
-//	@Param			request			body		updateSecretRequest		true	"Update Secret Request"
+//	@Param			collection_id	path		string				true	"Collection ID"
+//	@Param			secret_id		path		string				true	"Secret ID"
+//	@Param			request			body		updateSecretRequest	true	"Update Secret Request"
 //	@Success		200				{object}	response.SecretResponse	"Secret updated"
 //	@Failure		400				{object}	response.ErrorResponse	"Validation error"
 //	@Failure		404				{object}	response.ErrorResponse	"Data not found error"
@@ -230,12 +272,45 @@ func (sh *SecretHandler) UpdateSecret(ctx *gin.Context) {
 
 	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
 
-	secret := &domain.Secret{
-		ID:           secretID,
-		CollectionID: collectionID,
-		Name:         req.Name,
-		Description:  req.Description,
-		UpdatedBy:    authPayload.UserID,
+	var secret *domain.Secret
+	switch req.SecretType {
+	case string(domain.PasswordSecretType):
+		if req.URL == "" || req.Login == "" || req.Password == "" {
+			response.ValidationError(ctx, errors.New("missing fields for password secret"))
+			return
+		}
+		secret = &domain.Secret{
+			ID:           secretID,
+			CollectionID: collectionID,
+			Name:         req.Name,
+			Description:  req.Description,
+			UpdatedBy:    authPayload.UserID,
+			SecretType:   domain.PasswordSecretType,
+			PasswordSecret: &domain.PasswordSecret{
+				URL:      req.URL,
+				Login:    req.Login,
+				Password: req.Password,
+			},
+		}
+	case string(domain.TextSecretType):
+		if req.Text == "" {
+			response.ValidationError(ctx, errors.New("missing fields for text secret"))
+			return
+		}
+		secret = &domain.Secret{
+			ID:           secretID,
+			CollectionID: collectionID,
+			Name:         req.Name,
+			Description:  req.Description,
+			UpdatedBy:    authPayload.UserID,
+			SecretType:   domain.TextSecretType,
+			TextSecret: &domain.TextSecret{
+				Text: req.Text,
+			},
+		}
+	default:
+		response.ValidationError(ctx, domain.ErrInvalidSecretType)
+		return
 	}
 
 	updatedSecret, err := sh.svc.UpdateSecret(ctx, authPayload.UserID, collectionID, secret)

@@ -19,6 +19,10 @@ var (
 	ErrNoUpdatedData = errors.New("no data to update")
 	// ErrConflictingData is an error for when data conflicts with existing data
 	ErrConflictingData = errors.New("data conflicts with existing data")
+	// ErrDataNotAdded is an error for when data could not be added
+	ErrDataNotAdded = errors.New("data not added")
+	// ErrDataNotDeleted is an error for when data could not be deleted
+	ErrDataNotDeleted = errors.New("data not deleted")
 
 	// Token Errors
 	// ErrTokenDuration is an error for when the token duration format is invalid
@@ -69,6 +73,9 @@ var (
 	ErrInvalidMasterPassword = errors.New("invalid master password")
 	// ErrMasterPasswordAlreadyExists is an error for when a master password already exists for the user
 	ErrMasterPasswordAlreadyExists = errors.New("master password already exists")
+
+	// Error for invalid secret type
+	ErrInvalidSecretType = errors.New("invalid secret type")
 )
 
 // IsUniqueConstraintViolationError checks if the error is a unique constraint violation error

@@ -22,7 +22,7 @@ var SecretTypeValidator validator.Func = func(fl validator.FieldLevel) bool {
 	secretType := fl.Field().Interface().(domain.SecretTypeEnum)
 
 	switch secretType {
-	case domain.Password, domain.Text, domain.File:
+	case domain.PasswordSecretType, domain.TextSecretType, domain.FileSecretType:
 		return true
 	default:
 		return false

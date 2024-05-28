@@ -14,6 +14,7 @@ func (cs *CollectionService) CreateCollection(ctx context.Context, userID uuid.U
 	collectionDAO, err := cs.storage.CreateCollection(ctx, userID, converter.ToCollectionDAO(collection))
 	if err != nil {
 		cs.log.Error("Error creating collection:", "error", err.Error())
+		return nil, domain.ErrDataNotAdded
 	}
 	return converter.ToCollection(collectionDAO), err
 }
@@ -23,6 +24,8 @@ func (cs *CollectionService) ListCollectionsByUserID(ctx context.Context, userID
 	collectionsDAO, err := cs.storage.ListCollectionsByUserID(ctx, userID, skip, limit)
 	if err != nil {
 		cs.log.Error(fmt.Sprintf("Error listing collections for user %d:", userID), "error", err.Error())
+		return nil, domain.ErrInternal
+
 	}
 	var collections []domain.Collection
 	for _, collectionDAO := range collectionsDAO {
@@ -37,7 +40,7 @@ func (cs *CollectionService) GetCollection(ctx context.Context, userID, collecti
 	collectionDAO, err := cs.storage.GetCollectionByID(ctx, collectionID)
 	if err != nil {
 		cs.log.Error(fmt.Sprintf("Error getting collection %d:", collectionID), "error", err.Error())
-		return nil, err
+		return nil, domain.ErrDataNotAdded
 	}
 
 	// Check if the user is part of the collection
@@ -58,7 +61,7 @@ func (cs *CollectionService) UpdateCollection(ctx context.Context, userID uuid.U
 	updatedCollectionDAO, err := cs.storage.UpdateCollection(ctx, converter.ToCollectionDAO(collection))
 	if err != nil {
 		cs.log.Error(fmt.Sprintf("Error updating collection %d:", collection.ID), "error", err.Error())
-		return nil, err
+		return nil, domain.ErrNoUpdatedData
 	}
 
 	return converter.ToCollection(updatedCollectionDAO), nil
@@ -73,7 +76,7 @@ func (cs *CollectionService) DeleteCollection(ctx context.Context, userID, colle
 	err := cs.storage.DeleteCollection(ctx, collectionID)
 	if err != nil {
 		cs.log.Error(fmt.Sprintf("Error deleting collection %d:", collectionID), "error", err.Error())
-		return err
+		return domain.ErrDataNotDeleted
 	}
 
 	return nil

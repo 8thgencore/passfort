@@ -51,4 +51,16 @@ type SecretRepository interface {
 	UpdateSecret(ctx context.Context, secret *dao.SecretDAO) (*dao.SecretDAO, error)
 	// DeleteSecret deletes a secret
 	DeleteSecret(ctx context.Context, id uuid.UUID) error
+	// CreatePasswordSecret creates a new password secret in the data warehouse
+	CreatePasswordSecret(ctx context.Context, secret *dao.PasswordSecretDAO) (*dao.PasswordSecretDAO, error)
+	// GetPasswordSecretByID selects a password secret by id
+	GetPasswordSecretByID(ctx context.Context, id uuid.UUID) (*dao.PasswordSecretDAO, error)
+	// UpdatePasswordSecret updates a password secret
+	UpdatePasswordSecret(ctx context.Context, secret *dao.PasswordSecretDAO) (*dao.PasswordSecretDAO, error)
+	// CreateTextSecret creates a new text secret in the data warehouse
+	CreateTextSecret(ctx context.Context, secret *dao.TextSecretDAO) (*dao.TextSecretDAO, error)
+	// GetTextSecretByID selects a text secret by id
+	GetTextSecretByID(ctx context.Context, id uuid.UUID) (*dao.TextSecretDAO, error)
+	// UpdateTextSecret updates a text secret
+	UpdateTextSecret(ctx context.Context, secret *dao.TextSecretDAO) (*dao.TextSecretDAO, error)
 }

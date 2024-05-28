@@ -58,8 +58,9 @@ func ToCollection(collectionDAO *dao.CollectionDAO) *domain.Collection {
 	}
 }
 
+// ToSecretDAO converts a domain.Secret to a dao.SecretDAO
 func ToSecretDAO(secret *domain.Secret) *dao.SecretDAO {
-	return &dao.SecretDAO{
+	secretDAO := &dao.SecretDAO{
 		ID:           secret.ID,
 		CollectionID: secret.CollectionID,
 		SecretType:   string(secret.SecretType),
@@ -70,10 +71,26 @@ func ToSecretDAO(secret *domain.Secret) *dao.SecretDAO {
 		CreatedAt:    secret.CreatedAt,
 		UpdatedAt:    secret.UpdatedAt,
 	}
+
+	switch secret.SecretType {
+	case domain.PasswordSecretType:
+		if secret.PasswordSecret != nil {
+			secretDAO.LinkedSecretId = secret.PasswordSecret.ID
+			secretDAO.LinkedSecret = ToPasswordSecretDAO(secret.PasswordSecret)
+		}
+	case domain.TextSecretType:
+		if secret.TextSecret != nil {
+			secretDAO.LinkedSecretId = secret.TextSecret.ID
+			secretDAO.LinkedSecret = ToTextSecretDAO(secret.TextSecret)
+		}
+	}
+
+	return secretDAO
 }
 
+// ToSecret converts a dao.SecretDAO to a domain.Secret
 func ToSecret(secretDAO *dao.SecretDAO) *domain.Secret {
-	return &domain.Secret{
+	secret := &domain.Secret{
 		ID:           secretDAO.ID,
 		CollectionID: secretDAO.CollectionID,
 		SecretType:   domain.SecretTypeEnum(secretDAO.SecretType),
@@ -83,5 +100,54 @@ func ToSecret(secretDAO *dao.SecretDAO) *domain.Secret {
 		UpdatedBy:    secretDAO.UpdatedBy,
 		CreatedAt:    secretDAO.CreatedAt,
 		UpdatedAt:    secretDAO.UpdatedAt,
+	}
+
+	switch secretDAO.SecretType {
+	case string(domain.PasswordSecretType):
+		if ps, ok := secretDAO.LinkedSecret.(*dao.PasswordSecretDAO); ok {
+			secret.PasswordSecret = ToPasswordSecret(ps)
+		}
+	case string(domain.TextSecretType):
+		if ts, ok := secretDAO.LinkedSecret.(*dao.TextSecretDAO); ok {
+			secret.TextSecret = ToTextSecret(ts)
+		}
+	}
+
+	return secret
+}
+
+// ToPasswordSecretDAO converts a domain.PasswordSecret to a dao.PasswordSecretDAO
+func ToPasswordSecretDAO(ps *domain.PasswordSecret) *dao.PasswordSecretDAO {
+	return &dao.PasswordSecretDAO{
+		ID:       ps.ID,
+		URL:      ps.URL,
+		Login:    ps.Login,
+		Password: ps.Password,
+	}
+}
+
+// ToPasswordSecret converts a dao.PasswordSecretDAO to a domain.PasswordSecret
+func ToPasswordSecret(psDAO *dao.PasswordSecretDAO) *domain.PasswordSecret {
+	return &domain.PasswordSecret{
+		ID:       psDAO.ID,
+		URL:      psDAO.URL,
+		Login:    psDAO.Login,
+		Password: psDAO.Password,
+	}
+}
+
+// ToTextSecretDAO converts a domain.TextSecret to a dao.TextSecretDAO
+func ToTextSecretDAO(ts *domain.TextSecret) *dao.TextSecretDAO {
+	return &dao.TextSecretDAO{
+		ID:   ts.ID,
+		Text: ts.Text,
+	}
+}
+
+// ToTextSecret converts a dao.TextSecretDAO to a domain.TextSecret
+func ToTextSecret(tsDAO *dao.TextSecretDAO) *domain.TextSecret {
+	return &domain.TextSecret{
+		ID:   tsDAO.ID,
+		Text: tsDAO.Text,
 	}
 }

@@ -12,14 +12,34 @@ import (
 
 // CreateSecret creates a new secret
 func (ss *SecretService) CreateSecret(ctx context.Context, userID uuid.UUID, secret *domain.Secret) (*domain.Secret, error) {
-	secret.CreatedBy = userID
-	secret.UpdatedBy = userID
-
 	if !ss.isUserPartOfCollection(ctx, userID, secret.CollectionID) {
 		return nil, domain.ErrUnauthorized
 	}
 
-	createdSecretDAO, err := ss.secretStorage.CreateSecret(ctx, secret.CollectionID, converter.ToSecretDAO(secret))
+	secret.CreatedBy = userID
+	secret.UpdatedBy = userID
+	secretDAO := converter.ToSecretDAO(secret)
+
+	switch secret.SecretType {
+	case domain.PasswordSecretType:
+		newSecret, err := ss.secretStorage.CreatePasswordSecret(ctx, converter.ToPasswordSecretDAO(secret.PasswordSecret))
+		if err != nil {
+			ss.log.Error("Error creating password secret:", "error", err.Error())
+			return nil, domain.ErrInternal
+		}
+		secretDAO.LinkedSecretId = newSecret.ID
+	case domain.TextSecretType:
+		newSecret, err := ss.secretStorage.CreateTextSecret(ctx, converter.ToTextSecretDAO(secret.TextSecret))
+		if err != nil {
+			ss.log.Error("Error creating text secret:", "error", err.Error())
+			return nil, domain.ErrInternal
+		}
+		secretDAO.LinkedSecretId = newSecret.ID
+	default:
+		return nil, domain.ErrInvalidSecretType
+	}
+
+	createdSecretDAO, err := ss.secretStorage.CreateSecret(ctx, secret.CollectionID, secretDAO)
 
 	if err != nil {
 		ss.log.Error("Error creating secret:", "error", err.Error())
@@ -55,10 +75,32 @@ func (ss *SecretService) GetSecret(ctx context.Context, userID, collectionID, se
 		return nil, domain.ErrUnauthorized
 	}
 
+	// Getting the main secret
 	secretDAO, err := ss.secretStorage.GetSecretByID(ctx, secretID)
 	if err != nil {
 		ss.log.Error(fmt.Sprintf("Error getting secret %d:", secretID), "error", err.Error())
 		return nil, domain.ErrDataNotFound
+	}
+
+	// Depending on the type of secret, get additional data
+	switch secretDAO.SecretType {
+	case string(domain.PasswordSecretType):
+		passwordSecretDAO, err := ss.secretStorage.GetPasswordSecretByID(ctx, secretDAO.LinkedSecretId)
+		if err != nil {
+			ss.log.Error(fmt.Sprintf("Error getting password secret %s:", secretDAO.LinkedSecretId), "error", err.Error())
+			return nil, domain.ErrDataNotFound
+		}
+		secretDAO.LinkedSecret = passwordSecretDAO
+	case string(domain.TextSecretType):
+		textSecretDAO, err := ss.secretStorage.GetTextSecretByID(ctx, secretDAO.LinkedSecretId)
+		if err != nil {
+			ss.log.Error(fmt.Sprintf("Error getting text secret %s:", secretDAO.LinkedSecretId), "error", err.Error())
+			return nil, domain.ErrDataNotFound
+		}
+		secretDAO.LinkedSecret = textSecretDAO
+	default:
+		ss.log.Error(fmt.Sprintf("Invalid secret type %s for secret %s:", secretDAO.SecretType, secretID))
+		return nil, domain.ErrInvalidSecretType
 	}
 
 	return converter.ToSecret(secretDAO), nil
@@ -83,6 +125,39 @@ func (ss *SecretService) UpdateSecret(ctx context.Context, userID, collectionID 
 	if err != nil {
 		ss.log.Error("Error updating secret:", "error", err.Error())
 		return nil, domain.ErrNoUpdatedData
+	}
+
+	switch secret.SecretType {
+	case domain.PasswordSecretType:
+		if secret.PasswordSecret != nil {
+			passwordSecretDAO := converter.ToPasswordSecretDAO(&domain.PasswordSecret{
+				ID:       updatedSecretDAO.LinkedSecretId,
+				URL:      secret.PasswordSecret.URL,
+				Login:    secret.PasswordSecret.Login,
+				Password: secret.PasswordSecret.Password,
+			})
+			updatedPasswordSecretDAO, err := ss.secretStorage.UpdatePasswordSecret(ctx, passwordSecretDAO)
+			if err != nil {
+				ss.log.Error("Error updating password secret:", "error", err.Error())
+				return nil, domain.ErrNoUpdatedData
+			}
+			updatedSecretDAO.LinkedSecret = updatedPasswordSecretDAO
+		}
+	case domain.TextSecretType:
+		if secret.TextSecret != nil {
+			textSecretDAO := converter.ToTextSecretDAO(&domain.TextSecret{
+				ID:   updatedSecretDAO.LinkedSecretId,
+				Text: secret.TextSecret.Text,
+			})
+			updatedTextSecretDAO, err := ss.secretStorage.UpdateTextSecret(ctx, textSecretDAO)
+			if err != nil {
+				ss.log.Error("Error updating text secret:", "error", err.Error())
+				return nil, domain.ErrNoUpdatedData
+			}
+			updatedSecretDAO.LinkedSecret = updatedTextSecretDAO
+		}
+	default:
+		return nil, domain.ErrInvalidSecretType
 	}
 
 	// Convert the updated dao.SecretDAO back to domain.Secret and return it
