@@ -872,7 +872,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create a new secret",
+                "description": "Create a new secret (password or text)",
                 "consumes": [
                     "application/json"
                 ],
@@ -990,7 +990,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update a secret by id",
+                "description": "Update a secret (password or text) by id",
                 "consumes": [
                     "application/json"
                 ],
@@ -1595,9 +1595,9 @@ const docTemplate = `{
                 "file"
             ],
             "x-enum-varnames": [
-                "Password",
-                "Text",
-                "File"
+                "PasswordSecretType",
+                "TextSecretType",
+                "FileSecretType"
             ]
         },
         "domain.UserRoleEnum": {
@@ -1720,17 +1720,34 @@ const docTemplate = `{
                     "type": "string",
                     "example": "This is a secret"
                 },
+                "login": {
+                    "description": "Optional for PasswordSecret",
+                    "type": "string",
+                    "example": "user@example.com"
+                },
                 "name": {
                     "type": "string",
                     "example": "My Secret"
                 },
+                "password": {
+                    "description": "Optional for PasswordSecret",
+                    "type": "string",
+                    "example": "password123"
+                },
                 "secret_type": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/domain.SecretTypeEnum"
-                        }
-                    ],
+                    "description": "\"password\" or \"text\"",
+                    "type": "string",
                     "example": "password"
+                },
+                "text": {
+                    "description": "Optional for TextSecret",
+                    "type": "string",
+                    "example": "This is some secret text"
+                },
+                "url": {
+                    "description": "Optional for PasswordSecret",
+                    "type": "string",
+                    "example": "https://example.com"
                 }
             }
         },
@@ -1842,16 +1859,42 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "description",
-                "name"
+                "name",
+                "secret_type"
             ],
             "properties": {
                 "description": {
                     "type": "string",
                     "example": "This is a secret"
                 },
+                "login": {
+                    "description": "Optional for PasswordSecret",
+                    "type": "string",
+                    "example": "user@example.com"
+                },
                 "name": {
                     "type": "string",
                     "example": "My Secret"
+                },
+                "password": {
+                    "description": "Optional for PasswordSecret",
+                    "type": "string",
+                    "example": "password123"
+                },
+                "secret_type": {
+                    "description": "\"password\" or \"text\"",
+                    "type": "string",
+                    "example": "password"
+                },
+                "text": {
+                    "description": "Optional for TextSecret",
+                    "type": "string",
+                    "example": "This is some secret text"
+                },
+                "url": {
+                    "description": "Optional for PasswordSecret",
+                    "type": "string",
+                    "example": "https://example.com"
                 }
             }
         },
@@ -1963,6 +2006,23 @@ const docTemplate = `{
                 }
             }
         },
+        "response.PasswordSecretResponse": {
+            "type": "object",
+            "properties": {
+                "login": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "password123"
+                },
+                "url": {
+                    "type": "string",
+                    "example": "https://example.com"
+                }
+            }
+        },
         "response.Response": {
             "type": "object",
             "properties": {
@@ -1992,9 +2052,25 @@ const docTemplate = `{
                     "type": "string",
                     "example": "f10ff052-b316-47f0-9788-ae8ebfa91b86"
                 },
+                "description": {
+                    "type": "string",
+                    "example": "Secret description"
+                },
                 "id": {
                     "type": "string",
                     "example": "bb073c91-f09b-4858-b2d1-d14116e73b8d"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "My Secret"
+                },
+                "password_secret": {
+                    "description": "Nested fields for specific secret types",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.PasswordSecretResponse"
+                        }
+                    ]
                 },
                 "secret_type": {
                     "allOf": [
@@ -2004,6 +2080,9 @@ const docTemplate = `{
                     ],
                     "example": "password"
                 },
+                "text_secret": {
+                    "$ref": "#/definitions/response.TextSecretResponse"
+                },
                 "updated_at": {
                     "type": "string",
                     "example": "1970-01-01T00:00:00Z"
@@ -2011,6 +2090,15 @@ const docTemplate = `{
                 "updated_by": {
                     "type": "string",
                     "example": "f10ff052-b316-47f0-9788-ae8ebfa91b86"
+                }
+            }
+        },
+        "response.TextSecretResponse": {
+            "type": "object",
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "example": "This is some secret text"
                 }
             }
         },

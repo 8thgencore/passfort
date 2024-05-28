@@ -7,9 +7,9 @@ definitions:
     - file
     type: string
     x-enum-varnames:
-    - Password
-    - Text
-    - File
+    - PasswordSecretType
+    - TextSecretType
+    - FileSecretType
   domain.UserRoleEnum:
     enum:
     - admin
@@ -92,13 +92,29 @@ definitions:
       description:
         example: This is a secret
         type: string
+      login:
+        description: Optional for PasswordSecret
+        example: user@example.com
+        type: string
       name:
         example: My Secret
         type: string
+      password:
+        description: Optional for PasswordSecret
+        example: password123
+        type: string
       secret_type:
-        allOf:
-        - $ref: '#/definitions/domain.SecretTypeEnum'
+        description: '"password" or "text"'
         example: password
+        type: string
+      text:
+        description: Optional for TextSecret
+        example: This is some secret text
+        type: string
+      url:
+        description: Optional for PasswordSecret
+        example: https://example.com
+        type: string
     required:
     - description
     - name
@@ -183,12 +199,33 @@ definitions:
       description:
         example: This is a secret
         type: string
+      login:
+        description: Optional for PasswordSecret
+        example: user@example.com
+        type: string
       name:
         example: My Secret
+        type: string
+      password:
+        description: Optional for PasswordSecret
+        example: password123
+        type: string
+      secret_type:
+        description: '"password" or "text"'
+        example: password
+        type: string
+      text:
+        description: Optional for TextSecret
+        example: This is some secret text
+        type: string
+      url:
+        description: Optional for PasswordSecret
+        example: https://example.com
         type: string
     required:
     - description
     - name
+    - secret_type
     type: object
   handler.updateUserRequest:
     properties:
@@ -265,6 +302,18 @@ definitions:
         example: 100
         type: integer
     type: object
+  response.PasswordSecretResponse:
+    properties:
+      login:
+        example: user@example.com
+        type: string
+      password:
+        example: password123
+        type: string
+      url:
+        example: https://example.com
+        type: string
+    type: object
   response.Response:
     properties:
       data: {}
@@ -286,18 +335,36 @@ definitions:
       created_by:
         example: f10ff052-b316-47f0-9788-ae8ebfa91b86
         type: string
+      description:
+        example: Secret description
+        type: string
       id:
         example: bb073c91-f09b-4858-b2d1-d14116e73b8d
         type: string
+      name:
+        example: My Secret
+        type: string
+      password_secret:
+        allOf:
+        - $ref: '#/definitions/response.PasswordSecretResponse'
+        description: Nested fields for specific secret types
       secret_type:
         allOf:
         - $ref: '#/definitions/domain.SecretTypeEnum'
         example: password
+      text_secret:
+        $ref: '#/definitions/response.TextSecretResponse'
       updated_at:
         example: "1970-01-01T00:00:00Z"
         type: string
       updated_by:
         example: f10ff052-b316-47f0-9788-ae8ebfa91b86
+        type: string
+    type: object
+  response.TextSecretResponse:
+    properties:
+      text:
+        example: This is some secret text
         type: string
     type: object
   response.UserResponse:
@@ -849,7 +916,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new secret
+      description: Create a new secret (password or text)
       parameters:
       - description: Collection ID
         in: path
@@ -972,7 +1039,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: Update a secret by id
+      description: Update a secret (password or text) by id
       parameters:
       - description: Collection ID
         in: path

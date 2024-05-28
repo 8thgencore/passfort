@@ -42,8 +42,8 @@ type createSecretRequest struct {
 //	@Tags			Secrets
 //	@Accept			json
 //	@Produce		json
-//	@Param			collection_id	path		string				true	"Collection ID"
-//	@Param			request			body		createSecretRequest	true	"Create Secret Request"
+//	@Param			collection_id	path		string					true	"Collection ID"
+//	@Param			request			body		createSecretRequest		true	"Create Secret Request"
 //	@Success		201				{object}	response.SecretResponse	"Secret created"
 //	@Failure		400				{object}	response.ErrorResponse	"Validation error"
 //	@Failure		500				{object}	response.ErrorResponse	"Internal server error"
@@ -242,9 +242,9 @@ type updateSecretRequest struct {
 //	@Tags			Secrets
 //	@Accept			json
 //	@Produce		json
-//	@Param			collection_id	path		string				true	"Collection ID"
-//	@Param			secret_id		path		string				true	"Secret ID"
-//	@Param			request			body		updateSecretRequest	true	"Update Secret Request"
+//	@Param			collection_id	path		string					true	"Collection ID"
+//	@Param			secret_id		path		string					true	"Secret ID"
+//	@Param			request			body		updateSecretRequest		true	"Update Secret Request"
 //	@Success		200				{object}	response.SecretResponse	"Secret updated"
 //	@Failure		400				{object}	response.ErrorResponse	"Validation error"
 //	@Failure		404				{object}	response.ErrorResponse	"Data not found error"
