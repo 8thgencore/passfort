@@ -162,6 +162,8 @@ func (as *AuthService) RefreshToken(ctx context.Context, refreshToken string) (s
 	}
 
 	// Caching a revoked token
+	as.log.Info("dsf", "sdf", refreshToken)
+	as.log.Info("dsf", "sdf", token.ID)
 	err = as.tokenService.RevokeToken(ctx, token.ID)
 	if err != nil {
 		return "", "", err
