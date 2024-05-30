@@ -108,17 +108,22 @@ tasks:
       - swag fmt
       - swag init -g ./internal/app/app.go  -o ./docs --parseInternal true
 
+  # proto:
+  #   desc: "Generate proto files"
+  #   cmds:
+  #     - cd internal/clients/mail/grpc
+  #     - protoc -I proto proto/*.proto --go_out=./gen --go_opt=paths=source_relative --go-grpc_out=./gen --go-grpc_opt=paths=source_relative
+
   mock:
     desc: "Generate mocks files"
     cmds:
-      - mockery --name=CacheRepository --dir=internal/service/adapters/cache --output=internal/service/adapters/cache/mocks --filename=mock_cache_repository.go  
+      - mockery --name=CacheRepository --dir=internal/service/adapters/cache --output=internal/service/adapters/cache/mocks --filename=mock_cache_repository.go
+      - mockery --name=UserRepository --dir=internal/service/adapters/storage --output=internal/service/adapters/storage/mocks --filename=mock_user_repository.go
+      - mockery --name=CollectionRepository --dir=internal/service/adapters/storage --output=internal/service/adapters/storage/mocks --filename=mock_collection_repository.go
+      - mockery --name=SecretRepository --dir=internal/service/adapters/storage --output=internal/service/adapters/storage/mocks --filename=mock_secret_repository.go
 
   test:
     desc: "Run tests"
     cmds:
       - go test -v ./... -race -cover -timeout 30s -count 1 -coverprofile=coverage.out
       - go tool cover -html=coverage.out -o coverage.html
-
-
-# cd  internal/clients/mail/grpc
-# protoc -I proto proto/*.proto --go_out=./gen --go_opt=paths=source_relative --go-grpc_out=./gen --go-grpc_opt=paths=source_relative
