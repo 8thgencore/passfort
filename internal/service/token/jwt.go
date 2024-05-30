@@ -15,7 +15,7 @@ import (
 func (ts *TokenService) GenerateToken(userID uuid.UUID, role domain.UserRoleEnum) (string, string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
-	tokenId, err := uuid.NewRandom()
+	tokenID, err := uuid.NewRandom()
 	if err != nil {
 		return "", "", domain.ErrTokenCreation
 	}
@@ -27,7 +27,7 @@ func (ts *TokenService) GenerateToken(userID uuid.UUID, role domain.UserRoleEnum
 	claims := token.Claims.(jwt.MapClaims)
 	claims["exp"] = time.Now().Add(accessTokenTTL).Unix()
 	claims["iat"] = time.Now().Unix()
-	claims["id"] = tokenId
+	claims["id"] = tokenID
 	claims["user_id"] = userID
 	claims["role"] = role
 
@@ -93,10 +93,10 @@ func (ts *TokenService) ParseUserClaims(accessToken string) (*domain.UserClaims,
 }
 
 // RevokeToken revokes the specified JWT token.
-func (ts *TokenService) RevokeToken(ctx context.Context, tokenId uuid.UUID) error {
+func (ts *TokenService) RevokeToken(ctx context.Context, tokenID uuid.UUID) error {
 	// Caching a revoked token
-	cacheKey := util.GenerateCacheKey("token", tokenId)
-	userSerialized, err := util.Serialize(tokenId)
+	cacheKey := util.GenerateCacheKey("token", tokenID)
+	userSerialized, err := util.Serialize(tokenID)
 	if err != nil {
 		return domain.ErrInternal
 	}
@@ -110,13 +110,9 @@ func (ts *TokenService) RevokeToken(ctx context.Context, tokenId uuid.UUID) erro
 }
 
 // CheckJWTTokenRevoked checks if the JWT token is revoked.
-func (ts *TokenService) CheckJWTTokenRevoked(ctx context.Context, tokenId uuid.UUID) (bool, error) {
-	cacheKey := util.GenerateCacheKey("token", tokenId)
-	_, err := util.Serialize(tokenId)
-	if err != nil {
-		return false, domain.ErrInternal
-	}
-
+func (ts *TokenService) CheckJWTTokenRevoked(ctx context.Context, tokenID uuid.UUID) (bool, error) {
+	cacheKey := util.GenerateCacheKey("token", tokenID)
+	fmt.Println(cacheKey)
 	// Check if the value exists in the cache for the given key
 	exists, err := ts.cache.Exists(ctx, cacheKey)
 	if err != nil {
