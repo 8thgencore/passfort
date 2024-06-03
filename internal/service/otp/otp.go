@@ -2,6 +2,7 @@ package otp
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/8thgencore/passfort/internal/domain"
@@ -10,16 +11,16 @@ import (
 )
 
 // GenerateOTP generates a new OTP for the given user ID
-func (os *OtpService) GenerateOTP(ctx context.Context, userID uuid.UUID) (string, error) {
+func (s *OtpService) GenerateOTP(ctx context.Context, userID uuid.UUID) (string, error) {
 	otpCode := util.GenerateOTP()
 
 	// Store the generated OTP in your repository
 	cacheKey := util.GenerateCacheKey("user_otp", userID)
 	serializedOtp := []byte(otpCode)
 
-	err := os.cache.Set(ctx, cacheKey, serializedOtp, 10*time.Minute)
+	err := s.cache.Set(ctx, cacheKey, serializedOtp, 10*time.Minute)
 	if err != nil {
-		os.log.Error("Error storing OTP:", "error", err.Error())
+		s.log.Error("Error storing OTP:", "error", err.Error())
 		return "", domain.ErrInternal
 	}
 
@@ -28,12 +29,12 @@ func (os *OtpService) GenerateOTP(ctx context.Context, userID uuid.UUID) (string
 }
 
 // VerifyOTP verifies if the provided OTP is valid for the given user ID
-func (os *OtpService) VerifyOTP(ctx context.Context, userID uuid.UUID, otpCode string) error {
+func (s *OtpService) VerifyOTP(ctx context.Context, userID uuid.UUID, otpCode string) error {
 	var oldOtpCode string
 	// Retrieve the stored OTP for the user
 	cacheKey := util.GenerateCacheKey("user_otp", userID)
 
-	storedOTP, err := os.cache.Get(ctx, cacheKey)
+	storedOTP, err := s.cache.Get(ctx, cacheKey)
 	if err == nil {
 		oldOtpCode = string(storedOTP)
 	}
@@ -41,19 +42,19 @@ func (os *OtpService) VerifyOTP(ctx context.Context, userID uuid.UUID, otpCode s
 	// Verify the provided OTP against the stored OTP
 	valid := util.ValidateOTP(otpCode)
 	if !valid {
-		os.log.Error("Invalid OTP provided")
+		s.log.Error("Invalid OTP provided")
 		return domain.ErrInvalidOTP
 	}
 
 	if otpCode != oldOtpCode {
-		os.log.Error("Provided OTP does not match stored OTP")
+		s.log.Error("Provided OTP does not match stored OTP")
 		return domain.ErrInvalidOTP
 	}
 
 	// OTP is valid, remove it from storage to ensure one-time use
-	err = os.cache.Delete(ctx, cacheKey)
+	err = s.cache.Delete(ctx, cacheKey)
 	if err != nil {
-		os.log.Error("Error removing OTP:", "error", err.Error())
+		s.log.Error("Error removing OTP:", "error", err.Error())
 		return domain.ErrInternal
 	}
 
@@ -61,14 +62,15 @@ func (os *OtpService) VerifyOTP(ctx context.Context, userID uuid.UUID, otpCode s
 }
 
 // CheckCacheForKey checks if a value exists in the cache for the given key
-func (os *OtpService) CheckCacheForKey(ctx context.Context, userID uuid.UUID) (bool, error) {
+func (s *OtpService) CheckCacheForKey(ctx context.Context, userID uuid.UUID) (bool, error) {
 	// Retrieve the stored OTP for the user
 	key := util.GenerateCacheKey("user_otp", userID)
 
 	// Check if the value exists in the cache for the given key
-	exists, err := os.cache.Exists(ctx, key)
+	exists, err := s.cache.Exists(ctx, key)
+	fmt.Println(exists)
 	if err != nil {
-		os.log.Error("Error checking cache for key:", "error", err.Error())
+		s.log.Error("Error checking cache for key:", "error", err.Error())
 		return false, domain.ErrInternal
 	}
 

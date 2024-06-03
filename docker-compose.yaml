@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   postgres:
-    image: postgres:16.1-alpine3.19
+    image: postgres:16.3-alpine3.20
     container_name: passfort_storage
     restart: unless-stopped
     ports:
@@ -31,8 +31,10 @@ services:
       #   code and print a message, when the variable is not set or empty
       - redis-server --requirepass "$${REDIS_PASSWORD:?REDIS_PASSWORD variable is not set}"
     restart: unless-stopped
-    expose:
-      - 6379
+    # expose:
+    #   - 6379
+    ports:
+      - 6379:6379
     environment:
       ALLOW_EMPTY_PASSWORD: no
       REDIS_PASSWORD: "${REDIS_PASSWORD}"
