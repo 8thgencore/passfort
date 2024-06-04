@@ -46,7 +46,9 @@ PassFort is a secure password and secret management application designed to stor
     TOKEN_SIGNING_KEY=eab9adf86028e9409c785431114c9426
    ```
 
-4. Run the application:
+4. Change the config file `./config/config.yaml` if necessary.
+
+5. Run the application:
 
    ```sh
    task dev

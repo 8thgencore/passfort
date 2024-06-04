@@ -1,9 +1,22 @@
 version: "3.8"
 
 services:
+  passfort:
+    container_name: passfort-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8700:8080"
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - CONFIG_PATH=./config/config.yaml
+
   postgres:
     image: postgres:16.3-alpine3.20
-    container_name: passfort_storage
+    container_name: passfort-storage
     restart: unless-stopped
     ports:
       - 5432:5432
@@ -21,7 +34,7 @@ services:
 
   redis:
     image: "redis:7.2-alpine"
-    container_name: passfort_cache
+    container_name: passfort-cache
     command:
       - /bin/sh
       - -c
