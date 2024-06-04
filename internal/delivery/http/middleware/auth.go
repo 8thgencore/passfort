@@ -43,7 +43,7 @@ func AuthMiddleware(tokenService token.TokenService) gin.HandlerFunc {
 			err := domain.ErrInvalidAuthorizationType
 			response.HandleAbort(ctx, err)
 			return
-		}	
+		}
 
 		payload, err := tokenService.ParseUserClaims(fields[1])
 		if err != nil {
@@ -57,8 +57,7 @@ func AuthMiddleware(tokenService token.TokenService) gin.HandlerFunc {
 			return
 		}
 		if exists {
-			err := domain.ErrUnauthorized
-			response.HandleAbort(ctx, err)
+			response.HandleAbort(ctx, domain.ErrUnauthorized)
 			return
 		}
 
