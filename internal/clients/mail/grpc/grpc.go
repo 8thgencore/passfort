@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"time"
 
-	mailv1 "github.com/8thgencore/mailfort/gen/go/mail"
+	mailv1 "github.com/8thgencore/mailfort/protos/gen/go/mail/v1"
 	grpclog "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
 
@@ -16,7 +16,7 @@ import (
 )
 
 type Client struct {
-	api mailv1.MailClient
+	api mailv1.MailServiceClient
 	log *slog.Logger
 }
 
@@ -51,14 +51,14 @@ func New(
 	}
 
 	return &Client{
-		api: mailv1.NewMailClient(cc),
+		api: mailv1.NewMailServiceClient(cc),
 	}, nil
 }
 
 func (c *Client) SendConfirmationEmail(ctx context.Context, email, otpCode string) (bool, error) {
 	const op = "grpc.SendConfirmationEmail"
 
-	resp, err := c.api.SendConfirmationEmail(ctx, &mailv1.SendRequest{
+	resp, err := c.api.SendConfirmationEmailOTPCode(ctx, &mailv1.SendEmailWithOTPCodeRequest{
 		Email:   email,
 		OtpCode: otpCode,
 	})
@@ -66,13 +66,13 @@ func (c *Client) SendConfirmationEmail(ctx context.Context, email, otpCode strin
 		return false, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return resp.IsSuccess, nil
+	return resp.Success, nil
 }
 
 func (c *Client) SendPasswordReset(ctx context.Context, email, otpCode string) (bool, error) {
 	const op = "grpc.SendPasswordReset"
 
-	resp, err := c.api.SendPasswordReset(ctx, &mailv1.SendRequest{
+	resp, err := c.api.SendPasswordResetOTPCode(ctx, &mailv1.SendEmailWithOTPCodeRequest{
 		Email:   email,
 		OtpCode: otpCode,
 	})
@@ -81,7 +81,7 @@ func (c *Client) SendPasswordReset(ctx context.Context, email, otpCode string) (
 		return false, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return resp.IsSuccess, nil
+	return resp.Success, nil
 }
 
 // InterceptorLogger adapts slog logger to interceptor logger.
