@@ -25,6 +25,7 @@ type Secret struct {
 	UpdatedBy      uuid.UUID
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
+	LinkedSecretId uuid.UUID
 	PasswordSecret *PasswordSecret
 	TextSecret     *TextSecret
 }

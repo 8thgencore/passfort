@@ -9,6 +9,7 @@ CREATE TABLE
     email VARCHAR NOT NULL,
     password VARCHAR NOT NULL,
     master_password VARCHAR,
+    salt BYTEA,
     is_verified BOOLEAN DEFAULT false NOT NULL,
     role users_role_enum DEFAULT 'user',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now (),

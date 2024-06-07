@@ -118,7 +118,7 @@ func (svc *TokenService) RevokeToken(ctx context.Context, tokenID uuid.UUID) err
 // CheckJWTTokenRevoked checks if the JWT token is revoked.
 func (svc *TokenService) CheckJWTTokenRevoked(ctx context.Context, tokenID uuid.UUID) (bool, error) {
 	cacheKey := util.GenerateCacheKey("token", tokenID)
-	fmt.Println(cacheKey)
+
 	// Check if the value exists in the cache for the given key
 	exists, err := svc.cache.Exists(ctx, cacheKey)
 	if err != nil {

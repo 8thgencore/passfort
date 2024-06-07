@@ -7,31 +7,52 @@ import (
 
 	"github.com/8thgencore/passfort/internal/domain"
 	"github.com/8thgencore/passfort/internal/repository/storage/postgres/converter"
+	"github.com/8thgencore/passfort/internal/repository/storage/postgres/dao"
+	"github.com/8thgencore/passfort/pkg/cipherkit"
 	"github.com/google/uuid"
 )
 
 // CreateSecret creates a new secret
-func (ss *SecretService) CreateSecret(ctx context.Context, userID uuid.UUID, secret *domain.Secret) (*domain.Secret, error) {
-	if !ss.isUserPartOfCollection(ctx, userID, secret.CollectionID) {
+func (svc *SecretService) CreateSecret(ctx context.Context, userID uuid.UUID, secret *domain.Secret, encryptionKey []byte) (*domain.Secret, error) {
+	if !svc.isUserPartOfCollection(ctx, userID, secret.CollectionID) {
 		return nil, domain.ErrUnauthorized
 	}
 
 	secret.CreatedBy = userID
 	secret.UpdatedBy = userID
+
 	secretDAO := converter.ToSecretDAO(secret)
 
 	switch secret.SecretType {
 	case domain.PasswordSecretType:
-		newSecret, err := ss.secretStorage.CreatePasswordSecret(ctx, converter.ToPasswordSecretDAO(secret.PasswordSecret))
+		encryptPassword, err := cipherkit.Encrypt([]byte(secret.PasswordSecret.Password), encryptionKey)
 		if err != nil {
-			ss.log.Error("Error creating password secret:", "error", err.Error())
+			svc.log.Error("Error encrypt password secret:", "error", err.Error())
+			return nil, domain.ErrInternal
+		}
+
+		passwordSecretDAO := converter.ToPasswordSecretDAO(secret.PasswordSecret)
+		passwordSecretDAO.Password = encryptPassword
+
+		newSecret, err := svc.secretStorage.CreatePasswordSecret(ctx, passwordSecretDAO)
+		if err != nil {
+			svc.log.Error("Error creating text secret:", "error", err.Error())
 			return nil, domain.ErrInternal
 		}
 		secretDAO.LinkedSecretId = newSecret.ID
 	case domain.TextSecretType:
-		newSecret, err := ss.secretStorage.CreateTextSecret(ctx, converter.ToTextSecretDAO(secret.TextSecret))
+		encryptText, err := cipherkit.Encrypt([]byte(secret.TextSecret.Text), encryptionKey)
 		if err != nil {
-			ss.log.Error("Error creating text secret:", "error", err.Error())
+			svc.log.Error("Error encrypt text secret:", "error", err.Error())
+			return nil, domain.ErrInternal
+		}
+
+		textSecretDAO := converter.ToTextSecretDAO(secret.TextSecret)
+		textSecretDAO.Text = encryptText
+
+		newSecret, err := svc.secretStorage.CreateTextSecret(ctx, textSecretDAO)
+		if err != nil {
+			svc.log.Error("Error creating text secret:", "error", err.Error())
 			return nil, domain.ErrInternal
 		}
 		secretDAO.LinkedSecretId = newSecret.ID
@@ -39,10 +60,10 @@ func (ss *SecretService) CreateSecret(ctx context.Context, userID uuid.UUID, sec
 		return nil, domain.ErrInvalidSecretType
 	}
 
-	createdSecretDAO, err := ss.secretStorage.CreateSecret(ctx, secret.CollectionID, secretDAO)
+	createdSecretDAO, err := svc.secretStorage.CreateSecret(ctx, secret.CollectionID, secretDAO)
 
 	if err != nil {
-		ss.log.Error("Error creating secret:", "error", err.Error())
+		svc.log.Error("Error creating secret:", "error", err.Error())
 		return nil, domain.ErrInternal
 	}
 
@@ -50,14 +71,14 @@ func (ss *SecretService) CreateSecret(ctx context.Context, userID uuid.UUID, sec
 }
 
 // ListSecretsByCollectionID lists secrets for a specific collection ID
-func (ss *SecretService) ListSecretsByCollectionID(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, skip, limit uint64) ([]domain.Secret, error) {
-	if !ss.isUserPartOfCollection(ctx, userID, collectionID) {
+func (svc *SecretService) ListSecretsByCollectionID(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, skip, limit uint64) ([]domain.Secret, error) {
+	if !svc.isUserPartOfCollection(ctx, userID, collectionID) {
 		return nil, domain.ErrUnauthorized
 	}
 
-	secretsDAO, err := ss.secretStorage.ListSecretsByCollectionID(ctx, collectionID, skip, limit)
+	secretsDAO, err := svc.secretStorage.ListSecretsByCollectionID(ctx, collectionID, skip, limit)
 	if err != nil {
-		ss.log.Error(fmt.Sprintf("Error listing secrets for collection %d:", collectionID), "error", err.Error())
+		svc.log.Error(fmt.Sprintf("Error listing secrets for collection %d:", collectionID), "error", err.Error())
 		return nil, domain.ErrDataNotFound
 	}
 
@@ -70,46 +91,77 @@ func (ss *SecretService) ListSecretsByCollectionID(ctx context.Context, userID u
 }
 
 // GetSecret gets a secret by ID
-func (ss *SecretService) GetSecret(ctx context.Context, userID, collectionID, secretID uuid.UUID) (*domain.Secret, error) {
-	if !ss.isUserPartOfCollection(ctx, userID, collectionID) {
+func (svc *SecretService) GetSecret(ctx context.Context, userID, collectionID, secretID uuid.UUID, encryptionKey []byte) (*domain.Secret, error) {
+	if !svc.isUserPartOfCollection(ctx, userID, collectionID) {
 		return nil, domain.ErrUnauthorized
 	}
 
-	// Getting the main secret
-	secretDAO, err := ss.secretStorage.GetSecretByID(ctx, secretID)
+	secretDAO, err := svc.secretStorage.GetSecretByID(ctx, secretID)
 	if err != nil {
-		ss.log.Error(fmt.Sprintf("Error getting secret %d:", secretID), "error", err.Error())
+		svc.log.Error("Error getting secret by ID", "secretID", secretID, "error", err)
 		return nil, domain.ErrDataNotFound
 	}
 
-	// Depending on the type of secret, get additional data
 	switch secretDAO.SecretType {
-	case string(domain.PasswordSecretType):
-		passwordSecretDAO, err := ss.secretStorage.GetPasswordSecretByID(ctx, secretDAO.LinkedSecretId)
+	case dao.PasswordSecretType:
+		passwordSecretDAO, err := svc.getAndDecryptPasswordSecret(ctx, secretDAO.LinkedSecretId, encryptionKey)
 		if err != nil {
-			ss.log.Error(fmt.Sprintf("Error getting password secret %s:", secretDAO.LinkedSecretId), "error", err.Error())
-			return nil, domain.ErrDataNotFound
+			return nil, err
 		}
 		secretDAO.LinkedSecret = passwordSecretDAO
-	case string(domain.TextSecretType):
-		textSecretDAO, err := ss.secretStorage.GetTextSecretByID(ctx, secretDAO.LinkedSecretId)
+	case dao.TextSecretType:
+		textSecretDAO, err := svc.getAndDecryptTextSecret(ctx, secretDAO.LinkedSecretId, encryptionKey)
 		if err != nil {
-			ss.log.Error(fmt.Sprintf("Error getting text secret %s:", secretDAO.LinkedSecretId), "error", err.Error())
-			return nil, domain.ErrDataNotFound
+			return nil, err
 		}
 		secretDAO.LinkedSecret = textSecretDAO
 	default:
-		ss.log.Error(fmt.Sprintf("Invalid secret type %s for secret %s:", secretDAO.SecretType, secretID))
+		svc.log.Error("Invalid secret type", "secretType", secretDAO.SecretType, "secretID", secretID)
 		return nil, domain.ErrInvalidSecretType
 	}
 
-	return converter.ToSecret(secretDAO), nil
+	secret := converter.ToSecret(secretDAO)
+	return secret, nil
+}
+
+func (svc *SecretService) getAndDecryptPasswordSecret(ctx context.Context, linkedSecretID uuid.UUID, encryptionKey []byte) (*dao.PasswordSecretDAO, error) {
+	passwordSecretDAO, err := svc.secretStorage.GetPasswordSecretByID(ctx, linkedSecretID)
+	if err != nil {
+		svc.log.Error("Error getting password secret by ID", "linkedSecretID", linkedSecretID, "error", err)
+		return nil, domain.ErrDataNotFound
+	}
+
+	decryptPassword, err := cipherkit.Decrypt(passwordSecretDAO.Password, encryptionKey)
+	if err != nil {
+		svc.log.Error("Error decrypting password secret", "linkedSecretID", linkedSecretID, "error", err)
+		return nil, domain.ErrInternal
+	}
+
+	passwordSecretDAO.Password = decryptPassword
+	return passwordSecretDAO, nil
+}
+
+func (svc *SecretService) getAndDecryptTextSecret(ctx context.Context, linkedSecretID uuid.UUID, encryptionKey []byte) (*dao.TextSecretDAO, error) {
+	textSecretDAO, err := svc.secretStorage.GetTextSecretByID(ctx, linkedSecretID)
+	if err != nil {
+		svc.log.Error("Error getting text secret by ID", "linkedSecretID", linkedSecretID, "error", err)
+		return nil, domain.ErrDataNotFound
+	}
+
+	decryptText, err := cipherkit.Decrypt(textSecretDAO.Text, encryptionKey)
+	if err != nil {
+		svc.log.Error("Error decrypting text secret", "linkedSecretID", linkedSecretID, "error", err)
+		return nil, domain.ErrInternal
+	}
+
+	textSecretDAO.Text = decryptText
+	return textSecretDAO, nil
 }
 
 // UpdateSecret updates a secret
-func (ss *SecretService) UpdateSecret(ctx context.Context, userID, collectionID uuid.UUID, secret *domain.Secret) (*domain.Secret, error) {
+func (svc *SecretService) UpdateSecret(ctx context.Context, userID, collectionID uuid.UUID, secret *domain.Secret, encryptionKey []byte) (*domain.Secret, error) {
 	// Check if the user is part of the collection
-	if !ss.isUserPartOfCollection(ctx, userID, collectionID) {
+	if !svc.isUserPartOfCollection(ctx, userID, collectionID) {
 		return nil, domain.ErrUnauthorized
 	}
 
@@ -117,62 +169,89 @@ func (ss *SecretService) UpdateSecret(ctx context.Context, userID, collectionID 
 	secret.UpdatedBy = userID
 	secret.UpdatedAt = time.Now()
 
-	// Convert the domain.Secret to dao.SecretDAO
-	secretDAO := converter.ToSecretDAO(secret)
-
-	// Call the repository to update the secret
-	updatedSecretDAO, err := ss.secretStorage.UpdateSecret(ctx, secretDAO)
+	// Update the main secret
+	updatedSecretDAO, err := svc.secretStorage.UpdateSecret(ctx, converter.ToSecretDAO(secret))
 	if err != nil {
-		ss.log.Error("Error updating secret:", "error", err.Error())
+		svc.log.Error("Error updating secret:", "error", err.Error())
 		return nil, domain.ErrNoUpdatedData
 	}
+	secret.LinkedSecretId = updatedSecretDAO.LinkedSecretId
 
-	switch secret.SecretType {
-	case domain.PasswordSecretType:
-		if secret.PasswordSecret != nil {
-			passwordSecretDAO := converter.ToPasswordSecretDAO(&domain.PasswordSecret{
-				ID:       updatedSecretDAO.LinkedSecretId,
-				URL:      secret.PasswordSecret.URL,
-				Login:    secret.PasswordSecret.Login,
-				Password: secret.PasswordSecret.Password,
-			})
-			updatedPasswordSecretDAO, err := ss.secretStorage.UpdatePasswordSecret(ctx, passwordSecretDAO)
-			if err != nil {
-				ss.log.Error("Error updating password secret:", "error", err.Error())
-				return nil, domain.ErrNoUpdatedData
-			}
-			updatedSecretDAO.LinkedSecret = updatedPasswordSecretDAO
-		}
-	case domain.TextSecretType:
-		if secret.TextSecret != nil {
-			textSecretDAO := converter.ToTextSecretDAO(&domain.TextSecret{
-				ID:   updatedSecretDAO.LinkedSecretId,
-				Text: secret.TextSecret.Text,
-			})
-			updatedTextSecretDAO, err := ss.secretStorage.UpdateTextSecret(ctx, textSecretDAO)
-			if err != nil {
-				ss.log.Error("Error updating text secret:", "error", err.Error())
-				return nil, domain.ErrNoUpdatedData
-			}
-			updatedSecretDAO.LinkedSecret = updatedTextSecretDAO
-		}
-	default:
-		return nil, domain.ErrInvalidSecretType
+	// Update linked secret based on secret type
+	updatedLinkedSecret, err := svc.updateLinkedSecret(ctx, secret, encryptionKey)
+	if err != nil {
+		return nil, err
 	}
+	updatedSecretDAO.LinkedSecret = updatedLinkedSecret
 
 	// Convert the updated dao.SecretDAO back to domain.Secret and return it
 	return converter.ToSecret(updatedSecretDAO), nil
 }
 
+func (svc *SecretService) updateLinkedSecret(ctx context.Context, secret *domain.Secret, encryptionKey []byte) (dao.ISecret, error) {
+	switch secret.SecretType {
+	case domain.PasswordSecretType:
+		if secret.PasswordSecret != nil {
+			encryptedPassword, err := cipherkit.Encrypt([]byte(secret.PasswordSecret.Password), encryptionKey)
+			if err != nil {
+				svc.log.Error("Error encrypting password secret:", "error", err.Error())
+				return nil, domain.ErrInternal
+			}
+
+			passwordSecretDAO := converter.ToPasswordSecretDAO(secret.PasswordSecret)
+			passwordSecretDAO.ID = secret.LinkedSecretId
+			passwordSecretDAO.Password = encryptedPassword
+
+			updatedPasswordSecretDAO, err := svc.secretStorage.UpdatePasswordSecret(ctx, passwordSecretDAO)
+			if err != nil {
+				svc.log.Error("Error updating password secret:", "error", err.Error())
+				return nil, domain.ErrNoUpdatedData
+			}
+
+			// Restore plain password for returned value
+			updatedPasswordSecretDAO.Password = []byte(secret.PasswordSecret.Password)
+
+			return updatedPasswordSecretDAO, nil
+		}
+	case domain.TextSecretType:
+		if secret.TextSecret != nil {
+			encryptedText, err := cipherkit.Encrypt([]byte(secret.TextSecret.Text), encryptionKey)
+			if err != nil {
+				svc.log.Error("Error encrypting text secret:", "error", err.Error())
+				return nil, domain.ErrInternal
+			}
+
+			textSecretDAO := converter.ToTextSecretDAO(secret.TextSecret)
+			textSecretDAO.ID = secret.LinkedSecretId
+			textSecretDAO.Text = encryptedText
+
+			updatedTextSecretDAO, err := svc.secretStorage.UpdateTextSecret(ctx, textSecretDAO)
+			if err != nil {
+				svc.log.Error("Error updating text secret:", "error", err.Error())
+				return nil, domain.ErrNoUpdatedData
+			}
+
+			// Restore plain text for returned value
+			updatedTextSecretDAO.Text = []byte(secret.TextSecret.Text)
+
+			return updatedTextSecretDAO, nil
+		}
+	default:
+		return nil, domain.ErrInvalidSecretType
+	}
+
+	return nil, domain.ErrInvalidSecretType
+}
+
 // DeleteSecret deletes a secret
-func (ss *SecretService) DeleteSecret(ctx context.Context, userID, collectionID, secretID uuid.UUID) error {
-	if !ss.isUserPartOfCollection(ctx, userID, collectionID) {
+func (svc *SecretService) DeleteSecret(ctx context.Context, userID, collectionID, secretID uuid.UUID) error {
+	if !svc.isUserPartOfCollection(ctx, userID, collectionID) {
 		return domain.ErrUnauthorized
 	}
 
-	err := ss.secretStorage.DeleteSecret(ctx, secretID)
+	err := svc.secretStorage.DeleteSecret(ctx, secretID)
 	if err != nil {
-		ss.log.Error(fmt.Sprintf("Error deleting secrets %d:", secretID), "error", err.Error())
+		svc.log.Error(fmt.Sprintf("Error deleting secrets %d:", secretID), "error", err.Error())
 		return domain.ErrInternal
 	}
 
@@ -180,10 +259,10 @@ func (ss *SecretService) DeleteSecret(ctx context.Context, userID, collectionID,
 }
 
 // isUserPartOfCollection checks if the user is part of the given collection
-func (ss *SecretService) isUserPartOfCollection(ctx context.Context, userID, collectionID uuid.UUID) bool {
-	isPartOfCollection, err := ss.collectionStorage.IsUserPartOfCollection(ctx, userID, collectionID)
+func (svc *SecretService) isUserPartOfCollection(ctx context.Context, userID, collectionID uuid.UUID) bool {
+	isPartOfCollection, err := svc.collectionStorage.IsUserPartOfCollection(ctx, userID, collectionID)
 	if err != nil {
-		ss.log.Error(fmt.Sprintf("Error checking if user %d is part of collection %d:", userID, collectionID), "error", err.Error())
+		svc.log.Error(fmt.Sprintf("Error checking if user %d is part of collection %d:", userID, collectionID), "error", err.Error())
 		return false
 	}
 

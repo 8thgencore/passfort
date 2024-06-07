@@ -16,6 +16,18 @@ func NullString(value string) sql.NullString {
 	}
 }
 
+// nullBytes converts a byte slice to sql.NullByte for empty byte slice check
+func nullBytes(value []byte) sql.NullByte {
+	if len(value) == 0 {
+		return sql.NullByte{}
+	}
+
+	return sql.NullByte{
+		Byte:  value[0],
+		Valid: true,
+	}
+}
+
 // nullUint64 converts an uint64 to sql.NullInt64 for empty uint64 check
 func nullUint64(value uint64) sql.NullInt64 {
 	if value == 0 {

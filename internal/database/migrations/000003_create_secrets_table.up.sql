@@ -24,14 +24,14 @@ CREATE TABLE
         id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
         url VARCHAR NOT NULL,
         login VARCHAR NOT NULL,
-        password VARCHAR NOT NULL
+        password BYTEA NOT NULL
     );
 
 -- Create text_secrets table
 CREATE TABLE
     text_secrets (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
-        text VARCHAR NOT NULL
+        text BYTEA NOT NULL
     );
 
 -- Function to check secret links

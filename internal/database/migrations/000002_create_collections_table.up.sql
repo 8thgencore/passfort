@@ -13,7 +13,7 @@ CREATE TABLE
 -- Create users_collections table
 CREATE TABLE
     users_collections (
-        user_id UUID UNIQUE,
+        user_id UUID,
         collection_id UUID,
         created_at TIMESTAMPTZ NOT NULL DEFAULT now (),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT now (),

@@ -66,8 +66,8 @@ type MasterPasswordService interface {
 	ChangeMasterPassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error
 	// ActivateMasterPassword validates the master password for the given user
 	ActivateMasterPassword(ctx context.Context, userID uuid.UUID, password string) error
-	// IsMasterPasswordActivated checks if the master password for the given user has been recently validated
-	IsMasterPasswordActivated(ctx context.Context, userID uuid.UUID) (bool, error)
+	// GetEncryptionKey is required to encrypt or decrypt the password
+	GetEncryptionKey(ctx context.Context, userID uuid.UUID) ([]byte, error)
 }
 
 // UserService is an interface for interacting with user-related business logic
@@ -99,13 +99,13 @@ type CollectionService interface {
 // SecretService is an interface for interacting with secret-related business logic
 type SecretService interface {
 	// CreateSecret inserts a new secret into the database
-	CreateSecret(ctx context.Context, userID uuid.UUID, secret *domain.Secret) (*domain.Secret, error)
+	CreateSecret(ctx context.Context, userID uuid.UUID, secret *domain.Secret, encryptionKey []byte) (*domain.Secret, error)
 	// ListSecretsByCollectionID returns a list of secrets by collection ID with pagination
 	ListSecretsByCollectionID(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, skip, limit uint64) ([]domain.Secret, error)
 	// GetSecret returns a secret by id
-	GetSecret(ctx context.Context, userID, collectionID, secretID uuid.UUID) (*domain.Secret, error)
+	GetSecret(ctx context.Context, userID, collectionID, secretID uuid.UUID, encryptionKey []byte) (*domain.Secret, error)
 	// UpdateSecret updates a secret
-	UpdateSecret(ctx context.Context, userID, collectionID uuid.UUID, secret *domain.Secret) (*domain.Secret, error)
+	UpdateSecret(ctx context.Context, userID, collectionID uuid.UUID, secret *domain.Secret, encryptionKey []byte) (*domain.Secret, error)
 	// DeleteSecret deletes a secret
 	DeleteSecret(ctx context.Context, userID, collectionID, secretID uuid.UUID) error
 }

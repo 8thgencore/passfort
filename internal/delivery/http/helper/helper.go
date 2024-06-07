@@ -13,6 +13,11 @@ func GetAuthPayload(ctx *gin.Context, key string) *domain.UserClaims {
 	return ctx.MustGet(key).(*domain.UserClaims)
 }
 
+// GetEncryptionKey is a helper function to get the encryption key from the context
+func GetEncryptionKey(ctx *gin.Context, key string) string {
+	return ctx.MustGet(key).(string)
+}
+
 // StringToUint64 is a helper function to convert a string to uint64
 func StringToUint64(str string) (uint64, error) {
 	num, err := strconv.ParseUint(str, 10, 64)

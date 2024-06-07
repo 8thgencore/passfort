@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/8thgencore/passfort/internal/database"
@@ -48,12 +47,12 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *dao.UserDAO) (*da
 		&userDao.Email,
 		&userDao.Password,
 		&userDao.MasterPassword,
+		&userDao.Salt,
 		&userDao.IsVerified,
 		&userDao.Role,
 		&userDao.CreatedAt,
 		&userDao.UpdatedAt,
 	)
-	fmt.Println(err)
 	if err != nil {
 		if errCode := r.db.ErrorCode(err); errCode == "23505" {
 			return nil, domain.ErrConflictingData
@@ -84,6 +83,7 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*dao.Us
 		&userDao.Email,
 		&userDao.Password,
 		&userDao.MasterPassword,
+		&userDao.Salt,
 		&userDao.IsVerified,
 		&userDao.Role,
 		&userDao.CreatedAt,
@@ -119,6 +119,7 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*dao
 		&userDao.Email,
 		&userDao.Password,
 		&userDao.MasterPassword,
+		&userDao.Salt,
 		&userDao.IsVerified,
 		&userDao.Role,
 		&userDao.CreatedAt,
@@ -163,6 +164,7 @@ func (r *UserRepository) ListUsers(ctx context.Context, skip, limit uint64) ([]d
 			&userDao.Email,
 			&userDao.Password,
 			&userDao.MasterPassword,
+			&userDao.Salt,
 			&userDao.IsVerified,
 			&userDao.Role,
 			&userDao.CreatedAt,
@@ -187,6 +189,7 @@ func (r *UserRepository) UpdateUser(ctx context.Context, user *dao.UserDAO) (*da
 	email := NullString(user.Email)
 	password := NullString(user.Password)
 	masterPassword := user.MasterPassword
+	salt := user.Salt
 	isVerified := nullBool(user.IsVerified)
 	role := NullString(string(user.Role))
 
@@ -195,6 +198,7 @@ func (r *UserRepository) UpdateUser(ctx context.Context, user *dao.UserDAO) (*da
 		Set("email", sq.Expr("COALESCE(?, email)", email)).
 		Set("password", sq.Expr("COALESCE(?, password)", password)).
 		Set("master_password", sq.Expr("COALESCE(?, master_password)", masterPassword)).
+		Set("salt", sq.Expr("COALESCE(?, salt)", salt)).
 		Set("is_verified", sq.Expr("COALESCE(?, is_verified)", isVerified)).
 		Set("role", sq.Expr("COALESCE(?, role)", role)).
 		Set("updated_at", time.Now()).
@@ -212,6 +216,7 @@ func (r *UserRepository) UpdateUser(ctx context.Context, user *dao.UserDAO) (*da
 		&userDao.Email,
 		&userDao.Password,
 		&userDao.MasterPassword,
+		&userDao.Salt,
 		&userDao.IsVerified,
 		&userDao.Role,
 		&userDao.CreatedAt,

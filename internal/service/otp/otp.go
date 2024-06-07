@@ -2,7 +2,6 @@ package otp
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/8thgencore/passfort/internal/domain"
@@ -68,7 +67,6 @@ func (svc *OtpService) CheckCacheForKey(ctx context.Context, userID uuid.UUID) (
 
 	// Check if the value exists in the cache for the given key
 	exists, err := svc.cache.Exists(ctx, key)
-	fmt.Println(exists)
 	if err != nil {
 		svc.log.Error("Error checking cache for key:", "error", err.Error())
 		return false, domain.ErrInternal

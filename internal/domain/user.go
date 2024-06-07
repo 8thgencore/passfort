@@ -12,6 +12,7 @@ type User struct {
 	Email          string       `json:"email"`
 	Password       string       `json:"-"` // Hide the password field
 	MasterPassword string       `json:"-"` // Hide the master password field
+	Salt           []byte       `json:"-"`  // Hide the salt field
 	IsVerified     bool         `json:"is_verified"`
 	Role           UserRoleEnum `json:"role"`
 	CreatedAt      time.Time    `json:"created_at"`

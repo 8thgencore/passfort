@@ -13,6 +13,7 @@ type UserDAO struct {
 	Email          string         `db:"email"`
 	Password       string         `db:"password"`
 	MasterPassword sql.NullString `db:"master_password"`
+	Salt           []byte         `db:"salt"`
 	IsVerified     bool           `db:"is_verified"`
 	Role           string         `db:"role"`
 	CreatedAt      time.Time      `db:"created_at"`

@@ -8,6 +8,7 @@ import (
 	"github.com/8thgencore/passfort/internal/delivery/http/response"
 	"github.com/8thgencore/passfort/internal/domain"
 	"github.com/8thgencore/passfort/internal/service"
+	"github.com/8thgencore/passfort/pkg/base64_util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -106,7 +107,13 @@ func (sh *SecretHandler) CreateSecret(ctx *gin.Context) {
 		return
 	}
 
-	createdSecret, err := sh.svc.CreateSecret(ctx, authPayload.UserID, newSecret)
+	encryptionKey, err := base64_util.Base64ToBytes(helper.GetEncryptionKey(ctx, middleware.EncryptionKey))
+	if err != nil {
+		response.HandleError(ctx, domain.ErrInternal)
+		return
+	}
+
+	createdSecret, err := sh.svc.CreateSecret(ctx, authPayload.UserID, newSecret, encryptionKey)
 	if err != nil {
 		response.HandleError(ctx, err)
 		return
@@ -214,7 +221,13 @@ func (sh *SecretHandler) GetSecret(ctx *gin.Context) {
 
 	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
 
-	secret, err := sh.svc.GetSecret(ctx, authPayload.UserID, collectionID, secretID)
+	encryptionKey, err := base64_util.Base64ToBytes(helper.GetEncryptionKey(ctx, middleware.EncryptionKey))
+	if err != nil {
+		response.HandleError(ctx, domain.ErrInternal)
+		return
+	}
+
+	secret, err := sh.svc.GetSecret(ctx, authPayload.UserID, collectionID, secretID, encryptionKey)
 	if err != nil {
 		response.HandleError(ctx, err)
 		return
@@ -313,7 +326,13 @@ func (sh *SecretHandler) UpdateSecret(ctx *gin.Context) {
 		return
 	}
 
-	updatedSecret, err := sh.svc.UpdateSecret(ctx, authPayload.UserID, collectionID, secret)
+	encryptionKey, err := base64_util.Base64ToBytes(helper.GetEncryptionKey(ctx, middleware.EncryptionKey))
+	if err != nil {
+		response.HandleError(ctx, domain.ErrInternal)
+		return
+	}
+
+	updatedSecret, err := sh.svc.UpdateSecret(ctx, authPayload.UserID, collectionID, secret, encryptionKey)
 	if err != nil {
 		response.HandleError(ctx, err)
 		return

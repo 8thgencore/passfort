@@ -129,7 +129,7 @@ func Run(configPath string) {
 
 	// Secret
 	secretRepo := postgres.NewSecretRepository(db)
-	secretService := secretService.NewSecretService(log, secretRepo, collectionRepo)
+	secretService := secretService.NewSecretService(log, secretRepo, collectionRepo, cache)
 	secretHandler := handler.NewSecretHandler(secretService)
 
 	// Init router
