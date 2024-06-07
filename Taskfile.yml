@@ -7,7 +7,7 @@ vars:
   DSN: "{{.DB_CONNECTION}}://{{.DB_USER}}:{{.DB_PASSWORD}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME}}?sslmode=disable"
 
 dotenv:
-  - ".env"
+  - ".env.local"
 
 tasks:
   default:
@@ -19,7 +19,7 @@ tasks:
     desc: "Install dependencies"
     cmds:
       - go install github.com/go-task/task/v3/cmd/task@latest
-      - go install github.com/cosmtrek/air@latest
+      - go install github.com/air-verse/air@latest
       - go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
       - go install github.com/swaggo/swag/cmd/swag@latest
 
@@ -84,6 +84,13 @@ tasks:
     desc: "Start development server"
     cmd: air
 
+  local:
+    desc: "Start local development server"
+    cmd: |
+      export $(xargs < .env.local)
+      export CONFIG_PATH=./config/config.yaml   
+      air
+
   lint:
     desc: "Run linter"
     cmd: golangci-lint run ./...
@@ -107,12 +114,6 @@ tasks:
     cmds:
       - swag fmt
       - swag init -g ./internal/app/app.go  -o ./docs --parseInternal true
-
-  # proto:
-  #   desc: "Generate proto files"
-  #   cmds:
-  #     - cd internal/clients/mail/grpc
-  #     - protoc -I proto proto/*.proto --go_out=./gen --go_opt=paths=source_relative --go-grpc_out=./gen --go-grpc_opt=paths=source_relative
 
   mock:
     desc: "Generate mocks files"

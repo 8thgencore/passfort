@@ -9,9 +9,6 @@ http:
   port: 8080
   allow_origins: "*" # Example: 127.0.0.1, example.com
 
-cache:
-  address: "redis:6379"
-
 token:
   access_token_ttl: 30m
   refresh_token_ttl: 720h

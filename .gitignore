@@ -28,6 +28,7 @@ tmp/
 
 # exclude any development-specific files
 *.env
+*.env.local
 *.log
 *.out
 *.test

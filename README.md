@@ -41,6 +41,7 @@ PassFort is a secure password and secret management application designed to stor
     DB_USER=user
     DB_PASSWORD=password
 
+    REDIS_ADDRESS=redis:6379
     REDIS_PASSWORD=password
 
     TOKEN_SIGNING_KEY=eab9adf86028e9409c785431114c9426
@@ -52,6 +53,15 @@ PassFort is a secure password and secret management application designed to stor
 
    ```sh
    task dev
+   ```
+
+## Local development
+
+1. Create `.env.local` file
+
+2. Run the application:
+   ```sh
+   task local
    ```
 
 ## License
