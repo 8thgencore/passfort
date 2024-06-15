@@ -190,7 +190,7 @@ func (ah *AuthHandler) ResendOTPCode(ctx *gin.Context) {
 //	@Failure		400	{object}	response.ErrorResponse	"Validation error"
 //	@Failure		401	{object}	response.ErrorResponse	"Unauthorized error"
 //	@Failure		500	{object}	response.ErrorResponse	"Internal server error"
-//	@Router			/auth/refresh-token [get]
+//	@Router			/auth/refresh-token [post]
 func (ah *AuthHandler) RefreshToken(ctx *gin.Context) {
 	authorizationHeader := ctx.GetHeader(middleware.AuthorizationHeaderKey)
 

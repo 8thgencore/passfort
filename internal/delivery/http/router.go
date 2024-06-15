@@ -47,6 +47,11 @@ func NewRouter(
 	originsList := strings.Split(allowOrigins, ",")
 	ginConfig.AllowOrigins = originsList
 
+	// Allow other headers and methods as needed
+	ginConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
+	ginConfig.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	ginConfig.AllowCredentials = true
+
 	// Init router
 	router := gin.New()
 	router.Use(sloggin.New(log), gin.Recovery(), cors.New(ginConfig))
@@ -84,7 +89,7 @@ func NewRouter(
 
 			authUser := auth.Group("/").Use(authMiddleware)
 			{
-				authUser.GET("/refresh-token", authHandler.RefreshToken)
+				authUser.POST("/refresh-token", authHandler.RefreshToken)
 				authUser.POST("/logout", authHandler.Logout)
 				authUser.PUT("/change-password", authHandler.ChangePassword)
 			}
