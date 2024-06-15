@@ -74,7 +74,7 @@ type (
 
 	//  Clients
 	Client struct {
-		Address      string        `yaml:"address"`
+		Address      string        `yaml:"address"        env:"CLIENT_MAIL_ADDRESS"`
 		Timeout      time.Duration `yaml:"timeout"`
 		RetriesCount int           `yaml:"retries_count"`
 		Insecure     bool          `yaml:"insecure"`

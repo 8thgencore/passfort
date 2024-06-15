@@ -7,7 +7,7 @@ vars:
   DSN: "{{.DB_CONNECTION}}://{{.DB_USER}}:{{.DB_PASSWORD}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME}}?sslmode=disable"
 
 dotenv:
-  - ".env.local"
+  - ".env"
 
 tasks:
   default:
@@ -86,7 +86,9 @@ tasks:
 
   local:
     desc: "Start local development server"
+    dotenv: [".env.local"]
     cmd: |
+      docker compose -f docker-compose.local.yaml up -d --build
       export $(xargs < .env.local)
       export CONFIG_PATH=./config/config.yaml   
       air
