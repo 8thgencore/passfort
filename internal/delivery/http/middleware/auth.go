@@ -5,7 +5,7 @@ import (
 
 	"github.com/8thgencore/passfort/internal/delivery/http/response"
 	"github.com/8thgencore/passfort/internal/domain"
-	"github.com/8thgencore/passfort/internal/service/token"
+	"github.com/8thgencore/passfort/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,7 +19,7 @@ const (
 )
 
 // AuthMiddleware is a middleware to check if the user is authenticated
-func AuthMiddleware(tokenService token.TokenService) gin.HandlerFunc {
+func AuthMiddleware(tokenService service.TokenService) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authorizationHeader := ctx.GetHeader(AuthorizationHeaderKey)
 

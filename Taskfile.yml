@@ -81,10 +81,6 @@ tasks:
     cmd: docker exec -it passfort_cache redis-cli
 
   dev:
-    desc: "Start development server"
-    cmd: air
-
-  local:
     desc: "Start local development server"
     dotenv: [".env.local"]
     cmd: |

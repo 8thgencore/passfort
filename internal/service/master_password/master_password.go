@@ -101,6 +101,12 @@ func (svc *MasterPasswordService) ChangeMasterPassword(ctx context.Context, user
 		return domain.ErrInternal
 	}
 
+	err = svc.secretSvc.ReencryptAllSecrets(ctx, userID, []byte(oldPassword), []byte(newPassword))
+	if err != nil {
+		svc.log.Error("failed to start reencrypt all secrets", "error", err.Error())
+		return domain.ErrInternal
+	}
+
 	return nil
 }
 

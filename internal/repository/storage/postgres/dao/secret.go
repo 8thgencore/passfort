@@ -16,23 +16,18 @@ const (
 
 // SecretDAO is a model of a secret in a data store.
 type SecretDAO struct {
-	ID             uuid.UUID  `db:"id"`
-	CollectionID   uuid.UUID  `db:"collection_id"`
-	SecretType     SecretType `db:"secret_type"`
-	Name           string     `db:"name"`
-	Description    string     `db:"description"`
-	CreatedBy      uuid.UUID  `db:"created_by"`
-	UpdatedBy      uuid.UUID  `db:"updated_by"`
-	CreatedAt      time.Time  `db:"created_at"`
-	UpdatedAt      time.Time  `db:"updated_at"`
-	LinkedSecretId uuid.UUID  `db:"linked_secret_id"`
-	LinkedSecret   ISecret     `db:"-"`
-}
-
-// ISecret is an interface that all secret types implement.
-type ISecret interface {
-	// GetID() uuid.UUID
-	// SetID(id uuid.UUID)
+	ID             uuid.UUID         `db:"id"`
+	CollectionID   uuid.UUID         `db:"collection_id"`
+	SecretType     SecretType        `db:"secret_type"`
+	Name           string            `db:"name"`
+	Description    string            `db:"description"`
+	CreatedBy      uuid.UUID         `db:"created_by"`
+	UpdatedBy      uuid.UUID         `db:"updated_by"`
+	CreatedAt      time.Time         `db:"created_at"`
+	UpdatedAt      time.Time         `db:"updated_at"`
+	LinkedSecretId uuid.UUID         `db:"linked_secret_id"`
+	PasswordSecret PasswordSecretDAO `db:"-"`
+	TextSecret     TextSecretDAO     `db:"-"`
 }
 
 // PasswordSecretDAO represents a password secret.

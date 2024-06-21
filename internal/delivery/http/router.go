@@ -9,7 +9,6 @@ import (
 	"github.com/8thgencore/passfort/internal/delivery/http/helper"
 	"github.com/8thgencore/passfort/internal/delivery/http/middleware"
 	"github.com/8thgencore/passfort/internal/service"
-	"github.com/8thgencore/passfort/internal/service/token"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -28,7 +27,7 @@ type Router struct {
 func NewRouter(
 	log *slog.Logger,
 	cfg *config.Config,
-	tokenService token.TokenService,
+	tokenService service.TokenService,
 	masterPasswordService service.MasterPasswordService,
 	userHander handler.UserHandler,
 	authHandler handler.AuthHandler,
@@ -86,10 +85,10 @@ func NewRouter(
 			auth.POST("/register/resend-otp", authHandler.ResendOTPCode)
 			auth.POST("/forgot-password", authHandler.ForgotPassword)
 			auth.POST("/reset-password", authHandler.ResetPassword)
+			auth.POST("/refresh-token", authHandler.RefreshToken)
 
-			authUser := auth.Group("/").Use(authMiddleware)
+			authUser := auth.Use(authMiddleware)
 			{
-				authUser.POST("/refresh-token", authHandler.RefreshToken)
 				authUser.POST("/logout", authHandler.Logout)
 				authUser.PUT("/change-password", authHandler.ChangePassword)
 			}
@@ -98,15 +97,15 @@ func NewRouter(
 		// Master Password Routes
 		masterPassword := v1.Group("/master-password").Use(authMiddleware)
 		{
-			masterPassword.POST("/", masterPasswordHandler.CreateMasterPassword)
-			masterPassword.PUT("/", masterPasswordHandler.ChangeMasterPassword)
+			masterPassword.POST("", masterPasswordHandler.CreateMasterPassword)
+			masterPassword.PUT("", masterPasswordHandler.ChangeMasterPassword)
 			masterPassword.POST("/activate", masterPasswordHandler.ActivateMasterPassword)
 		}
 
 		// User Routes
 		usersGroup := v1.Group("/users")
 		{
-			users := usersGroup.Group("/").Use(authMiddleware)
+			users := usersGroup.Use(authMiddleware)
 			{
 				users.GET("/me", userHander.GetUserMe)
 				users.GET("/:id", userHander.GetUser)
@@ -114,7 +113,7 @@ func NewRouter(
 
 			admin := users.Use(adminMiddleware)
 			{
-				admin.GET("/", userHander.ListUsers)
+				admin.GET("", userHander.ListUsers)
 				admin.PUT("/:id", userHander.UpdateUser)
 				admin.DELETE("/:id", userHander.DeleteUser)
 			}
@@ -126,7 +125,7 @@ func NewRouter(
 			collections := collectionsGroup.Use(authMiddleware).Use(masterPasswordMiddleware)
 			{
 				collections.GET("/me", collectionHandler.ListMeCollections)
-				collections.POST("/", collectionHandler.CreateCollection)
+				collections.POST("", collectionHandler.CreateCollection)
 				collections.GET("/:collection_id", collectionHandler.GetCollection)
 				collections.PUT("/:collection_id", collectionHandler.UpdateCollection)
 				collections.DELETE("/:collection_id", collectionHandler.DeleteCollection)
@@ -135,8 +134,8 @@ func NewRouter(
 			// Nest the /secrets routes under /collections/:id
 			secrets := collectionsGroup.Group("/:collection_id/secrets").Use(authMiddleware).Use(masterPasswordMiddleware)
 			{
-				secrets.GET("/", secretHandler.ListMeSecrets)
-				secrets.POST("/", secretHandler.CreateSecret)
+				secrets.GET("", secretHandler.ListMeSecrets)
+				secrets.POST("", secretHandler.CreateSecret)
 				secrets.GET("/:secret_id", secretHandler.GetSecret)
 				secrets.PUT("/:secret_id", secretHandler.UpdateSecret)
 				secrets.DELETE("/:secret_id", secretHandler.DeleteSecret)

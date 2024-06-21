@@ -78,11 +78,11 @@ func ToSecretDAO(secret *domain.Secret) *dao.SecretDAO {
 	switch secret.SecretType {
 	case domain.PasswordSecretType:
 		if secret.PasswordSecret != nil {
-			secretDAO.LinkedSecret = ToPasswordSecretDAO(secret.PasswordSecret)
+			secretDAO.PasswordSecret = *ToPasswordSecretDAO(secret.PasswordSecret)
 		}
 	case domain.TextSecretType:
 		if secret.TextSecret != nil {
-			secretDAO.LinkedSecret = ToTextSecretDAO(secret.TextSecret)
+			secretDAO.TextSecret = *ToTextSecretDAO(secret.TextSecret)
 		}
 	}
 
@@ -106,13 +106,9 @@ func ToSecret(secretDAO *dao.SecretDAO) *domain.Secret {
 
 	switch secretDAO.SecretType {
 	case dao.PasswordSecretType:
-		if ps, ok := secretDAO.LinkedSecret.(*dao.PasswordSecretDAO); ok {
-			secret.PasswordSecret = ToPasswordSecret(ps)
-		}
+		secret.PasswordSecret = ToPasswordSecret(&secretDAO.PasswordSecret)
 	case dao.TextSecretType:
-		if ts, ok := secretDAO.LinkedSecret.(*dao.TextSecretDAO); ok {
-			secret.TextSecret = ToTextSecret(ts)
-		}
+		secret.TextSecret = ToTextSecret(&secretDAO.TextSecret)
 	}
 
 	return secret

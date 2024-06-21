@@ -108,4 +108,6 @@ type SecretService interface {
 	UpdateSecret(ctx context.Context, userID, collectionID uuid.UUID, secret *domain.Secret, encryptionKey []byte) (*domain.Secret, error)
 	// DeleteSecret deletes a secret
 	DeleteSecret(ctx context.Context, userID, collectionID, secretID uuid.UUID) error
+	// ReencryptAllSecrets reencrypt all secrets
+	ReencryptAllSecrets(ctx context.Context, userID uuid.UUID, oldEncryptionKey, newEncryptionKey []byte) error
 }

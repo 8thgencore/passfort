@@ -6,6 +6,7 @@ import (
 
 	"github.com/8thgencore/passfort/internal/service/adapters/cache"
 	"github.com/8thgencore/passfort/internal/service/adapters/storage"
+	"github.com/8thgencore/passfort/internal/service/secret"
 )
 
 /**
@@ -17,6 +18,7 @@ type MasterPasswordService struct {
 	log               *slog.Logger
 	storage           storage.UserRepository
 	cache             cache.CacheRepository
+	secretSvc         secret.SecretService
 	masterPasswordTTL time.Duration
 }
 
@@ -25,12 +27,14 @@ func NewMasterPasswordService(
 	log *slog.Logger,
 	storage storage.UserRepository,
 	cache cache.CacheRepository,
+	secretSvc secret.SecretService,
 	masterPasswordTTL time.Duration,
 ) *MasterPasswordService {
 	return &MasterPasswordService{
 		log:               log,
 		storage:           storage,
 		cache:             cache,
+		secretSvc:         secretSvc,
 		masterPasswordTTL: masterPasswordTTL,
 	}
 }

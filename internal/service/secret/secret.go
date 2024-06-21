@@ -39,6 +39,7 @@ func (svc *SecretService) CreateSecret(ctx context.Context, userID uuid.UUID, se
 			svc.log.Error("Error creating text secret:", "error", err.Error())
 			return nil, domain.ErrInternal
 		}
+
 		secretDAO.LinkedSecretId = newSecret.ID
 	case domain.TextSecretType:
 		encryptText, err := cipherkit.Encrypt([]byte(secret.TextSecret.Text), encryptionKey)
@@ -61,11 +62,13 @@ func (svc *SecretService) CreateSecret(ctx context.Context, userID uuid.UUID, se
 	}
 
 	createdSecretDAO, err := svc.secretStorage.CreateSecret(ctx, secret.CollectionID, secretDAO)
-
 	if err != nil {
 		svc.log.Error("Error creating secret:", "error", err.Error())
 		return nil, domain.ErrInternal
 	}
+
+	createdSecretDAO.TextSecret = secretDAO.TextSecret
+	createdSecretDAO.PasswordSecret = secretDAO.PasswordSecret
 
 	return converter.ToSecret(createdSecretDAO), nil
 }
@@ -108,13 +111,13 @@ func (svc *SecretService) GetSecret(ctx context.Context, userID, collectionID, s
 		if err != nil {
 			return nil, err
 		}
-		secretDAO.LinkedSecret = passwordSecretDAO
+		secretDAO.PasswordSecret = *passwordSecretDAO
 	case dao.TextSecretType:
 		textSecretDAO, err := svc.getAndDecryptTextSecret(ctx, secretDAO.LinkedSecretId, encryptionKey)
 		if err != nil {
 			return nil, err
 		}
-		secretDAO.LinkedSecret = textSecretDAO
+		secretDAO.TextSecret = *textSecretDAO
 	default:
 		svc.log.Error("Invalid secret type", "secretType", secretDAO.SecretType, "secretID", secretID)
 		return nil, domain.ErrInvalidSecretType
@@ -175,71 +178,80 @@ func (svc *SecretService) UpdateSecret(ctx context.Context, userID, collectionID
 		svc.log.Error("Error updating secret:", "error", err.Error())
 		return nil, domain.ErrNoUpdatedData
 	}
+
 	secret.LinkedSecretId = updatedSecretDAO.LinkedSecretId
 
 	// Update linked secret based on secret type
-	updatedLinkedSecret, err := svc.updateLinkedSecret(ctx, secret, encryptionKey)
-	if err != nil {
-		return nil, err
+	switch secret.SecretType {
+	case domain.PasswordSecretType:
+		updatedPasswordSecret, err := svc.updatePasswordSecret(ctx, secret, encryptionKey)
+		if err != nil {
+			return nil, err
+		}
+		updatedSecretDAO.PasswordSecret = *updatedPasswordSecret
+	case domain.TextSecretType:
+		updatedTextSecret, err := svc.updateTextSecret(ctx, secret, encryptionKey)
+		if err != nil {
+			return nil, err
+		}
+		updatedSecretDAO.TextSecret = *updatedTextSecret
+	default:
+		return nil, domain.ErrInvalidSecretType
 	}
-	updatedSecretDAO.LinkedSecret = updatedLinkedSecret
 
 	// Convert the updated dao.SecretDAO back to domain.Secret and return it
 	return converter.ToSecret(updatedSecretDAO), nil
 }
 
-func (svc *SecretService) updateLinkedSecret(ctx context.Context, secret *domain.Secret, encryptionKey []byte) (dao.ISecret, error) {
-	switch secret.SecretType {
-	case domain.PasswordSecretType:
-		if secret.PasswordSecret != nil {
-			encryptedPassword, err := cipherkit.Encrypt([]byte(secret.PasswordSecret.Password), encryptionKey)
-			if err != nil {
-				svc.log.Error("Error encrypting password secret:", "error", err.Error())
-				return nil, domain.ErrInternal
-			}
-
-			passwordSecretDAO := converter.ToPasswordSecretDAO(secret.PasswordSecret)
-			passwordSecretDAO.ID = secret.LinkedSecretId
-			passwordSecretDAO.Password = encryptedPassword
-
-			updatedPasswordSecretDAO, err := svc.secretStorage.UpdatePasswordSecret(ctx, passwordSecretDAO)
-			if err != nil {
-				svc.log.Error("Error updating password secret:", "error", err.Error())
-				return nil, domain.ErrNoUpdatedData
-			}
-
-			// Restore plain password for returned value
-			updatedPasswordSecretDAO.Password = []byte(secret.PasswordSecret.Password)
-
-			return updatedPasswordSecretDAO, nil
+func (svc *SecretService) updatePasswordSecret(ctx context.Context, secret *domain.Secret, encryptionKey []byte) (*dao.PasswordSecretDAO, error) {
+	if secret.PasswordSecret != nil {
+		encryptedPassword, err := cipherkit.Encrypt([]byte(secret.PasswordSecret.Password), encryptionKey)
+		if err != nil {
+			svc.log.Error("Error encrypting password secret:", "error", err.Error())
+			return nil, domain.ErrInternal
 		}
-	case domain.TextSecretType:
-		if secret.TextSecret != nil {
-			encryptedText, err := cipherkit.Encrypt([]byte(secret.TextSecret.Text), encryptionKey)
-			if err != nil {
-				svc.log.Error("Error encrypting text secret:", "error", err.Error())
-				return nil, domain.ErrInternal
-			}
 
-			textSecretDAO := converter.ToTextSecretDAO(secret.TextSecret)
-			textSecretDAO.ID = secret.LinkedSecretId
-			textSecretDAO.Text = encryptedText
+		passwordSecretDAO := converter.ToPasswordSecretDAO(secret.PasswordSecret)
+		passwordSecretDAO.ID = secret.LinkedSecretId
+		passwordSecretDAO.Password = encryptedPassword
 
-			updatedTextSecretDAO, err := svc.secretStorage.UpdateTextSecret(ctx, textSecretDAO)
-			if err != nil {
-				svc.log.Error("Error updating text secret:", "error", err.Error())
-				return nil, domain.ErrNoUpdatedData
-			}
-
-			// Restore plain text for returned value
-			updatedTextSecretDAO.Text = []byte(secret.TextSecret.Text)
-
-			return updatedTextSecretDAO, nil
+		updatedPasswordSecretDAO, err := svc.secretStorage.UpdatePasswordSecret(ctx, passwordSecretDAO)
+		if err != nil {
+			svc.log.Error("Error updating password secret:", "error", err.Error())
+			return nil, domain.ErrNoUpdatedData
 		}
-	default:
-		return nil, domain.ErrInvalidSecretType
+
+		// Restore plain password for returned value
+		updatedPasswordSecretDAO.Password = []byte(secret.PasswordSecret.Password)
+
+		return updatedPasswordSecretDAO, nil
 	}
+	return nil, domain.ErrInvalidSecretType
+}
 
+func (svc *SecretService) updateTextSecret(ctx context.Context, secret *domain.Secret, encryptionKey []byte) (*dao.TextSecretDAO, error) {
+	if secret.TextSecret != nil {
+		encryptedText, err := cipherkit.Encrypt([]byte(secret.TextSecret.Text), encryptionKey)
+		if err != nil {
+			svc.log.Error("Error encrypting text secret:", "error", err.Error())
+			return nil, domain.ErrInternal
+		}
+
+		textSecretDAO := converter.ToTextSecretDAO(secret.TextSecret)
+		textSecretDAO.ID = secret.LinkedSecretId
+		textSecretDAO.Text = encryptedText
+
+		updatedTextSecretDAO, err := svc.secretStorage.UpdateTextSecret(ctx, textSecretDAO)
+		if err != nil {
+			svc.log.Error("Error updating text secret:", "error", err.Error())
+			return nil, domain.ErrNoUpdatedData
+		}
+
+		// Restore plain text for returned value
+		updatedTextSecretDAO.Text = []byte(secret.TextSecret.Text)
+
+		return updatedTextSecretDAO, nil
+	}
 	return nil, domain.ErrInvalidSecretType
 }
 

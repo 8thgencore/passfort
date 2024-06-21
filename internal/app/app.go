@@ -15,14 +15,15 @@ import (
 	"github.com/8thgencore/passfort/internal/delivery/http/handler"
 	"github.com/8thgencore/passfort/internal/repository/cache/redis"
 	"github.com/8thgencore/passfort/internal/repository/storage/postgres"
-	authService "github.com/8thgencore/passfort/internal/service/auth"
-	collectionService "github.com/8thgencore/passfort/internal/service/collection"
-	masterPasswordService "github.com/8thgencore/passfort/internal/service/master_password"
-	"github.com/8thgencore/passfort/internal/service/otp"
-	secretService "github.com/8thgencore/passfort/internal/service/secret"
-	"github.com/8thgencore/passfort/internal/service/token"
-	userService "github.com/8thgencore/passfort/internal/service/user"
+	authSvc "github.com/8thgencore/passfort/internal/service/auth"
+	collectionSvc "github.com/8thgencore/passfort/internal/service/collection"
+	masterPasswordSvc "github.com/8thgencore/passfort/internal/service/master_password"
+	otpSvc "github.com/8thgencore/passfort/internal/service/otp"
+	secretSvc "github.com/8thgencore/passfort/internal/service/secret"
+	tokenSvc "github.com/8thgencore/passfort/internal/service/token"
+	userSvc "github.com/8thgencore/passfort/internal/service/user"
 	"github.com/8thgencore/passfort/pkg/logger/slogpretty"
+	"github.com/hibiken/asynq"
 )
 
 // @title						PassFort API
@@ -89,10 +90,10 @@ func Run(configPath string) {
 	log.Info("Successfully connected to the cache server")
 
 	// Init token service
-	tokenService := token.NewTokenService(log, cfg.Token.SigningKey, cfg.Token.AccessTokenTTL, cfg.Token.RefreshTokenTTL, cache)
+	tokenService := tokenSvc.NewTokenService(log, cfg.Token.SigningKey, cfg.Token.AccessTokenTTL, cfg.Token.RefreshTokenTTL, cache)
 
 	// Otp service
-	otpService := otp.NewOtpService(log, cache)
+	otpService := otpSvc.NewOtpService(log, cache)
 
 	// Register external microservices
 	mailClient, err := mailGrpc.New(ctx,
@@ -108,35 +109,51 @@ func Run(configPath string) {
 
 	log.Info("Successfully initializing the mail client")
 
+	// Init asynq client and server and register task handlers
+	asynqCfg := asynq.RedisClientOpt{Addr: cfg.Cache.Addr, Password: cfg.Cache.Password}
+	asynqClient := asynq.NewClient(asynqCfg)
+	asynqServer := asynq.NewServer(asynqCfg, asynq.Config{Concurrency: 10})
+
 	// Dependency injection
 	// User
 	userRepo := postgres.NewUserRepository(db)
-	userService := userService.NewUserService(log, userRepo, cache)
+	userService := userSvc.NewUserService(log, userRepo, cache)
 	userHandler := handler.NewUserHandler(userService)
 
 	// Auth
-	authService := authService.NewAuthService(log, userRepo, cache, tokenService, otpService, mailClient)
+	authService := authSvc.NewAuthService(log, userRepo, cache, tokenService, otpService, mailClient)
 	authHandler := handler.NewAuthHandler(authService)
-
-	// MasterPassword
-	masterPasswordService := masterPasswordService.NewMasterPasswordService(log, userRepo, cache, cfg.MasterPassword.MasterPasswordTTL)
-	masterPasswordHandler := handler.NewMasterPasswordHandler(masterPasswordService)
 
 	// Collection
 	collectionRepo := postgres.NewCollectionRepository(db)
-	collectionService := collectionService.NewCollectionService(log, collectionRepo)
+	collectionService := collectionSvc.NewCollectionService(log, collectionRepo)
 	collectionHandler := handler.NewCollectionHandler(collectionService)
 
 	// Secret
 	secretRepo := postgres.NewSecretRepository(db)
-	secretService := secretService.NewSecretService(log, secretRepo, collectionRepo, cache)
+	secretService := secretSvc.NewSecretService(log, secretRepo, collectionRepo, cache, asynqClient)
 	secretHandler := handler.NewSecretHandler(secretService)
+
+	// MasterPassword
+	masterPasswordService := masterPasswordSvc.NewMasterPasswordService(log, userRepo, cache, *secretService, cfg.MasterPassword.MasterPasswordTTL)
+	masterPasswordHandler := handler.NewMasterPasswordHandler(masterPasswordService)
+
+	mux := asynq.NewServeMux()
+	mux.HandleFunc(secretSvc.TypeReencryptSecrets, secretService.HandleReencryptSecretsTask)
+
+	go func() {
+		log.Info("Starting asynq server")
+		if err := asynqServer.Run(mux); err != nil {
+			log.Error("Could not run asynq server:", "error", err)
+			os.Exit(1)
+		}
+	}()
 
 	// Init router
 	router, err := http.NewRouter(
 		log,
 		cfg,
-		*tokenService,
+		tokenService,
 		masterPasswordService,
 		*userHandler,
 		*authHandler,

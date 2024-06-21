@@ -5,6 +5,7 @@ import (
 
 	"github.com/8thgencore/passfort/internal/service/adapters/cache"
 	"github.com/8thgencore/passfort/internal/service/adapters/storage"
+	"github.com/hibiken/asynq"
 )
 
 /**
@@ -16,6 +17,7 @@ type SecretService struct {
 	secretStorage     storage.SecretRepository
 	collectionStorage storage.CollectionRepository
 	cache             cache.CacheRepository
+	asynqClient       *asynq.Client
 }
 
 // NewSecretService creates a new secret service instance
@@ -24,11 +26,13 @@ func NewSecretService(
 	secretStorage storage.SecretRepository,
 	collectionStorage storage.CollectionRepository,
 	cache cache.CacheRepository,
+	asynqClient *asynq.Client,
 ) *SecretService {
 	return &SecretService{
 		log,
 		secretStorage,
 		collectionStorage,
 		cache,
+		asynqClient,
 	}
 }
