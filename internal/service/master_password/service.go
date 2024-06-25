@@ -16,7 +16,7 @@ import (
  */
 type MasterPasswordService struct {
 	log               *slog.Logger
-	storage           storage.UserRepository
+	userStorage       storage.UserRepository
 	cache             cache.CacheRepository
 	secretSvc         secret.SecretService
 	masterPasswordTTL time.Duration
@@ -25,14 +25,14 @@ type MasterPasswordService struct {
 // NewMasterPasswordService creates a new master password service instance
 func NewMasterPasswordService(
 	log *slog.Logger,
-	storage storage.UserRepository,
+	userStorage storage.UserRepository,
 	cache cache.CacheRepository,
 	secretSvc secret.SecretService,
 	masterPasswordTTL time.Duration,
 ) *MasterPasswordService {
 	return &MasterPasswordService{
 		log:               log,
-		storage:           storage,
+		userStorage:       userStorage,
 		cache:             cache,
 		secretSvc:         secretSvc,
 		masterPasswordTTL: masterPasswordTTL,

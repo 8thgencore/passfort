@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"errors"
+
 	"github.com/8thgencore/passfort/internal/domain"
 	"github.com/8thgencore/passfort/pkg/util"
 	"github.com/golang-jwt/jwt/v5"
@@ -20,29 +22,24 @@ func (svc *TokenService) GenerateToken(userID uuid.UUID, role domain.UserRoleEnu
 		return "", "", domain.ErrTokenCreation
 	}
 
-	var accessTokenTTL, refreshTokenTTL time.Duration
-	accessTokenTTL = svc.accessTokenTTL
-	refreshTokenTTL = svc.refreshTokenTTL
-
+	now := time.Now()
 	claims := token.Claims.(jwt.MapClaims)
-	claims["exp"] = time.Now().Add(accessTokenTTL).Unix()
-	claims["iat"] = time.Now().Unix()
+	claims["exp"] = now.Add(svc.accessTokenTTL).Unix()
+	claims["iat"] = now.Unix()
 	claims["id"] = tokenID
 	claims["user_id"] = userID
 	claims["role"] = role
 
 	accessToken, err := token.SignedString([]byte(svc.signingKey))
 	if err != nil {
-		return "", "", err
+		return "", "", errors.New("failed to sign access token")
 	}
 
-	// Reset the expiration time for the refresh token
-	claims = token.Claims.(jwt.MapClaims)
-	claims["exp"] = time.Now().Add(refreshTokenTTL).Unix()
+	claims["exp"] = now.Add(svc.refreshTokenTTL).Unix()
 
 	refreshToken, err := token.SignedString([]byte(svc.signingKey))
 	if err != nil {
-		return "", "", err
+		return "", "", errors.New("failed to sign refresh token")
 	}
 
 	return accessToken, refreshToken, nil
@@ -50,45 +47,44 @@ func (svc *TokenService) GenerateToken(userID uuid.UUID, role domain.UserRoleEnu
 
 // ParseUserClaims parses the access token and returns the user claims.
 func (svc *TokenService) ParseUserClaims(accessToken string) (*domain.UserClaims, error) {
-	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (i interface{}, err error) {
+	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-
 		return []byte(svc.signingKey), nil
 	})
 	if err != nil {
 		svc.log.Debug("Error parsing access token: %v", err)
-		return &domain.UserClaims{}, domain.ErrExpiredToken
+		return nil, domain.ErrExpiredToken
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
+	if !ok || !token.Valid {
 		svc.log.Debug("Error getting user claims from access token")
-		return &domain.UserClaims{}, domain.ErrInvalidToken
+		return nil, domain.ErrInvalidToken
 	}
 
 	tokenID, err := uuid.Parse(fmt.Sprintf("%v", claims["id"]))
 	if err != nil {
 		svc.log.Debug("Error parsing token ID: %v", err)
-		return &domain.UserClaims{}, domain.ErrInvalidToken
+		return nil, domain.ErrInvalidToken
 	}
 
 	userID, err := uuid.Parse(fmt.Sprintf("%v", claims["user_id"]))
 	if err != nil {
 		svc.log.Debug("Error parsing user ID: %v", err)
-		return &domain.UserClaims{}, domain.ErrInvalidToken
+		return nil, domain.ErrInvalidToken
 	}
 
 	roleStr, ok := claims["role"].(string)
 	if !ok {
 		svc.log.Debug("Error getting role from claims")
-		return &domain.UserClaims{}, domain.ErrInvalidToken
+		return nil, domain.ErrInvalidToken
 	}
 	role, err := domain.ParseUserRoleEnum(roleStr)
 	if err != nil {
 		svc.log.Debug("Error parsing user role: %v", err)
-		return &domain.UserClaims{}, domain.ErrInvalidToken
+		return nil, domain.ErrInvalidToken
 	}
 
 	return &domain.UserClaims{
@@ -100,16 +96,15 @@ func (svc *TokenService) ParseUserClaims(accessToken string) (*domain.UserClaims
 
 // RevokeToken revokes the specified JWT token.
 func (svc *TokenService) RevokeToken(ctx context.Context, tokenID uuid.UUID) error {
-	// Caching a revoked token
 	cacheKey := util.GenerateCacheKey("token", tokenID)
 	userSerialized, err := util.Serialize(tokenID)
 	if err != nil {
-		return domain.ErrInternal
+		return errors.New("failed to serialize token ID")
 	}
 
 	err = svc.cache.Set(ctx, cacheKey, userSerialized, svc.refreshTokenTTL)
 	if err != nil {
-		return domain.ErrInternal
+		return errors.New("failed to cache revoked token")
 	}
 
 	return nil
@@ -119,10 +114,9 @@ func (svc *TokenService) RevokeToken(ctx context.Context, tokenID uuid.UUID) err
 func (svc *TokenService) CheckJWTTokenRevoked(ctx context.Context, tokenID uuid.UUID) (bool, error) {
 	cacheKey := util.GenerateCacheKey("token", tokenID)
 
-	// Check if the value exists in the cache for the given key
 	exists, err := svc.cache.Exists(ctx, cacheKey)
 	if err != nil {
-		return false, domain.ErrInternal
+		return false, errors.New("failed to check if token is revoked")
 	}
 
 	return exists, nil

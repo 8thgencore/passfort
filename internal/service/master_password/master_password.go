@@ -12,9 +12,9 @@ import (
 
 // MasterPasswordExists checks if a master password already exists for the given user.
 func (svc *MasterPasswordService) MasterPasswordExists(ctx context.Context, userID uuid.UUID) (bool, error) {
-	user, err := svc.storage.GetUserByID(ctx, userID)
+	user, err := svc.userStorage.GetUserByID(ctx, userID)
 	if err != nil {
-		svc.log.Error("failed to check master password", "error", err.Error())
+		svc.log.Error("Failed to check master password", "error", err.Error())
 		return false, domain.ErrInternal
 	}
 
@@ -23,49 +23,47 @@ func (svc *MasterPasswordService) MasterPasswordExists(ctx context.Context, user
 
 // SaveMasterPassword saves or updates the master password for the given user.
 func (svc *MasterPasswordService) SaveMasterPassword(ctx context.Context, userID uuid.UUID, password string) error {
-	// Retrieve the user based on the userID
-	userDAO, err := svc.storage.GetUserByID(ctx, userID)
+	userDAO, err := svc.userStorage.GetUserByID(ctx, userID)
 	if err != nil {
-		svc.log.Error("failed get user", "error", err)
+		svc.log.Error("Failed to get user", "error", err.Error())
 		return domain.ErrInternal
 	}
+
 	user := converter.ToUser(userDAO)
 
 	hashedPassword, err := util.HashPassword(password)
 	if err != nil {
-		svc.log.Error("failed to hashing password", "error", err)
+		svc.log.Error("Failed to hash password", "error", err.Error())
 		return domain.ErrInternal
 	}
 
-	// Generation of a new salt
 	salt, err := cipherkit.GenerateSalt()
 	if err != nil {
-		svc.log.Error("failed to generate salt", "error", err)
+		svc.log.Error("Failed to generate salt", "error", err.Error())
 		return domain.ErrInternal
 	}
 
-	// Generating a new key
 	newKey := cipherkit.DeriveKey(password, salt)
 
-	// Store deriive key in cache with a TTL
 	encryptionKey := util.GenerateCacheKey("encryption_key", userID.String())
 	valueSerialized, err := util.Serialize(newKey)
 	if err != nil {
-		svc.log.Error("failed to serialize cache key", "error", err)
+		svc.log.Error("Failed to serialize cache key", "error", err.Error())
 		return domain.ErrInternal
 	}
 
 	err = svc.cache.Set(ctx, encryptionKey, valueSerialized, svc.masterPasswordTTL)
 	if err != nil {
-		svc.log.Error("failed to store master password activation status", "error", err.Error())
+		svc.log.Error("Failed to store master password activation status", "error", err.Error())
 		return domain.ErrInternal
 	}
 
 	user.MasterPassword = hashedPassword
 	user.Salt = salt
-	_, err = svc.storage.UpdateUser(ctx, converter.ToUserDAO(user))
+
+	_, err = svc.userStorage.UpdateUser(ctx, converter.ToUserDAO(user))
 	if err != nil {
-		svc.log.Error("failed to update user", "error", err.Error())
+		svc.log.Error("Failed to update user", "error", err.Error())
 		return domain.ErrInternal
 	}
 
@@ -74,36 +72,37 @@ func (svc *MasterPasswordService) SaveMasterPassword(ctx context.Context, userID
 
 // ChangeMasterPassword changes the master password for the given user.
 func (svc *MasterPasswordService) ChangeMasterPassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error {
-	// Retrieve the user based on the userID
-	userDAO, err := svc.storage.GetUserByID(ctx, userID)
+	userDAO, err := svc.userStorage.GetUserByID(ctx, userID)
 	if err != nil {
-		return err
+		return domain.ErrDataNotFound
 	}
+
 	user := converter.ToUser(userDAO)
 
-	// Verify the old master password
 	err = util.CompareHash(oldPassword, user.MasterPassword)
 	if err != nil {
 		return domain.ErrInvalidMasterPassword
 	}
 
-	// Hash the new master password
+	oldEncryptionKey := cipherkit.DeriveKey(oldPassword, user.Salt)
+	newEncryptionKey := cipherkit.DeriveKey(newPassword, user.Salt)
+
 	hashedNewPassword, err := util.HashPassword(newPassword)
 	if err != nil {
 		return domain.ErrInternal
 	}
 
-	// Update the master password
 	user.MasterPassword = hashedNewPassword
-	_, err = svc.storage.UpdateUser(ctx, converter.ToUserDAO(user))
+
+	_, err = svc.userStorage.UpdateUser(ctx, converter.ToUserDAO(user))
 	if err != nil {
-		svc.log.Error("failed to update user", "error", err.Error())
+		svc.log.Error("Failed to update user", "error", err.Error())
 		return domain.ErrInternal
 	}
 
-	err = svc.secretSvc.ReencryptAllSecrets(ctx, userID, []byte(oldPassword), []byte(newPassword))
+	err = svc.secretSvc.ReencryptAllSecrets(ctx, userID, oldEncryptionKey, newEncryptionKey)
 	if err != nil {
-		svc.log.Error("failed to start reencrypt all secrets", "error", err.Error())
+		svc.log.Error("Failed to start re-encrypt all secrets", "error", err.Error())
 		return domain.ErrInternal
 	}
 
@@ -112,56 +111,52 @@ func (svc *MasterPasswordService) ChangeMasterPassword(ctx context.Context, user
 
 // ActivateMasterPassword activates the master password for the given user.
 func (svc *MasterPasswordService) ActivateMasterPassword(ctx context.Context, userID uuid.UUID, password string) error {
-	user, err := svc.storage.GetUserByID(ctx, userID)
+	userDAO, err := svc.userStorage.GetUserByID(ctx, userID)
 	if err != nil {
-		svc.log.Error("failed to activate master password", "error", err.Error())
+		svc.log.Error("Failed to activate master password", "error", err.Error())
 		return domain.ErrInternal
 	}
 
-	if !user.MasterPassword.Valid || user.Salt == nil {
+	if !userDAO.MasterPassword.Valid || userDAO.Salt == nil {
 		return domain.ErrMasterPasswordNotSet
 	}
 
-	// Verify the master password
-	err = util.CompareHash(password, user.MasterPassword.String)
+	err = util.CompareHash(password, userDAO.MasterPassword.String)
 	if err != nil {
 		return domain.ErrInvalidMasterPassword
 	}
 
-	// Generating a new key
-	newKey := cipherkit.DeriveKey(password, user.Salt)
+	newKey := cipherkit.DeriveKey(password, userDAO.Salt)
 
-	// Store deriive key in cache with a TTL
 	encryptionKey := util.GenerateCacheKey("encryption_key", userID.String())
 	valueSerialized, err := util.Serialize(newKey)
 	if err != nil {
-		svc.log.Error("failed to serialize cache key", "error", err)
+		svc.log.Error("Failed to serialize cache key", "error", err.Error())
 		return domain.ErrInternal
 	}
 
 	err = svc.cache.Set(ctx, encryptionKey, valueSerialized, svc.masterPasswordTTL)
 	if err != nil {
-		svc.log.Error("failed to store master password activation status", "error", err.Error())
+		svc.log.Error("Failed to store master password activation status", "error", err.Error())
 		return domain.ErrInternal
 	}
 
 	return nil
 }
 
-// GetEncryptionKey is required to encrypt or decrypt the password
+// GetEncryptionKey retrieves the encryption key from the cache.
 func (svc *MasterPasswordService) GetEncryptionKey(ctx context.Context, userID uuid.UUID) ([]byte, error) {
-	var encryptionKey []byte
-
 	cacheKey := util.GenerateCacheKey("encryption_key", userID.String())
 	valueSerialized, err := svc.cache.Get(ctx, cacheKey)
 	if err != nil {
-		svc.log.Error("failed to get encryption key", "error", err.Error())
+		svc.log.Error("Failed to get encryption key", "error", err.Error())
 		return nil, domain.ErrMasterPasswordActivationExpired
 	}
 
+	var encryptionKey []byte
 	err = util.Deserialize(valueSerialized, &encryptionKey)
 	if err != nil {
-		svc.log.Error("failed to deserialize encryption key", "error", err.Error())
+		svc.log.Error("Failed to deserialize encryption key", "error", err.Error())
 		return nil, domain.ErrInternal
 	}
 

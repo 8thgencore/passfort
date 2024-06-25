@@ -17,8 +17,7 @@ func (svc *OtpService) GenerateOTP(ctx context.Context, userID uuid.UUID) (strin
 	cacheKey := util.GenerateCacheKey("user_otp", userID)
 	serializedOtp := []byte(otpCode)
 
-	err := svc.cache.Set(ctx, cacheKey, serializedOtp, 10*time.Minute)
-	if err != nil {
+	if err := svc.cache.Set(ctx, cacheKey, serializedOtp, 10*time.Minute); err != nil {
 		svc.log.Error("Error storing OTP:", "error", err.Error())
 		return "", domain.ErrInternal
 	}
@@ -51,8 +50,7 @@ func (svc *OtpService) VerifyOTP(ctx context.Context, userID uuid.UUID, otpCode 
 	}
 
 	// OTP is valid, remove it from storage to ensure one-time use
-	err = svc.cache.Delete(ctx, cacheKey)
-	if err != nil {
+	if err := svc.cache.Delete(ctx, cacheKey); err != nil {
 		svc.log.Error("Error removing OTP:", "error", err.Error())
 		return domain.ErrInternal
 	}
