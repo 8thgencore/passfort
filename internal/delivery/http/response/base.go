@@ -142,7 +142,7 @@ type SecretResponse struct {
 }
 
 // NewSecretResponse is a helper function to create a response body for handling secret data
-func NewSecretResponse(secret *domain.Secret) SecretResponse {
+func NewSecretResponse(secret *domain.Secret, includeSensitiveData bool) SecretResponse {
 	response := SecretResponse{
 		ID:           secret.ID,
 		CollectionID: secret.CollectionID,
@@ -155,19 +155,21 @@ func NewSecretResponse(secret *domain.Secret) SecretResponse {
 		UpdatedBy:    secret.UpdatedBy,
 	}
 
-	switch secret.SecretType {
-	case domain.PasswordSecretType:
-		if secret.PasswordSecret != nil {
-			response.PasswordSecret = &PasswordSecretResponse{
-				URL:      secret.PasswordSecret.URL,
-				Login:    secret.PasswordSecret.Login,
-				Password: secret.PasswordSecret.Password,
+	if includeSensitiveData {
+		switch secret.SecretType {
+		case domain.PasswordSecretType:
+			if secret.PasswordSecret != nil {
+				response.PasswordSecret = &PasswordSecretResponse{
+					URL:      secret.PasswordSecret.URL,
+					Login:    secret.PasswordSecret.Login,
+					Password: secret.PasswordSecret.Password,
+				}
 			}
-		}
-	case domain.TextSecretType:
-		if secret.TextSecret != nil {
-			response.TextSecret = &TextSecretResponse{
-				Text: secret.TextSecret.Text,
+		case domain.TextSecretType:
+			if secret.TextSecret != nil {
+				response.TextSecret = &TextSecretResponse{
+					Text: secret.TextSecret.Text,
+				}
 			}
 		}
 	}

@@ -540,7 +540,7 @@ paths:
       tags:
       - Authentication
   /auth/refresh-token:
-    get:
+    post:
       consumes:
       - application/json
       description: Refreshes an access token by providing the refresh token

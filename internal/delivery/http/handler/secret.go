@@ -119,7 +119,7 @@ func (sh *SecretHandler) CreateSecret(ctx *gin.Context) {
 		return
 	}
 
-	rsp := response.NewSecretResponse(createdSecret)
+	rsp := response.NewSecretResponse(createdSecret, true)
 
 	response.HandleSuccess(ctx, rsp)
 }
@@ -169,7 +169,7 @@ func (sh *SecretHandler) ListMeSecrets(ctx *gin.Context) {
 	}
 
 	for _, secret := range secrets {
-		secretsList = append(secretsList, response.NewSecretResponse(&secret))
+		secretsList = append(secretsList, response.NewSecretResponse(&secret, false))
 	}
 
 	total := uint64(len(secretsList))
@@ -233,7 +233,7 @@ func (sh *SecretHandler) GetSecret(ctx *gin.Context) {
 		return
 	}
 
-	rsp := response.NewSecretResponse(secret)
+	rsp := response.NewSecretResponse(secret, true)
 
 	response.HandleSuccess(ctx, rsp)
 }
@@ -338,7 +338,7 @@ func (sh *SecretHandler) UpdateSecret(ctx *gin.Context) {
 		return
 	}
 
-	rsp := response.NewSecretResponse(updatedSecret)
+	rsp := response.NewSecretResponse(updatedSecret, true)
 	response.HandleSuccess(ctx, rsp)
 }
 
