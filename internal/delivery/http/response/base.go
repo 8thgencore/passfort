@@ -65,12 +65,11 @@ type UserResponse struct {
 
 // NewUserResponse is a helper function to create a response body for handling user data
 func NewUserResponse(user *domain.User) UserResponse {
-
 	return UserResponse{
 		ID:                user.ID,
 		Name:              user.Name,
 		Email:             user.Email,
-		MasterPasswordSet: len(user.MasterPassword) > 0,
+		MasterPasswordSet: user.MasterPasswordSet,
 		CreatedAt:         user.CreatedAt,
 		UpdatedAt:         user.UpdatedAt,
 	}

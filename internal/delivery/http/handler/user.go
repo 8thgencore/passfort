@@ -84,7 +84,7 @@ func (uh *UserHandler) GetUserMe(ctx *gin.Context) {
 	// Retrieve the user ID from the context (assuming it's stored during authentication)
 	authPayload := helper.GetAuthPayload(ctx, middleware.AuthorizationPayloadKey)
 
-	user, err := uh.svc.GetUser(ctx, authPayload.UserID)
+	user, err := uh.svc.GetUserByID(ctx, authPayload.UserID)
 	if err != nil {
 		response.HandleError(ctx, err)
 		return
@@ -127,7 +127,7 @@ func (uh *UserHandler) GetUser(ctx *gin.Context) {
 		return
 	}
 
-	user, err := uh.svc.GetUser(ctx, uuid)
+	user, err := uh.svc.GetUserByID(ctx, uuid)
 	if err != nil {
 		response.HandleError(ctx, err)
 		return

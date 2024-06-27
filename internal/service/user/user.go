@@ -9,22 +9,21 @@ import (
 	"github.com/google/uuid"
 )
 
-// GetUser gets a user by ID
-func (us *UserService) GetUser(ctx context.Context, id uuid.UUID) (*domain.User, error) {
+// GetUserByID gets a user by ID
+func (svc *UserService) GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	var user *domain.User
 
 	cacheKey := util.GenerateCacheKey("user", id)
-	cachedUser, err := us.cache.Get(ctx, cacheKey)
+	cachedUser, err := svc.cache.Get(ctx, cacheKey)
 	if err == nil {
-		err := util.Deserialize(cachedUser, &user)
-		if err != nil {
+		if err := util.Deserialize(cachedUser, &user); err != nil {
 			return nil, domain.ErrInternal
 		}
 
 		return user, nil
 	}
 
-	userDAO, err := us.storage.GetUserByID(ctx, id)
+	userDAO, err := svc.storage.GetUserByID(ctx, id)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
 			return nil, err
@@ -38,8 +37,7 @@ func (us *UserService) GetUser(ctx context.Context, id uuid.UUID) (*domain.User,
 		return nil, domain.ErrInternal
 	}
 
-	err = us.cache.Set(ctx, cacheKey, serializedUser, 0)
-	if err != nil {
+	if err = svc.cache.Set(ctx, cacheKey, serializedUser, 0); err != nil {
 		return nil, domain.ErrInternal
 	}
 
@@ -47,23 +45,22 @@ func (us *UserService) GetUser(ctx context.Context, id uuid.UUID) (*domain.User,
 }
 
 // ListUsers lists all users
-func (us *UserService) ListUsers(ctx context.Context, skip, limit uint64) ([]domain.User, error) {
+func (svc *UserService) ListUsers(ctx context.Context, skip, limit uint64) ([]domain.User, error) {
 	var users []domain.User
 
 	params := util.GenerateCacheKeyParams(skip, limit)
 	cacheKey := util.GenerateCacheKey("users", params)
 
-	cachedUsers, err := us.cache.Get(ctx, cacheKey)
+	cachedUsers, err := svc.cache.Get(ctx, cacheKey)
 	if err == nil {
-		err := util.Deserialize(cachedUsers, &users)
-		if err != nil {
+		if err := util.Deserialize(cachedUsers, &users); err != nil {
 			return nil, domain.ErrInternal
 		}
 
 		return users, nil
 	}
 
-	usersDAO, err := us.storage.ListUsers(ctx, skip, limit)
+	usersDAO, err := svc.storage.ListUsers(ctx, skip, limit)
 	if err != nil {
 		return nil, domain.ErrInternal
 	}
@@ -76,8 +73,7 @@ func (us *UserService) ListUsers(ctx context.Context, skip, limit uint64) ([]dom
 		return nil, domain.ErrInternal
 	}
 
-	err = us.cache.Set(ctx, cacheKey, usersSerialized, 0)
-	if err != nil {
+	if err = svc.cache.Set(ctx, cacheKey, usersSerialized, 0); err != nil {
 		return nil, domain.ErrInternal
 	}
 
@@ -85,8 +81,8 @@ func (us *UserService) ListUsers(ctx context.Context, skip, limit uint64) ([]dom
 }
 
 // UpdateUser updates a user's name, email, and password
-func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
-	existingUserDAO, err := us.storage.GetUserByID(ctx, user.ID)
+func (svc *UserService) UpdateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
+	existingUserDAO, err := svc.storage.GetUserByID(ctx, user.ID)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
 			return nil, err
@@ -105,7 +101,7 @@ func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 		return nil, domain.ErrNoUpdatedData
 	}
 
-	updatedUserDAO, err := us.storage.UpdateUser(ctx, converter.ToUserDAO(user))
+	updatedUserDAO, err := svc.storage.UpdateUser(ctx, converter.ToUserDAO(user))
 	if err != nil {
 		if err == domain.ErrConflictingData {
 			return nil, err
@@ -115,8 +111,7 @@ func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 	updatedUser := converter.ToUser(updatedUserDAO)
 
 	cacheKey := util.GenerateCacheKey("user", user.ID)
-	err = us.cache.Delete(ctx, cacheKey)
-	if err != nil {
+	if err = svc.cache.Delete(ctx, cacheKey); err != nil {
 		return nil, domain.ErrInternal
 	}
 
@@ -125,13 +120,11 @@ func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 		return nil, domain.ErrInternal
 	}
 
-	err = us.cache.Set(ctx, cacheKey, serializedUser, 0)
-	if err != nil {
+	if err = svc.cache.Set(ctx, cacheKey, serializedUser, 0); err != nil {
 		return nil, domain.ErrInternal
 	}
 
-	err = us.cache.DeleteByPrefix(ctx, "users:*")
-	if err != nil {
+	if err = svc.cache.DeleteByPrefix(ctx, "users:*"); err != nil {
 		return nil, domain.ErrInternal
 	}
 
@@ -139,8 +132,8 @@ func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 }
 
 // DeleteUser deletes a user by ID
-func (us *UserService) DeleteUser(ctx context.Context, id uuid.UUID) error {
-	_, err := us.storage.GetUserByID(ctx, id)
+func (svc *UserService) DeleteUser(ctx context.Context, id uuid.UUID) error {
+	_, err := svc.storage.GetUserByID(ctx, id)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
 			return err
@@ -150,15 +143,13 @@ func (us *UserService) DeleteUser(ctx context.Context, id uuid.UUID) error {
 
 	cacheKey := util.GenerateCacheKey("user", id)
 
-	err = us.cache.Delete(ctx, cacheKey)
-	if err != nil {
+	if err = svc.cache.Delete(ctx, cacheKey); err != nil {
 		return domain.ErrInternal
 	}
 
-	err = us.cache.DeleteByPrefix(ctx, "users:*")
-	if err != nil {
+	if err = svc.cache.DeleteByPrefix(ctx, "users:*"); err != nil {
 		return domain.ErrInternal
 	}
 
-	return us.storage.DeleteUser(ctx, id)
+	return svc.storage.DeleteUser(ctx, id)
 }

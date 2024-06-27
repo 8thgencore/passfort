@@ -52,8 +52,7 @@ func (svc *MasterPasswordService) SaveMasterPassword(ctx context.Context, userID
 		return domain.ErrInternal
 	}
 
-	err = svc.cache.Set(ctx, encryptionKey, valueSerialized, svc.masterPasswordTTL)
-	if err != nil {
+	if err = svc.cache.Set(ctx, encryptionKey, valueSerialized, svc.masterPasswordTTL); err != nil {
 		svc.log.Error("Failed to store master password activation status", "error", err.Error())
 		return domain.ErrInternal
 	}
@@ -61,9 +60,23 @@ func (svc *MasterPasswordService) SaveMasterPassword(ctx context.Context, userID
 	user.MasterPassword = hashedPassword
 	user.Salt = salt
 
-	_, err = svc.userStorage.UpdateUser(ctx, converter.ToUserDAO(user))
+	updatedUser, err := svc.userStorage.UpdateUser(ctx, converter.ToUserDAO(user))
 	if err != nil {
 		svc.log.Error("Failed to update user", "error", err.Error())
+		return domain.ErrInternal
+	}
+
+	cacheKey := util.GenerateCacheKey("user", updatedUser.ID)
+	if err = svc.cache.Delete(ctx, cacheKey); err != nil {
+		return domain.ErrInternal
+	}
+
+	serializedUser, err := util.Serialize(converter.ToUser(updatedUser))
+	if err != nil {
+		return domain.ErrInternal
+	}
+
+	if err = svc.cache.Set(ctx, cacheKey, serializedUser, 0); err != nil {
 		return domain.ErrInternal
 	}
 
@@ -79,8 +92,7 @@ func (svc *MasterPasswordService) ChangeMasterPassword(ctx context.Context, user
 
 	user := converter.ToUser(userDAO)
 
-	err = util.CompareHash(oldPassword, user.MasterPassword)
-	if err != nil {
+	if err = util.CompareHash(oldPassword, user.MasterPassword); err != nil {
 		return domain.ErrInvalidMasterPassword
 	}
 
@@ -100,8 +112,7 @@ func (svc *MasterPasswordService) ChangeMasterPassword(ctx context.Context, user
 		return domain.ErrInternal
 	}
 
-	err = svc.secretSvc.ReencryptAllSecrets(ctx, userID, oldEncryptionKey, newEncryptionKey)
-	if err != nil {
+	if err = svc.secretSvc.ReencryptAllSecrets(ctx, userID, oldEncryptionKey, newEncryptionKey); err != nil {
 		svc.log.Error("Failed to start re-encrypt all secrets", "error", err.Error())
 		return domain.ErrInternal
 	}
@@ -121,8 +132,7 @@ func (svc *MasterPasswordService) ActivateMasterPassword(ctx context.Context, us
 		return domain.ErrMasterPasswordNotSet
 	}
 
-	err = util.CompareHash(password, userDAO.MasterPassword.String)
-	if err != nil {
+	if err = util.CompareHash(password, userDAO.MasterPassword.String); err != nil {
 		return domain.ErrInvalidMasterPassword
 	}
 
@@ -135,8 +145,7 @@ func (svc *MasterPasswordService) ActivateMasterPassword(ctx context.Context, us
 		return domain.ErrInternal
 	}
 
-	err = svc.cache.Set(ctx, encryptionKey, valueSerialized, svc.masterPasswordTTL)
-	if err != nil {
+	if err = svc.cache.Set(ctx, encryptionKey, valueSerialized, svc.masterPasswordTTL); err != nil {
 		svc.log.Error("Failed to store master password activation status", "error", err.Error())
 		return domain.ErrInternal
 	}
@@ -154,8 +163,7 @@ func (svc *MasterPasswordService) GetEncryptionKey(ctx context.Context, userID u
 	}
 
 	var encryptionKey []byte
-	err = util.Deserialize(valueSerialized, &encryptionKey)
-	if err != nil {
+	if err = util.Deserialize(valueSerialized, &encryptionKey); err != nil {
 		svc.log.Error("Failed to deserialize encryption key", "error", err.Error())
 		return nil, domain.ErrInternal
 	}

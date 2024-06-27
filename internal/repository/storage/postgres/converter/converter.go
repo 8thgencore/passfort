@@ -23,16 +23,17 @@ func ToUserDAO(user *domain.User) *dao.UserDAO {
 
 func ToUser(userDAO *dao.UserDAO) *domain.User {
 	return &domain.User{
-		ID:             userDAO.ID,
-		Name:           userDAO.Name,
-		Email:          userDAO.Email,
-		Password:       userDAO.Password,
-		MasterPassword: userDAO.MasterPassword.String,
-		Salt:           userDAO.Salt,
-		IsVerified:     userDAO.IsVerified,
-		Role:           domain.UserRoleEnum(userDAO.Role),
-		CreatedAt:      userDAO.CreatedAt,
-		UpdatedAt:      userDAO.UpdatedAt,
+		ID:                userDAO.ID,
+		Name:              userDAO.Name,
+		Email:             userDAO.Email,
+		Password:          userDAO.Password,
+		MasterPassword:    userDAO.MasterPassword.String,
+		MasterPasswordSet: len(userDAO.MasterPassword.String) > 0,
+		Salt:              userDAO.Salt,
+		IsVerified:        userDAO.IsVerified,
+		Role:              domain.UserRoleEnum(userDAO.Role),
+		CreatedAt:         userDAO.CreatedAt,
+		UpdatedAt:         userDAO.UpdatedAt,
 	}
 }
 

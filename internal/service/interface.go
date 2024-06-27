@@ -73,7 +73,7 @@ type MasterPasswordService interface {
 // UserService is an interface for interacting with user-related business logic
 type UserService interface {
 	// GetUser returns a user by id
-	GetUser(ctx context.Context, id uuid.UUID) (*domain.User, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
 	// ListUsers returns a list of users with pagination
 	ListUsers(ctx context.Context, skip, limit uint64) ([]domain.User, error)
 	// UpdateUser updates a user
