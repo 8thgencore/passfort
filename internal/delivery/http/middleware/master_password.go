@@ -28,9 +28,7 @@ func MasterPasswordMiddleware(masterPasswordService service.MasterPasswordServic
 			return
 		}
 
-		userID := payload.UserID
-
-		encryptionKey, err := masterPasswordService.GetEncryptionKey(ctx, userID)
+		encryptionKey, err := masterPasswordService.GetEncryptionKey(ctx, payload.UserID)
 		if err != nil {
 			response.HandleAbort(ctx, err)
 			return
