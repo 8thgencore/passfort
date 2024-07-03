@@ -129,7 +129,7 @@ func (r *CollectionRepository) ListCollectionsByUserID(ctx context.Context, user
 		From("collections c").
 		Join("users_collections uc ON c.id = uc.collection_id").
 		Where(sq.Eq{"uc.user_id": userID}).
-		OrderBy("c.id").
+		OrderBy("c.created_at DESC").
 		Limit(limit).
 		Offset((skip - 1) * limit)
 
