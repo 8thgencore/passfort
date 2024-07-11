@@ -5,6 +5,7 @@ import (
 
 	"github.com/8thgencore/passfort/internal/domain"
 	"github.com/8thgencore/passfort/internal/repository/storage/postgres/converter"
+	"github.com/8thgencore/passfort/pkg/logger/sl"
 	"github.com/8thgencore/passfort/pkg/util"
 	"github.com/google/uuid"
 )
@@ -16,7 +17,7 @@ func (as *AuthService) Login(ctx context.Context, email, password string) (strin
 		if err == domain.ErrDataNotFound {
 			return "", "", domain.ErrInvalidCredentials
 		}
-		as.log.Error("failed to get the user by email", "error", err.Error())
+		as.log.Error("failed to get the user by email", sl.Err(err))
 
 		return "", "", domain.ErrInternal
 	}
@@ -53,7 +54,7 @@ func (as *AuthService) Register(ctx context.Context, user *domain.User) (*domain
 		if err == domain.ErrConflictingData {
 			return nil, err
 		}
-		as.log.Error("failed to create a user", "error", err.Error())
+		as.log.Error("failed to create a user", sl.Err(err))
 
 		return nil, domain.ErrInternal
 	}
@@ -66,7 +67,7 @@ func (as *AuthService) Register(ctx context.Context, user *domain.User) (*domain
 	}
 	_, err = as.mailClient.SendConfirmationEmail(ctx, user.Email, otp)
 	if err != nil {
-		as.log.Error("failed send confirmation email", "error", err.Error())
+		as.log.Error("failed send confirmation email", sl.Err(err))
 		return nil, domain.ErrInternal
 	}
 
@@ -99,7 +100,7 @@ func (as *AuthService) ConfirmRegistration(ctx context.Context, email, otp strin
 		if err == domain.ErrDataNotFound {
 			return domain.ErrInvalidOTP
 		}
-		as.log.Error("failed to get the user by email", "error", err.Error())
+		as.log.Error("failed to get the user by email", sl.Err(err))
 		return domain.ErrInternal
 	}
 
@@ -111,7 +112,7 @@ func (as *AuthService) ConfirmRegistration(ctx context.Context, email, otp strin
 	userDAO.IsVerified = true
 	_, err = as.storage.UpdateUser(ctx, userDAO)
 	if err != nil {
-		as.log.Error("failed to update user", "error", err.Error())
+		as.log.Error("failed to update user", sl.Err(err))
 		return domain.ErrInternal
 	}
 
@@ -123,7 +124,7 @@ func (as *AuthService) RequestNewRegistrationCode(ctx context.Context, email str
 	// Retrieve user by email
 	userDAO, err := as.storage.GetUserByEmail(ctx, email)
 	if err != nil {
-		as.log.Error("failed to get the user by email", "error", err.Error())
+		as.log.Error("failed to get the user by email", sl.Err(err))
 		return nil
 	}
 	user := converter.ToUser(userDAO)
@@ -131,7 +132,7 @@ func (as *AuthService) RequestNewRegistrationCode(ctx context.Context, email str
 	// Check if OTP already exists for the user
 	exists, err := as.otp.CheckCacheForKey(ctx, user.ID)
 	if err != nil {
-		as.log.Error("failed to check cache for OTP", "error", err.Error())
+		as.log.Error("failed to check cache for OTP", sl.Err(err))
 		return domain.ErrInternal
 	}
 	if exists {
@@ -141,13 +142,13 @@ func (as *AuthService) RequestNewRegistrationCode(ctx context.Context, email str
 	// Generate and send new registration confirmation OTP
 	otp, err := as.otp.GenerateOTP(ctx, user.ID)
 	if err != nil {
-		as.log.Error("failed to generate new registration confirmation OTP", "error", err.Error())
+		as.log.Error("failed to generate new registration confirmation OTP", sl.Err(err))
 		return domain.ErrInternal
 	}
 
 	_, err = as.mailClient.SendConfirmationEmail(ctx, user.Email, otp)
 	if err != nil {
-		as.log.Error("failed to send new registration confirmation email", "error", err.Error())
+		as.log.Error("failed to send new registration confirmation email", sl.Err(err))
 		return domain.ErrInternal
 	}
 
@@ -233,7 +234,7 @@ func (as *AuthService) ForgotPassword(ctx context.Context, email string) error {
 	// Retrieve user by email
 	userDAO, err := as.storage.GetUserByEmail(ctx, email)
 	if err != nil {
-		as.log.Error("failed to get the user by email", "error", err.Error())
+		as.log.Error("failed to get the user by email", sl.Err(err))
 		return nil
 	}
 	user := converter.ToUser(userDAO)
@@ -241,13 +242,13 @@ func (as *AuthService) ForgotPassword(ctx context.Context, email string) error {
 	// Generate and send reset OTP
 	resetOTP, err := as.otp.GenerateOTP(ctx, user.ID)
 	if err != nil {
-		as.log.Error("failed to update user", "error", err.Error())
+		as.log.Error("failed to update user", sl.Err(err))
 		return domain.ErrInternal
 	}
 
 	_, err = as.mailClient.SendPasswordReset(ctx, user.Email, resetOTP)
 	if err != nil {
-		as.log.Error("failed send reset password", "error", err.Error())
+		as.log.Error("failed send reset password", sl.Err(err))
 		return domain.ErrInternal
 	}
 
@@ -262,7 +263,7 @@ func (as *AuthService) ResetPassword(ctx context.Context, email, newPassword, ot
 		if err == domain.ErrDataNotFound {
 			return domain.ErrInvalidOTP
 		}
-		as.log.Error("failed to get the user by email", "error", err.Error())
+		as.log.Error("failed to get the user by email", sl.Err(err))
 		return domain.ErrInternal
 	}
 	user := converter.ToUser(userDAO)
@@ -281,7 +282,7 @@ func (as *AuthService) ResetPassword(ctx context.Context, email, newPassword, ot
 	user.Password = hashedPassword
 	_, err = as.storage.UpdateUser(ctx, converter.ToUserDAO(user))
 	if err != nil {
-		as.log.Error("failed to update user", "error", err.Error())
+		as.log.Error("failed to update user", sl.Err(err))
 		return domain.ErrInternal
 	}
 

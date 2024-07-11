@@ -8,6 +8,7 @@ import (
 	"github.com/8thgencore/passfort/internal/repository/storage/postgres/converter"
 	"github.com/8thgencore/passfort/internal/repository/storage/postgres/dao"
 	"github.com/8thgencore/passfort/pkg/cipherkit"
+	"github.com/8thgencore/passfort/pkg/logger/sl"
 	"github.com/google/uuid"
 )
 
@@ -37,7 +38,7 @@ func (svc *SecretService) CreateSecret(ctx context.Context, userID uuid.UUID, se
 
 	createdSecretDAO, err := svc.secretStorage.CreateSecret(ctx, secret.CollectionID, secretDAO)
 	if err != nil {
-		svc.log.Error("Error creating secret:", "error", err.Error())
+		svc.log.Error("Error creating secret:", sl.Err(err))
 		return nil, domain.ErrInternal
 	}
 
@@ -50,7 +51,7 @@ func (svc *SecretService) CreateSecret(ctx context.Context, userID uuid.UUID, se
 func (svc *SecretService) createPasswordSecret(ctx context.Context, secret *domain.Secret, encryptionKey []byte, secretDAO *dao.SecretDAO) error {
 	encryptedPassword, err := cipherkit.Encrypt([]byte(secret.PasswordSecret.Password), encryptionKey)
 	if err != nil {
-		svc.log.Error("Error encrypting password secret:", "error", err.Error())
+		svc.log.Error("Error encrypting password secret:", sl.Err(err))
 		return domain.ErrInternal
 	}
 
@@ -59,7 +60,7 @@ func (svc *SecretService) createPasswordSecret(ctx context.Context, secret *doma
 
 	newSecret, err := svc.secretStorage.CreatePasswordSecret(ctx, passwordSecretDAO)
 	if err != nil {
-		svc.log.Error("Error creating password secret:", "error", err.Error())
+		svc.log.Error("Error creating password secret:", sl.Err(err))
 		return domain.ErrInternal
 	}
 
@@ -70,7 +71,7 @@ func (svc *SecretService) createPasswordSecret(ctx context.Context, secret *doma
 func (svc *SecretService) createTextSecret(ctx context.Context, secret *domain.Secret, encryptionKey []byte, secretDAO *dao.SecretDAO) error {
 	encryptedText, err := cipherkit.Encrypt([]byte(secret.TextSecret.Text), encryptionKey)
 	if err != nil {
-		svc.log.Error("Error encrypting text secret:", "error", err.Error())
+		svc.log.Error("Error encrypting text secret:", sl.Err(err))
 		return domain.ErrInternal
 	}
 
@@ -79,7 +80,7 @@ func (svc *SecretService) createTextSecret(ctx context.Context, secret *domain.S
 
 	newSecret, err := svc.secretStorage.CreateTextSecret(ctx, textSecretDAO)
 	if err != nil {
-		svc.log.Error("Error creating text secret:", "error", err.Error())
+		svc.log.Error("Error creating text secret:", sl.Err(err))
 		return domain.ErrInternal
 	}
 	secretDAO.LinkedSecretId = newSecret.ID
@@ -94,7 +95,7 @@ func (svc *SecretService) ListSecretsByCollectionID(ctx context.Context, userID,
 
 	secretsDAO, err := svc.secretStorage.ListSecretsByCollectionID(ctx, collectionID, skip, limit)
 	if err != nil {
-		svc.log.Error("Error listing secrets for collection:", "collectionID", collectionID, "error", err.Error())
+		svc.log.Error("Error listing secrets for collection:", "collectionID", collectionID, sl.Err(err))
 		return nil, domain.ErrDataNotFound
 	}
 
@@ -184,7 +185,7 @@ func (svc *SecretService) UpdateSecret(ctx context.Context, userID, collectionID
 
 	updatedSecretDAO, err := svc.secretStorage.UpdateSecret(ctx, converter.ToSecretDAO(secret))
 	if err != nil {
-		svc.log.Error("Error updating secret:", "error", err.Error())
+		svc.log.Error("Error updating secret:", sl.Err(err))
 		return nil, domain.ErrNoUpdatedData
 	}
 
@@ -217,7 +218,7 @@ func (svc *SecretService) updatePasswordSecret(ctx context.Context, secret *doma
 
 	encryptedPassword, err := cipherkit.Encrypt([]byte(secret.PasswordSecret.Password), encryptionKey)
 	if err != nil {
-		svc.log.Error("Error encrypting password secret:", "error", err.Error())
+		svc.log.Error("Error encrypting password secret:", sl.Err(err))
 		return nil, domain.ErrInternal
 	}
 
@@ -227,7 +228,7 @@ func (svc *SecretService) updatePasswordSecret(ctx context.Context, secret *doma
 
 	updatedPasswordSecretDAO, err := svc.secretStorage.UpdatePasswordSecret(ctx, passwordSecretDAO)
 	if err != nil {
-		svc.log.Error("Error updating password secret:", "error", err.Error())
+		svc.log.Error("Error updating password secret:", sl.Err(err))
 		return nil, domain.ErrNoUpdatedData
 	}
 
@@ -242,7 +243,7 @@ func (svc *SecretService) updateTextSecret(ctx context.Context, secret *domain.S
 
 	encryptedText, err := cipherkit.Encrypt([]byte(secret.TextSecret.Text), encryptionKey)
 	if err != nil {
-		svc.log.Error("Error encrypting text secret:", "error", err.Error())
+		svc.log.Error("Error encrypting text secret:", sl.Err(err))
 		return nil, domain.ErrInternal
 	}
 
@@ -252,7 +253,7 @@ func (svc *SecretService) updateTextSecret(ctx context.Context, secret *domain.S
 
 	updatedTextSecretDAO, err := svc.secretStorage.UpdateTextSecret(ctx, textSecretDAO)
 	if err != nil {
-		svc.log.Error("Error updating text secret:", "error", err.Error())
+		svc.log.Error("Error updating text secret:", sl.Err(err))
 		return nil, domain.ErrNoUpdatedData
 	}
 
@@ -268,7 +269,7 @@ func (svc *SecretService) DeleteSecret(ctx context.Context, userID, collectionID
 
 	err := svc.secretStorage.DeleteSecret(ctx, secretID)
 	if err != nil {
-		svc.log.Error("Error deleting secret:", "secretID", secretID, "error", err.Error())
+		svc.log.Error("Error deleting secret:", "secretID", secretID, sl.Err(err))
 		return domain.ErrInternal
 	}
 
@@ -279,7 +280,7 @@ func (svc *SecretService) DeleteSecret(ctx context.Context, userID, collectionID
 func (svc *SecretService) isUserPartOfCollection(ctx context.Context, userID, collectionID uuid.UUID) bool {
 	isPartOfCollection, err := svc.collectionStorage.IsUserPartOfCollection(ctx, userID, collectionID)
 	if err != nil {
-		svc.log.Error("Error checking user collection membership:", "userID", userID, "collectionID", collectionID, "error", err.Error())
+		svc.log.Error("Error checking user collection membership:", "userID", userID, "collectionID", collectionID, sl.Err(err))
 		return false
 	}
 

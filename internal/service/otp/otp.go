@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/8thgencore/passfort/internal/domain"
+	"github.com/8thgencore/passfort/pkg/logger/sl"
 	"github.com/8thgencore/passfort/pkg/util"
 	"github.com/google/uuid"
 )
@@ -18,7 +19,7 @@ func (svc *OtpService) GenerateOTP(ctx context.Context, userID uuid.UUID) (strin
 	serializedOtp := []byte(otpCode)
 
 	if err := svc.cache.Set(ctx, cacheKey, serializedOtp, 10*time.Minute); err != nil {
-		svc.log.Error("Error storing OTP:", "error", err.Error())
+		svc.log.Error("Error storing OTP:", sl.Err(err))
 		return "", domain.ErrInternal
 	}
 
@@ -51,7 +52,7 @@ func (svc *OtpService) VerifyOTP(ctx context.Context, userID uuid.UUID, otpCode 
 
 	// OTP is valid, remove it from storage to ensure one-time use
 	if err := svc.cache.Delete(ctx, cacheKey); err != nil {
-		svc.log.Error("Error removing OTP:", "error", err.Error())
+		svc.log.Error("Error removing OTP:", sl.Err(err))
 		return domain.ErrInternal
 	}
 
@@ -66,7 +67,7 @@ func (svc *OtpService) CheckCacheForKey(ctx context.Context, userID uuid.UUID) (
 	// Check if the value exists in the cache for the given key
 	exists, err := svc.cache.Exists(ctx, key)
 	if err != nil {
-		svc.log.Error("Error checking cache for key:", "error", err.Error())
+		svc.log.Error("Error checking cache for key:", sl.Err(err))
 		return false, domain.ErrInternal
 	}
 

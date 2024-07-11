@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/8thgencore/passfort/internal/domain"
+	"github.com/8thgencore/passfort/pkg/logger/sl"
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
 )
@@ -30,13 +31,13 @@ func (svc *SecretService) ReencryptAllSecrets(ctx context.Context, userID uuid.U
 		NewEncryptionKey: newEncryptionKey,
 	})
 	if err != nil {
-		svc.log.Error("Error marshaling payload:", "error", err.Error())
+		svc.log.Error("Error marshaling payload:", sl.Err(err))
 		return domain.ErrInternal
 	}
 
 	task := asynq.NewTask(TypeReencryptSecrets, payload)
 	if _, err := svc.asynqClient.Enqueue(task); err != nil {
-		svc.log.Error("Error enqueueing reencrypt secrets task:", "error", err.Error())
+		svc.log.Error("Error enqueueing reencrypt secrets task:", sl.Err(err))
 		return domain.ErrInternal
 	}
 
@@ -47,13 +48,13 @@ func (svc *SecretService) ReencryptAllSecrets(ctx context.Context, userID uuid.U
 func (svc *SecretService) HandleReencryptSecretsTask(ctx context.Context, t *asynq.Task) error {
 	var p ReencryptSecretsPayload
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		svc.log.Error("Error unmarshaling payload:", "error", err.Error())
+		svc.log.Error("Error unmarshaling payload:", sl.Err(err))
 		return fmt.Errorf("unmarshal payload: %v", err)
 	}
 
 	collections, err := svc.collectionStorage.ListCollectionsByUserID(ctx, p.UserID, 1, 10)
 	if err != nil {
-		svc.log.Error("Error fetching collections for user:", "userID", p.UserID, "error", err.Error())
+		svc.log.Error("Error fetching collections for user:", "userID", p.UserID, sl.Err(err))
 		return domain.ErrDataNotFound
 	}
 
@@ -69,7 +70,7 @@ func (svc *SecretService) HandleReencryptSecretsTask(ctx context.Context, t *asy
 func (svc *SecretService) reencryptCollectionSecrets(ctx context.Context, collectionID, userID uuid.UUID, oldEncryptionKey, newEncryptionKey []byte) error {
 	secretsDAO, err := svc.secretStorage.ListSecretsByCollectionID(ctx, collectionID, 1, 10)
 	if err != nil {
-		svc.log.Error("Error listing secrets for collection", "collectionID", collectionID, "error", err.Error())
+		svc.log.Error("Error listing secrets for collection", "collectionID", collectionID, sl.Err(err))
 		return domain.ErrDataNotFound
 	}
 
@@ -81,7 +82,7 @@ func (svc *SecretService) reencryptCollectionSecrets(ctx context.Context, collec
 		}
 
 		if _, err := svc.UpdateSecret(ctx, userID, secretDAO.CollectionID, secret, newEncryptionKey); err != nil {
-			svc.log.Error("Error updating secret:", "secretID", secretDAO.ID, "error", err.Error())
+			svc.log.Error("Error updating secret:", "secretID", secretDAO.ID, sl.Err(err))
 			return err
 		}
 	}

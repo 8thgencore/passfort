@@ -7,6 +7,7 @@ import (
 	"time"
 
 	mailv1 "github.com/8thgencore/mailfort/protos/gen/go/mail/v1"
+	"github.com/8thgencore/passfort/pkg/logger/sl"
 	grpclog "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
 
@@ -77,7 +78,7 @@ func (c *Client) SendPasswordReset(ctx context.Context, email, otpCode string) (
 		OtpCode: otpCode,
 	})
 	if err != nil {
-		c.log.Error("Failed send reset password code", "error", err.Error())
+		c.log.Error("Failed send reset password code", sl.Err(err))
 		return false, fmt.Errorf("%s: %w", op, err)
 	}
 

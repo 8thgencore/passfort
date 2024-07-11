@@ -22,6 +22,7 @@ import (
 	secretSvc "github.com/8thgencore/passfort/internal/service/secret"
 	tokenSvc "github.com/8thgencore/passfort/internal/service/token"
 	userSvc "github.com/8thgencore/passfort/internal/service/user"
+	"github.com/8thgencore/passfort/pkg/logger/sl"
 	"github.com/8thgencore/passfort/pkg/logger/slogpretty"
 	"github.com/hibiken/asynq"
 )
@@ -63,7 +64,7 @@ func Run(configPath string) {
 	ctx := context.Background()
 	db, err := database.New(ctx, &cfg.Database)
 	if err != nil {
-		log.Error("Error initializing database connection", "error", err.Error())
+		log.Error("Error initializing database connection", sl.Err(err))
 		os.Exit(1)
 	}
 	defer db.Close()
@@ -73,7 +74,7 @@ func Run(configPath string) {
 	// Migrate database
 	err = db.Migrate()
 	if err != nil {
-		log.Error("Error migrating database", "error", err.Error())
+		log.Error("Error migrating database", sl.Err(err))
 		os.Exit(1)
 	}
 
@@ -82,7 +83,7 @@ func Run(configPath string) {
 	// Init cache service
 	cache, err := redis.New(ctx, &cfg.Cache)
 	if err != nil {
-		log.Error("Error initializing cache connection", "error", err.Error())
+		log.Error("Error initializing cache connection", sl.Err(err))
 		os.Exit(1)
 	}
 	defer cache.Close()
@@ -162,7 +163,7 @@ func Run(configPath string) {
 		*masterPasswordHandler,
 	)
 	if err != nil {
-		log.Error("Error initializing router", "error", err.Error())
+		log.Error("Error initializing router", sl.Err(err))
 		os.Exit(1)
 	}
 
@@ -173,7 +174,7 @@ func Run(configPath string) {
 
 	err = router.Serve(listenAddr)
 	if err != nil {
-		log.Error("Error starting the HTTP server", "error", err.Error())
+		log.Error("Error starting the HTTP server", sl.Err(err))
 		os.Exit(1)
 	}
 }

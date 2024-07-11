@@ -6,6 +6,7 @@ import (
 
 	"github.com/8thgencore/passfort/internal/domain"
 	"github.com/8thgencore/passfort/internal/repository/storage/postgres/converter"
+	"github.com/8thgencore/passfort/pkg/logger/sl"
 	"github.com/google/uuid"
 )
 
@@ -13,7 +14,7 @@ import (
 func (cs *CollectionService) CreateCollection(ctx context.Context, userID uuid.UUID, collection *domain.Collection) (*domain.Collection, error) {
 	collectionDAO, err := cs.storage.CreateCollection(ctx, userID, converter.ToCollectionDAO(collection))
 	if err != nil {
-		cs.log.Error("Error creating collection:", "error", err.Error())
+		cs.log.Error("Error creating collection:", sl.Err(err))
 		return nil, domain.ErrDataNotAdded
 	}
 	return converter.ToCollection(collectionDAO), err
@@ -23,7 +24,7 @@ func (cs *CollectionService) CreateCollection(ctx context.Context, userID uuid.U
 func (cs *CollectionService) ListCollectionsByUserID(ctx context.Context, userID uuid.UUID, skip, limit uint64) ([]domain.Collection, error) {
 	collectionsDAO, err := cs.storage.ListCollectionsByUserID(ctx, userID, skip, limit)
 	if err != nil {
-		cs.log.Error(fmt.Sprintf("Error listing collections for user %d:", userID), "error", err.Error())
+		cs.log.Error(fmt.Sprintf("Error listing collections for user %d:", userID), sl.Err(err))
 		return nil, domain.ErrInternal
 
 	}
@@ -39,7 +40,7 @@ func (cs *CollectionService) ListCollectionsByUserID(ctx context.Context, userID
 func (cs *CollectionService) GetCollection(ctx context.Context, userID, collectionID uuid.UUID) (*domain.Collection, error) {
 	collectionDAO, err := cs.storage.GetCollectionByID(ctx, collectionID)
 	if err != nil {
-		cs.log.Error(fmt.Sprintf("Error getting collection %d:", collectionID), "error", err.Error())
+		cs.log.Error(fmt.Sprintf("Error getting collection %d:", collectionID), sl.Err(err))
 		return nil, domain.ErrDataNotAdded
 	}
 
@@ -60,7 +61,7 @@ func (cs *CollectionService) UpdateCollection(ctx context.Context, userID uuid.U
 
 	updatedCollectionDAO, err := cs.storage.UpdateCollection(ctx, converter.ToCollectionDAO(collection))
 	if err != nil {
-		cs.log.Error(fmt.Sprintf("Error updating collection %d:", collection.ID), "error", err.Error())
+		cs.log.Error(fmt.Sprintf("Error updating collection %d:", collection.ID), sl.Err(err))
 		return nil, domain.ErrNoUpdatedData
 	}
 
@@ -75,7 +76,7 @@ func (cs *CollectionService) DeleteCollection(ctx context.Context, userID, colle
 
 	err := cs.storage.DeleteCollection(ctx, collectionID)
 	if err != nil {
-		cs.log.Error(fmt.Sprintf("Error deleting collection %d:", collectionID), "error", err.Error())
+		cs.log.Error(fmt.Sprintf("Error deleting collection %d:", collectionID), sl.Err(err))
 		return domain.ErrDataNotDeleted
 	}
 
@@ -86,7 +87,7 @@ func (cs *CollectionService) DeleteCollection(ctx context.Context, userID, colle
 func (cs *CollectionService) isUserPartOfCollection(ctx context.Context, userID, collectionID uuid.UUID) bool {
 	isPartOfCollection, err := cs.storage.IsUserPartOfCollection(ctx, userID, collectionID)
 	if err != nil {
-		cs.log.Error(fmt.Sprintf("Error checking if user %d is part of collection %d:", userID, collectionID), "error", err.Error())
+		cs.log.Error(fmt.Sprintf("Error checking if user %d is part of collection %d:", userID, collectionID), sl.Err(err))
 		return false
 	}
 
