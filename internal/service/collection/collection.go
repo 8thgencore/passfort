@@ -2,7 +2,6 @@ package collection
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/8thgencore/passfort/internal/domain"
 	"github.com/8thgencore/passfort/internal/repository/storage/postgres/converter"
@@ -11,20 +10,20 @@ import (
 )
 
 // CreateCollection creates a new collection
-func (cs *CollectionService) CreateCollection(ctx context.Context, userID uuid.UUID, collection *domain.Collection) (*domain.Collection, error) {
-	collectionDAO, err := cs.storage.CreateCollection(ctx, userID, converter.ToCollectionDAO(collection))
+func (svc *CollectionService) CreateCollection(ctx context.Context, userID uuid.UUID, collection *domain.Collection) (*domain.Collection, error) {
+	collectionDAO, err := svc.storage.CreateCollection(ctx, userID, converter.ToCollectionDAO(collection))
 	if err != nil {
-		cs.log.Error("Error creating collection:", sl.Err(err))
+		svc.log.Error("Error creating collection:", sl.Err(err))
 		return nil, domain.ErrDataNotAdded
 	}
 	return converter.ToCollection(collectionDAO), err
 }
 
 // ListCollectionsByUserID retrieves a list of collections with pagination for a specific user
-func (cs *CollectionService) ListCollectionsByUserID(ctx context.Context, userID uuid.UUID, skip, limit uint64) ([]domain.Collection, error) {
-	collectionsDAO, err := cs.storage.ListCollectionsByUserID(ctx, userID, skip, limit)
+func (svc *CollectionService) ListCollectionsByUserID(ctx context.Context, userID uuid.UUID, skip, limit uint64) ([]domain.Collection, error) {
+	collectionsDAO, err := svc.storage.ListCollectionsByUserID(ctx, userID, skip, limit)
 	if err != nil {
-		cs.log.Error(fmt.Sprintf("Error listing collections for user %d:", userID), sl.Err(err))
+		svc.log.Error("Error listing collections", "user", userID, sl.Err(err))
 		return nil, domain.ErrInternal
 
 	}
@@ -37,15 +36,15 @@ func (cs *CollectionService) ListCollectionsByUserID(ctx context.Context, userID
 }
 
 // GetCollection retrieves a collection by ID
-func (cs *CollectionService) GetCollection(ctx context.Context, userID, collectionID uuid.UUID) (*domain.Collection, error) {
-	collectionDAO, err := cs.storage.GetCollectionByID(ctx, collectionID)
+func (svc *CollectionService) GetCollection(ctx context.Context, userID, collectionID uuid.UUID) (*domain.Collection, error) {
+	collectionDAO, err := svc.storage.GetCollectionByID(ctx, collectionID)
 	if err != nil {
-		cs.log.Error(fmt.Sprintf("Error getting collection %d:", collectionID), sl.Err(err))
+		svc.log.Error("Error getting collection", "collection", collectionID, sl.Err(err))
 		return nil, domain.ErrDataNotAdded
 	}
 
 	// Check if the user is part of the collection
-	if !cs.isUserPartOfCollection(ctx, userID, collectionDAO.ID) {
+	if !svc.isUserPartOfCollection(ctx, userID, collectionDAO.ID) {
 		return nil, domain.ErrUnauthorized
 	}
 
@@ -53,15 +52,15 @@ func (cs *CollectionService) GetCollection(ctx context.Context, userID, collecti
 }
 
 // UpdateCollection updates a collection by ID, checking if the user is part of the collection
-func (cs *CollectionService) UpdateCollection(ctx context.Context, userID uuid.UUID, collection *domain.Collection) (*domain.Collection, error) {
+func (svc *CollectionService) UpdateCollection(ctx context.Context, userID uuid.UUID, collection *domain.Collection) (*domain.Collection, error) {
 	// Check if the user is part of the collection
-	if !cs.isUserPartOfCollection(ctx, userID, collection.ID) {
+	if !svc.isUserPartOfCollection(ctx, userID, collection.ID) {
 		return nil, domain.ErrUnauthorized
 	}
 
-	updatedCollectionDAO, err := cs.storage.UpdateCollection(ctx, converter.ToCollectionDAO(collection))
+	updatedCollectionDAO, err := svc.storage.UpdateCollection(ctx, converter.ToCollectionDAO(collection))
 	if err != nil {
-		cs.log.Error(fmt.Sprintf("Error updating collection %d:", collection.ID), sl.Err(err))
+		svc.log.Error("Error updating collection", "collection", collection.ID, sl.Err(err))
 		return nil, domain.ErrNoUpdatedData
 	}
 
@@ -69,14 +68,14 @@ func (cs *CollectionService) UpdateCollection(ctx context.Context, userID uuid.U
 }
 
 // DeleteCollection deletes a collection by ID, checking if the user is part of the collection
-func (cs *CollectionService) DeleteCollection(ctx context.Context, userID, collectionID uuid.UUID) error {
-	if !cs.isUserPartOfCollection(ctx, userID, collectionID) {
+func (svc *CollectionService) DeleteCollection(ctx context.Context, userID, collectionID uuid.UUID) error {
+	if !svc.isUserPartOfCollection(ctx, userID, collectionID) {
 		return domain.ErrUnauthorized
 	}
 
-	err := cs.storage.DeleteCollection(ctx, collectionID)
+	err := svc.storage.DeleteCollection(ctx, collectionID)
 	if err != nil {
-		cs.log.Error(fmt.Sprintf("Error deleting collection %d:", collectionID), sl.Err(err))
+		svc.log.Error("Error deleting collection", "collection", collectionID, sl.Err(err))
 		return domain.ErrDataNotDeleted
 	}
 
@@ -84,10 +83,10 @@ func (cs *CollectionService) DeleteCollection(ctx context.Context, userID, colle
 }
 
 // isUserPartOfCollection checks if the user is part of the given collection
-func (cs *CollectionService) isUserPartOfCollection(ctx context.Context, userID, collectionID uuid.UUID) bool {
-	isPartOfCollection, err := cs.storage.IsUserPartOfCollection(ctx, userID, collectionID)
+func (svc *CollectionService) isUserPartOfCollection(ctx context.Context, userID, collectionID uuid.UUID) bool {
+	isPartOfCollection, err := svc.storage.IsUserPartOfCollection(ctx, userID, collectionID)
 	if err != nil {
-		cs.log.Error(fmt.Sprintf("Error checking if user %d is part of collection %d:", userID, collectionID), sl.Err(err))
+		svc.log.Error("Error checking if user is part of collection", "user", userID, "collection", collectionID, sl.Err(err))
 		return false
 	}
 
