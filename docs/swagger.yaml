@@ -378,6 +378,9 @@ definitions:
       id:
         example: bb073c91-f09b-4858-b2d1-d14116e73b8d
         type: string
+      master_password_set:
+        example: true
+        type: boolean
       name:
         example: John Doe
         type: string
@@ -886,7 +889,6 @@ paths:
       - description: Skip
         in: query
         name: skip
-        required: true
         type: integer
       - description: Limit
         in: query
@@ -1090,7 +1092,6 @@ paths:
       - description: Skip
         in: query
         name: skip
-        required: true
         type: integer
       - description: Limit
         in: query
@@ -1233,7 +1234,6 @@ paths:
       - description: Skip
         in: query
         name: skip
-        required: true
         type: integer
       - description: Limit
         in: query

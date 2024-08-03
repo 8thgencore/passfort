@@ -126,7 +126,7 @@ func (sh *SecretHandler) CreateSecret(ctx *gin.Context) {
 
 // listMeSecretsRequest represents the request body for listing secrets by user ID
 type listMeSecretsRequest struct {
-	Skip  uint64 `form:"skip" binding:"required,min=0" example:"0"`
+	Skip  uint64 `form:"skip" binding:"min=0" example:"0"`
 	Limit uint64 `form:"limit" binding:"required,min=5" example:"5"`
 }
 
@@ -138,7 +138,7 @@ type listMeSecretsRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			collection_id	path		string					true	"Collection ID"
-//	@Param			skip			query		uint64					true	"Skip"
+//	@Param			skip			query		uint64					false "Skip"
 //	@Param			limit			query		uint64					true	"Limit"
 //	@Success		200				{object}	response.Meta			"Secrets displayed"
 //	@Failure		400				{object}	response.ErrorResponse	"Validation error"

@@ -144,7 +144,7 @@ func (r *UserRepository) ListUsers(ctx context.Context, skip, limit uint64) ([]d
 		From("users").
 		OrderBy("id").
 		Limit(limit).
-		Offset((skip - 1) * limit)
+		Offset(skip)
 
 	sql, args, err := query.ToSql()
 	if err != nil {

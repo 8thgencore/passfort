@@ -577,8 +577,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Skip",
                         "name": "skip",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -834,8 +833,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Skip",
                         "name": "skip",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -1318,8 +1316,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Skip",
                         "name": "skip",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -2116,6 +2113,10 @@ const docTemplate = `{
                 "id": {
                     "type": "string",
                     "example": "bb073c91-f09b-4858-b2d1-d14116e73b8d"
+                },
+                "master_password_set": {
+                    "type": "boolean",
+                    "example": true
                 },
                 "name": {
                     "type": "string",

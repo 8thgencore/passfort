@@ -131,7 +131,7 @@ func (r *CollectionRepository) ListCollectionsByUserID(ctx context.Context, user
 		Where(sq.Eq{"uc.user_id": userID}).
 		OrderBy("c.created_at DESC").
 		Limit(limit).
-		Offset((skip - 1) * limit)
+		Offset(skip)
 
 	sql, args, err := query.ToSql()
 	if err != nil {
