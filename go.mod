@@ -16,7 +16,7 @@ require (
 	github.com/hibiken/asynq v0.24.1
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jackc/pgx/v5 v5.6.0
-	github.com/redis/go-redis/v9 v9.5.3
+	github.com/redis/go-redis/v9 v9.6.1
 	github.com/samber/slog-gin v1.13.3
 	github.com/stretchr/testify v1.9.0
 	github.com/swaggo/files v1.0.1
@@ -30,14 +30,14 @@ require (
 require (
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/bytedance/sonic v1.11.9 // indirect
-	github.com/bytedance/sonic/loader v0.1.1 // indirect
+	github.com/bytedance/sonic v1.12.0 // indirect
+	github.com/bytedance/sonic/loader v0.2.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/gabriel-vasile/mimetype v1.4.4 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.5 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.21.0 // indirect
@@ -47,7 +47,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/goccy/go-json v0.10.3 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.20.0 // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.21.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -85,8 +85,8 @@ require (
 	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.23.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240711142825-46eb208f015d // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240711142825-46eb208f015d // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240730163845-b1a4ccb954bf // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240730163845-b1a4ccb954bf // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	olympos.io/encoding/edn v0.0.0-20201019073823-d3554ca0b0a3 // indirect
 )
