@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   passfort:
     container_name: passfort-app
