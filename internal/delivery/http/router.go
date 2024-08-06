@@ -41,15 +41,15 @@ func NewRouter(
 	}
 
 	// CORS
-	ginConfig := cors.DefaultConfig()
-	allowOrigins := cfg.HTTP.AllowOrigins
-	originsList := strings.Split(allowOrigins, ",")
-	ginConfig.AllowOrigins = originsList
-
-	// Allow other headers and methods as needed
-	ginConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
-	ginConfig.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
-	ginConfig.AllowCredentials = true
+	ginConfig := cors.Config{
+		AllowOrigins: strings.Split(cfg.HTTP.AllowOrigins, ","),
+		AllowOriginFunc: func(origin string) bool {
+			return true
+		},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowCredentials: true,
+	}
 
 	// Init router
 	router := gin.New()
