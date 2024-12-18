@@ -1,6 +1,6 @@
 module github.com/8thgencore/passfort
 
-go 1.22.2
+go 1.23.4
 
 require (
 	github.com/8thgencore/mailfort v1.2.2
